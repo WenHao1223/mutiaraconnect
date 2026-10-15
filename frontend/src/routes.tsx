@@ -60,7 +60,7 @@ const pages: PageRoute[] = [
     { path: PATHS.announcements, label: "Announcements", element: <Placeholder title="Announcements" /> },
 
     { path: PATHS.profile, label: "My Dashboard", element: <Placeholder title="My Dashboard" /> },
-    { path: PATHS.profileSettings, label: "Profile & Settings", element: <ProfileSettingsPage /> },
+    { path: PATHS.profileSettings, label: "Account Settings", element: <ProfileSettingsPage /> },
     { path: PATHS.profileTickets, label: "My Tickets", element: <Placeholder title="My Tickets" /> },
     { path: PATHS.profileBusiness, label: "Business Applications", element: <BusinessApplicationPage /> },
     { path: PATHS.admin, label: "Admin Dashboard", element: <Placeholder title="Admin Dashboard" /> },

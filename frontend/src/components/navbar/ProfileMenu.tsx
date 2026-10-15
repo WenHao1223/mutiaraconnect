@@ -12,6 +12,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { initials, roleLabels } from "@/lib/user-display";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";
 
@@ -40,20 +41,31 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
             <DropdownMenuContent align="end" className="w-60">
                 {user ? (
                     <>
-                        <DropdownMenuLabel className="font-normal">
-                            <p className="text-sm font-semibold">{user.name}</p>
-                            {user.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
-                            <p className="mt-1 text-xs font-medium text-primary">{roleLabels[user.role]}</p>
-                        </DropdownMenuLabel>
+                        <div className="flex items-start justify-between gap-2 px-2 py-1.5">
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold">{user.name}</p>
+                                {user.email && <p className="truncate text-xs text-muted-foreground">{user.email}</p>}
+                                <p className="mt-1 text-xs font-medium text-primary">{roleLabels[user.role]}</p>
+                            </div>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            to={PATHS.profileSettings}
+                                            aria-label="Account Settings"
+                                            className="cursor-pointer flex size-7 shrink-0 items-center justify-center rounded-md p-0 text-muted-foreground"
+                                        >
+                                            <Settings className="size-4" />
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">Account Settings</TooltipContent>
+                            </Tooltip>
+                        </div>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                             <Link to={PATHS.profile}>
                                 <LayoutDashboard className="size-4" /> My Dashboard
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link to={PATHS.profileSettings}>
-                                <Settings className="size-4" /> Profile & Settings
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>

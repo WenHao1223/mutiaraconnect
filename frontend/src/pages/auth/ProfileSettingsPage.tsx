@@ -23,7 +23,7 @@ export default function ProfileSettingsPage() {
                     </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                    <h1 className="truncate text-2xl font-semibold tracking-tight text-primary">Profile & Settings</h1>
+                    <h1 className="truncate text-2xl font-semibold tracking-tight text-primary">Account Settings</h1>
                     <p className="truncate text-sm text-muted-foreground">
                         {user.name}
                         {user.email && ` · ${user.email}`} · {roleLabels[user.role]}
