@@ -27,6 +27,9 @@ export interface Ticket {
     category: TicketCategory;
     /** Station or area the report is about. */
     location: string;
+    /** Where the report was filed, used to pin it on the map. */
+    latitude?: number;
+    longitude?: number;
     description: string;
     status: TicketStatus;
     /** ISO 8601 timestamp. */

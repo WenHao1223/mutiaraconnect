@@ -1,14 +1,23 @@
-import { Clock, MessageSquareText, Paperclip, Store } from "lucide-react";
+import { Clock, MapPin, MessageSquareText, Navigation, Paperclip, Store } from "lucide-react";
+import LocationPicker from "@/components/custom/LocationPicker";
 import { categoryLabels, formatDate, formatDateTime, statusMeta } from "@/lib/tickets";
 import { cn } from "@/lib/utils";
 import StatusBadge from "@/components/tickets/StatusBadge";
 import StatusProgress from "@/components/tickets/StatusProgress";
 import type { Ticket } from "@/types/ticket";
 
+const ignoreLocationChange = () => undefined;
+
 /** Everything about one ticket: summary, progress bar, latest response and history. */
 export default function TicketDetail({ ticket }: { ticket: Ticket }) {
     const latest = ticket.updates[ticket.updates.length - 1];
     const history = [...ticket.updates].reverse();
+
+    const hasCoords = typeof ticket.latitude === "number" && typeof ticket.longitude === "number";
+    // Directions when we have a pin; otherwise fall back to searching the area by name.
+    const mapsUrl = hasCoords
+        ? `https://www.google.com/maps/dir/?api=1&destination=${ticket.latitude},${ticket.longitude}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ticket.location)}`;
 
     return (
         <article>
@@ -18,7 +27,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
                         {ticket.id} · {categoryLabels[ticket.category]}
                     </h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                        {ticket.location} · Submitted {formatDate(ticket.submittedAt)}
+                        Submitted {formatDate(ticket.submittedAt)}
                     </p>
                 </div>
                 <StatusBadge status={ticket.status} />
@@ -40,6 +49,33 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
             )}
 
             <p className="mt-4 text-sm">{ticket.description}</p>
+
+            <section className="mt-4" aria-label="Reported location">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                    <span className="inline-flex items-center gap-1.5 font-medium">
+                        <MapPin className="size-4 text-muted-foreground" aria-hidden /> {ticket.location}
+                    </span>
+                    <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                    >
+                        <Navigation className="size-3.5" aria-hidden /> Navigate
+                    </a>
+                </div>
+                {hasCoords && (
+                    <LocationPicker
+                        readOnly
+                        value={{
+                            latitude: ticket.latitude as number,
+                            longitude: ticket.longitude as number,
+                            address: ticket.location,
+                        }}
+                        onChange={ignoreLocationChange}
+                    />
+                )}
+            </section>
 
             <div className="mt-6">
                 <StatusProgress status={ticket.status} />
