@@ -7,6 +7,7 @@ import Placeholder from "@/pages/Placeholder";
 import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import BusinessApplicationPage from "@/pages/profile/BusinessApplicationPage";
+import PublicTicketsPage from "@/pages/PublicTicketsPage";
 import TicketsPage from "@/pages/TicketsPage";
 
 /** Every URL in the app. Use these instead of typing path strings anywhere else. */
@@ -50,7 +51,7 @@ const pages: PageRoute[] = [
     { path: PATHS.constructionUpdates, label: "Updates", element: <Placeholder title="Construction Updates" />, nav: "construction" },
 
     { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
-    { path: PATHS.ticket, label: "Ticket", element: <Placeholder title="Ticket" />, nav: "main" },
+    { path: PATHS.ticket, label: "Ticket", element: <PublicTicketsPage />, nav: "main" },
     { path: PATHS.business, label: "Business", element: <Placeholder title="Business" />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
     { path: PATHS.about, label: "About Us", element: <Placeholder title="About Us" />, nav: "main" },

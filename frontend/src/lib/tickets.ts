@@ -8,6 +8,29 @@ import type { BusinessProfile, MockAccount } from "@/types/user";
 // business@example.com. FB-2030 and FB-2027 belong to other people and only show up by ID lookup.
 const tickets = ticketData as Ticket[];
 
+/**
+ * Reports submitted through the app (frontend only, no backend). Kept in localStorage and
+ * merged with the seed data above. Replace with Supabase later.
+ */
+const SUBMITTED_KEY = "mutiaraconnect.submitted-tickets";
+
+function readSubmittedTickets(): Ticket[] {
+    try {
+        const raw = localStorage.getItem(SUBMITTED_KEY);
+        return raw ? (JSON.parse(raw) as Ticket[]) : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeSubmittedTickets(list: Ticket[]) {
+    try {
+        localStorage.setItem(SUBMITTED_KEY, JSON.stringify(list));
+    } catch {
+        /* storage unavailable: the report just won't survive a refresh */
+    }
+}
+
 /** The business premises each account owns, keyed by lower-cased email. */
 const businessByEmail = new Map<string, BusinessProfile[]>();
 for (const account of Object.values(usersData) as MockAccount[]) {
@@ -43,9 +66,56 @@ export function isBusinessOwner(ticket: Ticket): boolean {
 export function getTicketsForUser(email: string | undefined): Ticket[] {
     if (!email) return [];
     const target = email.trim().toLowerCase();
-    return tickets
+    return [...tickets, ...readSubmittedTickets()]
         .filter((t) => t.submittedByEmail?.toLowerCase() === target)
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/** Resolved reports, newest first, for the public "recently resolved" board. */
+export function getResolvedTickets(): Ticket[] {
+    return tickets
+        .filter((ticket) => ticket.status === "resolved")
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export interface NewTicketInput {
+    email?: string;
+    category: TicketCategory;
+    description: string;
+    location: string;
+    latitude: number;
+    longitude: number;
+    premise?: string;
+    hasPhoto?: boolean;
+}
+
+/** Creates a report owned by the signed-in account and stores it locally. */
+export function submitTicket(input: NewTicketInput): Ticket {
+    const now = new Date().toISOString();
+    const ticket: Ticket = {
+        id: `FB-${3001 + readSubmittedTickets().length}`,
+        category: input.category,
+        location: input.location,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        description: input.description,
+        status: "received",
+        submittedAt: now,
+        updatedAt: now,
+        submittedByEmail: input.email,
+        premise: input.premise,
+        hasPhoto: input.hasPhoto,
+        updates: [
+            {
+                status: "received",
+                message: "Report received. We'll assign it to the site team shortly.",
+                by: "System",
+                at: now,
+            },
+        ],
+    };
+    writeSubmittedTickets([...readSubmittedTickets(), ticket]);
+    return ticket;
 }
 
 /** Look a ticket up by its public tracking ID, e.g. "FB-2041". */
@@ -80,6 +150,22 @@ export function normalizeTicketId(raw: string) {
     const text = raw.trim().toUpperCase().replace(/\s+/g, "");
     const digits = text.match(/^(?:FB-?)?(\d+)$/)?.[1];
     return digits ? `FB-${digits}` : text;
+}
+
+/** Free-text match across the fields a reporter would recognise ("2041", "noise", "Komtar"). */
+export function matchesTicketQuery(ticket: Ticket, query: string) {
+    const text = query.trim().toLowerCase();
+    if (!text) return true;
+    const haystack = [
+        ticket.id,
+        categoryLabels[ticket.category],
+        statusMeta[ticket.status].label,
+        ticket.location,
+        ticket.premise ?? "",
+    ]
+        .join(" ")
+        .toLowerCase();
+    return haystack.includes(text) || ticket.id.toUpperCase().includes(normalizeTicketId(query));
 }
 
 export function formatDate(iso: string) {

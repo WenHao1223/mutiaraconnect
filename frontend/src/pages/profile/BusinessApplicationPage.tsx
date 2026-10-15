@@ -292,7 +292,7 @@ export default function BusinessApplicationPage() {
                                 the site team.
                             </p>
                             <Link
-                                to={PATHS.ticket}
+                                to={PATHS.profileTickets}
                                 className="mt-4 inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90"
                             >
                                 Report access issue

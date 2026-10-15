@@ -1,12 +1,15 @@
 import { useRef, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { SearchX, Ticket as TicketIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Navigate } from "react-router-dom";
+import { Plus, SearchX, Ticket as TicketIcon } from "lucide-react";
+import { toast } from "sonner";
 import TicketDetail from "@/components/tickets/TicketDetail";
+import TicketForm, { type TicketFormValues } from "@/components/tickets/TicketForm";
 import TicketList from "@/components/tickets/TicketList";
 import TicketLookup from "@/components/tickets/TicketLookup";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth";
-import { categoryLabels, getTicketsForUser, normalizeTicketId, statusMeta } from "@/lib/tickets";
+import { readPremises, readRemovedPremiseIds } from "@/lib/business";
+import { getTicketsForUser, matchesTicketQuery, submitTicket } from "@/lib/tickets";
 import { PATHS } from "@/routes";
 import type { Ticket } from "@/types/ticket";
 import type { AppUser } from "@/types/user";
@@ -15,20 +18,6 @@ const subtitles: Partial<Record<AppUser["role"], string>> = {
     resident: "Follow the reports you have raised until the responsible team responds.",
     business_premise: "Follow reports about your premise until the responsible team responds.",
 };
-
-/** Free-text match across the fields a reporter would recognise ("2041", "noise", "Komtar"). */
-function matchesQuery(ticket: Ticket, text: string, idNeedle: string) {
-    const haystack = [
-        ticket.id,
-        categoryLabels[ticket.category],
-        statusMeta[ticket.status].label,
-        ticket.location,
-        ticket.premise ?? "",
-    ]
-        .join(" ")
-        .toLowerCase();
-    return haystack.includes(text) || ticket.id.toUpperCase().includes(idNeedle);
-}
 
 /** My Tickets: shared by residents and business premises. Admins manage tickets elsewhere. */
 export default function TicketsPage() {
@@ -44,14 +33,22 @@ export default function TicketsPage() {
 function TicketsView({ user }: { user: AppUser }) {
     const detailRef = useRef<HTMLDivElement>(null);
 
-    const myTickets = getTicketsForUser(user.email);
-    const [selectedId, setSelectedId] = useState<string | undefined>(myTickets[0]?.id);
+    const [myTickets, setMyTickets] = useState<Ticket[]>(() => getTicketsForUser(user.email));
+    const [selectedId, setSelectedId] = useState<string | undefined>(() => myTickets[0]?.id);
     const [query, setQuery] = useState("");
+    // With no tickets yet, open the form straight away.
+    const [showForm, setShowForm] = useState(() => myTickets.length === 0);
+
+    const removed = new Set(readRemovedPremiseIds(user.email));
+    const premises =
+        user.role === "business_premise"
+            ? [...(user.businesses ?? []), ...readPremises(user.email)].filter(
+                  (premise) => !removed.has(premise.id),
+              )
+            : [];
 
     // Tracking filters the list in place instead of changing the URL.
-    const text = query.trim().toLowerCase();
-    const idNeedle = normalizeTicketId(query);
-    const visible = text ? myTickets.filter((ticket) => matchesQuery(ticket, text, idNeedle)) : myTickets;
+    const visible = myTickets.filter((ticket) => matchesTicketQuery(ticket, query));
     const selected = visible.find((t) => t.id === selectedId) ?? visible[0];
 
     function select(id: string) {
@@ -60,6 +57,23 @@ function TicketsView({ user }: { user: AppUser }) {
         if (!window.matchMedia("(min-width: 1024px)").matches) {
             detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }
+    }
+
+    function openTicket(values: TicketFormValues) {
+        const ticket = submitTicket({
+            email: user.email,
+            category: values.category,
+            description: values.description,
+            location: values.location.address,
+            latitude: values.location.latitude,
+            longitude: values.location.longitude,
+            premise: values.premise,
+        });
+        setMyTickets((current) => [ticket, ...current]);
+        setSelectedId(ticket.id);
+        setQuery("");
+        setShowForm(false);
+        toast.success(`Report ${ticket.id} submitted.`);
     }
 
     return (
@@ -79,50 +93,75 @@ function TicketsView({ user }: { user: AppUser }) {
 
             <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
                 <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <h2 className="text-lg font-semibold">Your tickets</h2>
-                    <div className="mt-3">
-                        <TicketLookup value={query} onChange={setQuery} />
-                    </div>
-
-                    <div className="mt-4">
-                        {myTickets.length === 0 ? (
-                            <div className="rounded-lg bg-muted px-4 py-8 text-center">
-                                <TicketIcon
-                                    className="mx-auto size-8 text-muted-foreground"
-                                    aria-hidden
-                                />
-                                <p className="mt-2 text-sm font-medium">No tickets yet</p>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    Reports you submit will show up here.
-                                </p>
-                                <Button asChild className="mt-4" size="sm">
-                                    <Link to={PATHS.ticket}>Submit a report</Link>
-                                </Button>
-                            </div>
-                        ) : visible.length === 0 ? (
-                            <div className="rounded-lg bg-muted px-4 py-8 text-center">
-                                <SearchX className="mx-auto size-8 text-muted-foreground" aria-hidden />
-                                <p className="mt-2 text-sm font-medium">No ticket found</p>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    None of your tickets match “{query.trim()}”.
-                                </p>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-4"
-                                    onClick={() => setQuery("")}
-                                >
-                                    Clear search
-                                </Button>
-                            </div>
-                        ) : (
-                            <TicketList
-                                tickets={visible}
-                                selectedId={selected?.id}
-                                onSelect={select}
-                            />
+                    <div className="flex items-center justify-between gap-2">
+                        <h2 className="text-lg font-semibold">Your tickets</h2>
+                        {myTickets.length > 0 && (
+                            <Button
+                                size="sm"
+                                variant={showForm ? "outline" : "default"}
+                                onClick={() => setShowForm((open) => !open)}
+                            >
+                                {!showForm && <Plus className="size-4" />}
+                                {showForm ? "Close" : "New report"}
+                            </Button>
                         )}
                     </div>
+
+                    {showForm ? (
+                        <div className="mt-4">
+                            <TicketForm
+                                premises={premises}
+                                onSubmit={openTicket}
+                                onCancel={() => setShowForm(false)}
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            <div className="mt-3">
+                                <TicketLookup value={query} onChange={setQuery} />
+                            </div>
+
+                            <div className="mt-4">
+                                {myTickets.length === 0 ? (
+                                    <div className="rounded-lg bg-muted px-4 py-8 text-center">
+                                        <TicketIcon
+                                            className="mx-auto size-8 text-muted-foreground"
+                                            aria-hidden
+                                        />
+                                        <p className="mt-2 text-sm font-medium">No tickets yet</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            Reports you submit will show up here.
+                                        </p>
+                                        <Button className="mt-4" size="sm" onClick={() => setShowForm(true)}>
+                                            Submit a report
+                                        </Button>
+                                    </div>
+                                ) : visible.length === 0 ? (
+                                    <div className="rounded-lg bg-muted px-4 py-8 text-center">
+                                        <SearchX className="mx-auto size-8 text-muted-foreground" aria-hidden />
+                                        <p className="mt-2 text-sm font-medium">No ticket found</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            None of your tickets match “{query.trim()}”.
+                                        </p>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-4"
+                                            onClick={() => setQuery("")}
+                                        >
+                                            Clear search
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <TicketList
+                                        tickets={visible}
+                                        selectedId={selected?.id}
+                                        onSelect={select}
+                                    />
+                                )}
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div
