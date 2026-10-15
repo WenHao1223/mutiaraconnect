@@ -17,6 +17,7 @@ export default function BusinessAccountCard({ user }: { user: AppUser }) {
     if (user.role === "admin" || user.role === "super_admin") return null;
 
     const application = findApplication(user.email ?? user.ic ?? user.name);
+    const business = user.role === "business_premise" ? user.business : undefined;
 
     const description =
         user.role === "business_premise"
@@ -33,7 +34,13 @@ export default function BusinessAccountCard({ user }: { user: AppUser }) {
                 </CardTitle>
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+                {business && (
+                    <div className="text-sm">
+                        <p className="font-medium">{business.name}</p>
+                        <p className="text-muted-foreground">{business.address}</p>
+                    </div>
+                )}
                 <Button asChild>
                     <Link to={PATHS.profileBusiness}>
                         {user.role === "business_premise"

@@ -15,6 +15,13 @@
         "myDigitalId": "MDID-0000002",
         "ic": "850505-07-0002",
         "gender": "male",
+        "business": {
+            "name": "Restoran Mutiara Nasi Kandar",
+            "registrationNumber": "202301234567 (0012345-X)",
+            "address": "12, Lebuh Chulia, 10200 George Town, Pulau Pinang",
+            "latitude": 5.4183,
+            "longitude": 100.3364
+        },
         "passwordHash": "$2b$10$li41XRLiaC/MkxOEXvOMb.tMP3mgktezSWXs.lKyFDQLZ7jcJTlYa"
     },
     "admin": {

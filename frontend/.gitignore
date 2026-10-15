@@ -17,6 +17,11 @@ dist-ssr
 .nitro
 *.local
 
+# Local env (contains secrets such as the Google Maps API key)
+.env
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

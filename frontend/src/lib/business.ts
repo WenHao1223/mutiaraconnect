@@ -9,7 +9,11 @@ export interface BusinessApplication {
     email?: string;
     businessName: string;
     registrationNumber: string;
+    /** Human-readable address resolved from the pinned map location. */
     premiseAddress: string;
+    /** Shop coordinates picked on the map. */
+    latitude: number;
+    longitude: number;
     status: "pending" | "approved" | "rejected";
     submittedAt: string;
 }
