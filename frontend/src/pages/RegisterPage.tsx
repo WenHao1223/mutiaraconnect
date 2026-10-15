@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/lib/auth";
+import { AuthError, useAuth } from "@/lib/auth";
 import { PATHS } from "@/routes";
 import AuthLayout from "@/pages/auth/AuthLayout";
 import MyDigitalIdButton from "@/pages/auth/MyDigitalIdButton";
@@ -29,6 +29,7 @@ export default function RegisterPage() {
         register,
         control,
         handleSubmit,
+        setError,
         getValues,
         formState: { errors, isSubmitting },
     } = useForm<RegisterValues>({ defaultValues: { agree: false } });
@@ -52,7 +53,7 @@ export default function RegisterPage() {
         >
             <MyDigitalIdButton onDone={goBack} />
             <p className="mt-2 text-center text-xs text-muted-foreground">
-                Fastest option: your name and IC are verified for you.
+                For residents with a MyDigitalID account.
             </p>
             <Divider>or register with email</Divider>
 
@@ -60,8 +61,13 @@ export default function RegisterPage() {
                 noValidate
                 className="space-y-4"
                 onSubmit={handleSubmit(async ({ name, email, password }) => {
-                    await registerWithEmail({ name: name.trim(), email: email.trim(), password });
-                    goBack();
+                    try {
+                        await registerWithEmail({ name: name.trim(), email, password });
+                        goBack();
+                    } catch (err) {
+                        if (err instanceof AuthError) setError("email", { message: err.message });
+                        else setError("root", { message: "Registration failed. Please try again." });
+                    }
                 })}
             >
                 <div>
@@ -146,6 +152,8 @@ export default function RegisterPage() {
                     </div>
                     <FieldError message={errors.agree?.message} />
                 </div>
+
+                <FieldError message={errors.root?.message} />
 
                 <Button type="submit" variant="outline" className="h-10 w-full" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="size-4 animate-spin" />}

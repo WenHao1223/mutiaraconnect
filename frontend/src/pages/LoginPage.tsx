@@ -7,7 +7,7 @@ import PasswordField from "@/components/custom/PasswordField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/lib/auth";
+import { AuthError, useAuth } from "@/lib/auth";
 import { PATHS } from "@/routes";
 import AuthLayout from "@/pages/auth/AuthLayout";
 import MyDigitalIdButton from "@/pages/auth/MyDigitalIdButton";
@@ -24,6 +24,7 @@ export default function LoginPage() {
     const {
         register,
         handleSubmit,
+        setError,
         formState: { errors, isSubmitting },
     } = useForm<LoginValues>();
 
@@ -51,8 +52,14 @@ export default function LoginPage() {
                 noValidate
                 className="space-y-4"
                 onSubmit={handleSubmit(async ({ email, password }) => {
-                    await signInWithEmail(email.trim(), password);
-                    goBack();
+                    try {
+                        await signInWithEmail(email, password);
+                        goBack();
+                    } catch (err) {
+                        setError("root", {
+                            message: err instanceof AuthError ? err.message : "Sign in failed. Please try again.",
+                        });
+                    }
                 })}
             >
                 <div>
@@ -93,6 +100,8 @@ export default function LoginPage() {
                     </div>
                     <FieldError message={errors.password?.message} />
                 </div>
+
+                <FieldError message={errors.root?.message} />
 
                 <Button type="submit" variant="outline" className="h-10 w-full" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="size-4 animate-spin" />}
