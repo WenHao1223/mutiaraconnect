@@ -1,3 +1,5 @@
+export type Gender = "male" | "female";
+
 export interface AppUser {
     name: string;
     email?: string;
@@ -7,5 +9,5 @@ export interface AppUser {
     myDigitalId?: string;
     /** Malaysian IC (MyKad) number */
     ic?: string;
-    gender?: "male" | "female";
+    gender?: Gender;
 }

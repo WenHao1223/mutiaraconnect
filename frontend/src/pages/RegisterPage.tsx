@@ -9,12 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthError, useAuth } from "@/lib/auth/auth";
+import { formatIc, parseIc } from "@/lib/auth/ic";
 import { PATHS } from "@/routes";
 import AuthLayout from "@/pages/auth/AuthLayout";
 import MyDigitalIdButton from "@/pages/auth/MyDigitalIdButton";
 
 interface RegisterValues {
     name: string;
+    ic: string;
     email: string;
     password: string;
     confirmPassword: string;
@@ -32,7 +34,7 @@ export default function RegisterPage() {
         setError,
         getValues,
         formState: { errors, isSubmitting },
-    } = useForm<RegisterValues>({ defaultValues: { agree: false } });
+    } = useForm<RegisterValues>({ defaultValues: { ic: "", agree: false } });
 
     if (user) return <Navigate to={from} replace />;
 
@@ -60,9 +62,9 @@ export default function RegisterPage() {
             <form
                 noValidate
                 className="space-y-4"
-                onSubmit={handleSubmit(async ({ name, email, password }) => {
+                onSubmit={handleSubmit(async ({ name, ic, email, password }) => {
                     try {
-                        await registerWithEmail({ name: name.trim(), email, password });
+                        await registerWithEmail({ name: name.trim(), email, password, ic });
                         goBack();
                     } catch (err) {
                         if (err instanceof AuthError) setError("email", { message: err.message });
@@ -80,6 +82,34 @@ export default function RegisterPage() {
                         {...register("name", { required: "Enter your full name.", validate: (v) => v.trim().length > 1 || "Enter your full name." })}
                     />
                     <FieldError message={errors.name?.message} />
+                </div>
+
+                <div>
+                    <Label htmlFor="ic">MyKad IC number</Label>
+                    <Controller
+                        name="ic"
+                        control={control}
+                        rules={{
+                            required: "Enter your MyKad IC number.",
+                            validate: (v) => {
+                                if (v.replace(/\D/g, "").length !== 12) return "Enter a valid 12-digit MyKad IC number.";
+                                return parseIc(v) ? true : "Enter a valid MyKad IC number.";
+                            },
+                        }}
+                        render={({ field }) => (
+                            <Input
+                                id="ic"
+                                inputMode="numeric"
+                                autoComplete="off"
+                                placeholder="900101-07-0001"
+                                className="mt-1.5"
+                                aria-invalid={!!errors.ic}
+                                value={field.value}
+                                onChange={(e) => field.onChange(formatIc(e.target.value))}
+                            />
+                        )}
+                    />
+                    <FieldError message={errors.ic?.message} />
                 </div>
 
                 <div>

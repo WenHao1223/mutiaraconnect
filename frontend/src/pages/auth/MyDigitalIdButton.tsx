@@ -5,13 +5,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthError, useAuth } from "@/lib/auth/auth";
+import { formatIc } from "@/lib/auth/ic";
 import FieldError from "@/components/custom/FieldError";
-
-/** Formats digits as 000000-00-0000 while typing. */
-function formatIc(value: string) {
-    const d = value.replace(/\D/g, "").slice(0, 12);
-    return [d.slice(0, 6), d.slice(6, 8), d.slice(8)].filter(Boolean).join("-");
-}
 
 /**
  * Stand-in for the MyDigitalID redirect. The dialog plays the role of the MyDigitalID

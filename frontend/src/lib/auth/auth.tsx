@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { demoUsers, type MockAccount } from "@/data/users";
-import type { AppUser } from "@/types/user";
+import type { AppUser, Gender } from "@/types/user";
 
 /**
  * MOCK AUTH (frontend only, no backend). Logic is real, storage is the browser:
@@ -17,9 +17,9 @@ interface AuthContextValue {
     user: AppUser | null;
     signInWithMyDigitalId: (ic: string) => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
-    registerWithEmail: (input: { name: string; email: string; password: string }) => Promise<void>;
-    /** Changes the display name. Birth date and age come from the IC and cannot be edited. */
-    updateName: (name: string) => Promise<void>;
+    registerWithEmail: (input: { name: string; email: string; password: string; ic: string }) => Promise<void>;
+    /** Updates editable profile fields. Birth date and age come from the IC and cannot be edited. */
+    updateProfile: (input: { name?: string; gender?: Gender }) => Promise<void>;
     changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
     signOut: () => void;
 }
@@ -60,7 +60,7 @@ function writeStorage(key: string, value: unknown) {
 
 const readRegistered = () => readStorage<StoredAccount[]>(REGISTERED_KEY, []);
 
-type AccountOverride = { name?: string; passwordHash?: string };
+type AccountOverride = { name?: string; gender?: Gender; passwordHash?: string };
 const readOverrides = () => readStorage<Record<string, AccountOverride>>(OVERRIDES_KEY, {});
 
 function saveOverride(email: string, patch: AccountOverride) {
@@ -76,6 +76,7 @@ function toAppUser(account: MockAccount | StoredAccount): AppUser {
     delete rest.passwordHash;
     const override = account.email ? readOverrides()[normalizeEmail(account.email)] : undefined;
     if (override?.name) rest.name = override.name;
+    if (override?.gender) rest.gender = override.gender;
     return rest as AppUser;
 }
 
@@ -119,7 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 await wait(800); // stands in for the MyDigitalID redirect + callback
                 const digits = normalizeIc(ic);
                 if (digits.length !== 12) throw new AuthError("Enter a valid 12-digit MyKad IC number.");
-                const account = Object.values(demoUsers).find((a) => a.ic && normalizeIc(a.ic) === digits);
+                const account = Object.values(demoUsers).find((a) => a.ic && normalizeIc(a.ic) === digits)
+                    ?? readRegistered().find((a) => a.ic && normalizeIc(a.ic) === digits);
                 if (!account) throw new AuthError("No MyDigitalID account found for this IC number.");
                 startSession(account);
             },
@@ -132,26 +134,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 startSession(account);
             },
 
-            async registerWithEmail({ name, email, password }) {
+            async registerWithEmail({ name, email, password, ic }) {
                 await wait(500);
                 if (findByEmail(email)) throw new AuthError("An account with this email already exists. Try signing in.");
                 const account: StoredAccount = {
                     name,
                     email: email.trim(),
                     role: "resident", // self-registration is always a resident
+                    ic,
                     passwordHash: await sha256(password),
                 };
                 writeStorage(REGISTERED_KEY, [...readRegistered(), account]);
                 startSession(account);
             },
 
-            async updateName(name) {
+            async updateProfile({ name, gender }) {
                 await wait(400);
-                const clean = name.trim();
-                if (clean.length < 2) throw new AuthError("Enter your full name.");
                 if (!user?.email) throw new AuthError("You need to be signed in to edit your profile.");
-                saveOverride(user.email, { name: clean });
-                setUserState({ ...user, name: clean });
+                const patch: AccountOverride = {};
+                const next: AppUser = { ...user };
+                if (name !== undefined) {
+                    const clean = name.trim();
+                    if (clean.length < 2) throw new AuthError("Enter your full name.");
+                    patch.name = clean;
+                    next.name = clean;
+                }
+                if (gender !== undefined) {
+                    patch.gender = gender;
+                    next.gender = gender;
+                }
+                saveOverride(user.email, patch);
+                setUserState(next);
             },
 
             async changePassword(currentPassword, newPassword) {

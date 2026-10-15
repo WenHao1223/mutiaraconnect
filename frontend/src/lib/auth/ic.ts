@@ -3,6 +3,12 @@ export interface IcDetails {
     age: number;
 }
 
+/** Formats a MyKad IC as 000000-00-0000 (digits only, max 12). */
+export function formatIc(ic?: string): string {
+    const digits = (ic ?? "").replace(/\D/g, "").slice(0, 12);
+    return [digits.slice(0, 6), digits.slice(6, 8), digits.slice(8)].filter(Boolean).join("-");
+}
+
 /**
  * Reads the birth date from a Malaysian MyKad IC number (YYMMDD-PB-###G).
  * The IC only has a 2-digit year, so we assume the 2000s unless that would
