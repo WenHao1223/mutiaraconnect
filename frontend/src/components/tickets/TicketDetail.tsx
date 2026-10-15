@@ -67,6 +67,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
                 {hasCoords && (
                     <LocationPicker
                         readOnly
+                        recenterKey={ticket.id}
                         value={{
                             latitude: ticket.latitude as number,
                             longitude: ticket.longitude as number,

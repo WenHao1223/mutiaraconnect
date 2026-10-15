@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { APIProvider, Map, Marker, useMapsLibrary } from "@vis.gl/react-google-maps";
+import { useEffect, useRef, useState } from "react";
+import { APIProvider, Map, Marker, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { MapPin } from "lucide-react";
 
 /** Default view: George Town, Penang — the centre of the Mutiara LRT corridor. */
@@ -19,6 +19,11 @@ interface LocationPickerProps {
     onChange: (location: PickedLocation | null) => void;
     /** Display the pin without letting the user move or clear it. */
     readOnly?: boolean;
+    /**
+     * Changes whenever the shown place changes (e.g. the ticket id). Forces the map to
+     * re-centre even when two places share the same coordinates.
+     */
+    recenterKey?: string;
 }
 
 /** Loads the Maps JS API and renders the picker, or explains how to enable it. */
@@ -40,7 +45,7 @@ export default function LocationPicker(props: LocationPickerProps) {
     );
 }
 
-function MapPicker({ value, onChange, readOnly }: LocationPickerProps) {
+function MapPicker({ value, onChange, readOnly, recenterKey }: LocationPickerProps) {
     const geocoding = useMapsLibrary("geocoding");
     const [resolving, setResolving] = useState(false);
 
@@ -76,6 +81,13 @@ function MapPicker({ value, onChange, readOnly }: LocationPickerProps) {
                     if (point) void moveTo(point.lat, point.lng);
                 }}
             >
+                {value && (
+                    <RecenterOnChange
+                        recenterKey={recenterKey ?? `${value.latitude},${value.longitude}`}
+                        latitude={value.latitude}
+                        longitude={value.longitude}
+                    />
+                )}
                 {value && (
                     <Marker
                         position={{ lat: value.latitude, lng: value.longitude }}
@@ -113,4 +125,26 @@ function MapPicker({ value, onChange, readOnly }: LocationPickerProps) {
             </div>
         </div>
     );
+}
+
+/** Pans the map when the shown place changes, but ignores the user's own panning. */
+function RecenterOnChange({
+    recenterKey,
+    latitude,
+    longitude,
+}: {
+    recenterKey: string;
+    latitude: number;
+    longitude: number;
+}) {
+    const map = useMap();
+    const lastKey = useRef<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (!map || lastKey.current === recenterKey) return;
+        lastKey.current = recenterKey;
+        map.panTo({ lat: latitude, lng: longitude });
+    }, [map, recenterKey, latitude, longitude]);
+
+    return null;
 }
