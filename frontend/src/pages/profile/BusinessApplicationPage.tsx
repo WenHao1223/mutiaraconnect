@@ -5,6 +5,7 @@ import { ArrowLeft, BadgeCheck, ExternalLink, Store } from "lucide-react";
 import { toast } from "sonner";
 import FieldError from "@/components/custom/FieldError";
 import LocationPicker, { type PickedLocation } from "@/components/custom/LocationPicker";
+import MapsLink from "@/components/custom/MapsLink";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,9 +39,6 @@ const ignoreLocationChange = () => undefined;
 /** Read-only summary of a registered business, including the pinned shop location. */
 function BusinessDetails({ business }: { business: BusinessDetailsData }) {
     const hasLocation = typeof business.latitude === "number" && typeof business.longitude === "number";
-    const mapsLink = hasLocation
-        ? `https://www.google.com/maps/search/?api=1&query=${business.latitude},${business.longitude}`
-        : undefined;
 
     return (
         <div className="space-y-3 text-sm">
@@ -78,15 +76,15 @@ function BusinessDetails({ business }: { business: BusinessDetailsData }) {
                         }}
                         onChange={ignoreLocationChange}
                     />
-                    <dd>
-                        <a
-                            href={mapsLink}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-primary hover:underline italic"
+                    <dd className="text-sm text-muted-foreground italic *:**:mt-1 font-light">
+                        <MapsLink
+                            location={{
+                                latitude: business.latitude as number,
+                                longitude: business.longitude as number,
+                            }}
                         >
-                            Open in Google Maps <ExternalLink className="size-3" />
-                        </a>
+                            Open in Google Maps <ExternalLink className="size-3" aria-hidden />
+                        </MapsLink>
                     </dd>
                 </div>
             )}

@@ -1,5 +1,6 @@
 import { BadgeCheck, Clock, MapPin, MessageSquareText, Navigation, Paperclip, Store } from "lucide-react";
 import LocationPicker from "@/components/custom/LocationPicker";
+import MapsLink from "@/components/custom/MapsLink";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { categoryLabels, formatDate, formatDateTime, isBusinessOwner, statusMeta } from "@/lib/tickets";
 import { cn } from "@/lib/utils";
@@ -16,9 +17,9 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
 
     const hasCoords = typeof ticket.latitude === "number" && typeof ticket.longitude === "number";
     // Directions when we have a pin; otherwise fall back to searching the area by name.
-    const mapsUrl = hasCoords
-        ? `https://www.google.com/maps/dir/?api=1&destination=${ticket.latitude},${ticket.longitude}`
-        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ticket.location)}`;
+    const mapsLocation = hasCoords
+        ? { latitude: ticket.latitude as number, longitude: ticket.longitude as number }
+        : ticket.location;
 
     return (
         <article>
@@ -72,14 +73,9 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
                     <span className="inline-flex items-center gap-1.5 font-medium">
                         <MapPin className="size-4 text-muted-foreground" aria-hidden /> {ticket.location}
                     </span>
-                    <a
-                        href={mapsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                    >
+                    <MapsLink location={mapsLocation} mode={hasCoords ? "directions" : "search"}>
                         <Navigation className="size-3.5" aria-hidden /> Navigate
-                    </a>
+                    </MapsLink>
                 </div>
                 {hasCoords && (
                     <LocationPicker
