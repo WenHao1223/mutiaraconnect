@@ -61,7 +61,7 @@ function TicketsView({ user }: { user: AppUser }) {
 
     function openTicket(values: TicketFormValues) {
         const ticket = submitTicket({
-            email: user.email,
+            email: values.anonymous ? undefined : user.email,
             category: values.category,
             description: values.description,
             location: values.location.address,

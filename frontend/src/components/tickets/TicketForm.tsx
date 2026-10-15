@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import FieldError from "@/components/custom/FieldError";
 import LocationPicker, { type PickedLocation } from "@/components/custom/LocationPicker";
+import SubmitAnonymously from "@/components/tickets/SubmitAnonymously";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,8 @@ export interface TicketFormValues {
     description: string;
     location: PickedLocation;
     premise?: string;
+    /** File without linking the account; hides the owner's verified badge. */
+    anonymous: boolean;
 }
 
 interface TicketFormProps {
@@ -38,6 +41,7 @@ export default function TicketForm({ premises = [], onSubmit, onCancel }: Ticket
     const [premiseId, setPremiseId] = useState<string>();
     const [otherPremise, setOtherPremise] = useState("");
     const [premiseError, setPremiseError] = useState<string>();
+    const [anonymous, setAnonymous] = useState(false);
     const {
         register,
         handleSubmit,
@@ -88,12 +92,13 @@ export default function TicketForm({ premises = [], onSubmit, onCancel }: Ticket
                         ? otherPremise.trim()
                         : premises.find((p) => p.id === premiseId)?.name;
 
-                onSubmit({ category, description: description.trim(), location, premise });
+                onSubmit({ category, description: description.trim(), location, premise, anonymous });
                 reset();
                 setCategory(undefined);
                 setLocation(null);
                 setPremiseId(undefined);
                 setOtherPremise("");
+                setAnonymous(false);
             })}
         >
             <div>
@@ -180,6 +185,16 @@ export default function TicketForm({ premises = [], onSubmit, onCancel }: Ticket
                 />
                 <FieldError message={locationError} />
             </div>
+
+            <SubmitAnonymously
+                checked={anonymous}
+                onCheckedChange={setAnonymous}
+                description={
+                    premises.length > 0
+                        ? "Your account is not linked to this report. Your business name is hidden and it will not show a verified badge."
+                        : "Your account is not linked to this report."
+                }
+            />
 
             <div className="flex justify-end gap-2">
                 {onCancel && (

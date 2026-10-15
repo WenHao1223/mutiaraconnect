@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import FieldError from "@/components/custom/FieldError";
+import SubmitAnonymously from "@/components/tickets/SubmitAnonymously";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +12,7 @@ import type { FeedbackCategory } from "@/types/feedback";
 export interface FeedbackFormValues {
     category: FeedbackCategory;
     message: string;
+    anonymous: boolean;
 }
 
 interface FeedbackFormProps {
@@ -24,6 +26,7 @@ const categories = Object.entries(feedbackLabels) as [FeedbackCategory, string][
 export default function FeedbackForm({ onSubmit, onCancel }: FeedbackFormProps) {
     const [category, setCategory] = useState<FeedbackCategory>();
     const [categoryError, setCategoryError] = useState<string>();
+    const [anonymous, setAnonymous] = useState(false);
     const {
         register,
         handleSubmit,
@@ -41,9 +44,10 @@ export default function FeedbackForm({ onSubmit, onCancel }: FeedbackFormProps) 
                     return;
                 }
                 setCategoryError(undefined);
-                onSubmit({ category, message: message.trim() });
+                onSubmit({ category, message: message.trim(), anonymous });
                 reset();
                 setCategory(undefined);
+                setAnonymous(false);
             })}
         >
             <div>
@@ -85,6 +89,12 @@ export default function FeedbackForm({ onSubmit, onCancel }: FeedbackFormProps) 
                 />
                 <FieldError message={errors.message?.message} />
             </div>
+
+            <SubmitAnonymously
+                checked={anonymous}
+                onCheckedChange={setAnonymous}
+                description="Your account is not linked to this feedback."
+            />
 
             <div className="flex justify-end gap-2">
                 {onCancel && (

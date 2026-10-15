@@ -55,7 +55,7 @@ export default function PublicTicketsPage() {
 
     function openTicket(values: TicketFormValues) {
         const ticket = submitTicket({
-            email: user?.email,
+            email: values.anonymous ? undefined : user?.email,
             category: values.category,
             description: values.description,
             location: values.location.address,
@@ -72,7 +72,7 @@ export default function PublicTicketsPage() {
 
     function openFeedback(values: FeedbackFormValues) {
         const feedback = submitFeedback({
-            email: user?.email,
+            email: values.anonymous ? undefined : user?.email,
             category: values.category,
             message: values.message,
         });
