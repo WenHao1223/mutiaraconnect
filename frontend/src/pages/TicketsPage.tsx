@@ -96,7 +96,7 @@ function TicketsView({ user }: { user: AppUser }) {
                                     Reports you submit will show up here.
                                 </p>
                                 <Button asChild className="mt-4" size="sm">
-                                    <Link to={PATHS.feedback}>Submit a report</Link>
+                                    <Link to={PATHS.ticket}>Submit a report</Link>
                                 </Button>
                             </div>
                         ) : visible.length === 0 ? (

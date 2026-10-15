@@ -15,7 +15,7 @@ export default function NotFoundPage() {
                     <Link to={PATHS.home}>Back to map</Link>
                 </Button>
                 <Button asChild variant="outline">
-                    <Link to={PATHS.feedback}>Report a problem</Link>
+                    <Link to={PATHS.ticket}>Report a problem</Link>
                 </Button>
             </div>
         </div>
