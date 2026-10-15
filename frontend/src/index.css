@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
 /* ------------------------------------------------------------------
     MutiaraConnect theme: Harbour Blue + Pearl, with Hazard Amber
     reserved for construction notices, closures and unread badges.
@@ -43,6 +45,45 @@
     --info: #0284c7;
 
     --radius: 0.5rem;
+}
+
+/* Dark mode: toggled by the "dark" class on <html> (see lib/settings.tsx).
+   Primary becomes a lighter harbour blue so headings and links stay readable. */
+.dark {
+    color-scheme: dark;
+
+    --background: #0b141a;
+    --foreground: #e6eef2;
+
+    --card: #111e26;
+    --card-foreground: #e6eef2;
+    --popover: #111e26;
+    --popover-foreground: #e6eef2;
+
+    --primary: #5cb8d9;
+    --primary-hover: #7cc8e3;
+    --primary-foreground: #0b1a22;
+
+    --secondary: #2dbdbd;
+    --secondary-foreground: #0b1a22;
+
+    --muted: #17252e;
+    --muted-foreground: #9fb1bc;
+
+    --accent: #17303d;
+    --accent-foreground: #8fd0e8;
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --border: #223641;
+    --input: #2d4452;
+    --ring: #5cb8d9;
+
+    --hazard: #f59e0b;
+    --hazard-foreground: #0f1f2a;
+    --success: #22c55e;
+    --info: #38bdf8;
 }
 
 @theme inline {

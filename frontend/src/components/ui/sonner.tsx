@@ -1,10 +1,13 @@
 import { Toaster as Sonner } from "sonner";
+import { useSettings } from "@/lib/settings";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme } = useSettings();
   return (
     <Sonner
+      theme={theme}
       className="toaster group"
       toastOptions={{
         classNames: {

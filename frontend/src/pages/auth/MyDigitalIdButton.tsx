@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AuthError, useAuth } from "@/lib/auth";
+import { AuthError, useAuth } from "@/lib/auth/auth";
 import FieldError from "@/components/custom/FieldError";
 
 /** Formats digits as 000000-00-0000 while typing. */

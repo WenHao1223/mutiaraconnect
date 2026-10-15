@@ -5,12 +5,16 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AnnouncementItem from "@/components/navbar/AnnoucementItem";
+import { useSettings } from "@/lib/settings";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
 
 export default function AnnouncementsBell({ items }: { items: Announcement[] }) {
     const [readIds, setReadIds] = useState<string[]>([]);
+    const { notificationsEnabled } = useSettings();
     const unreadCount = items.filter((item) => !readIds.includes(item.id)).length;
+    // Paused notifications hide the badge; the list itself is still readable.
+    const badgeCount = notificationsEnabled ? unreadCount : 0;
 
     const markRead = (id: string) =>
         setReadIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -22,12 +26,12 @@ export default function AnnouncementsBell({ items }: { items: Announcement[] }) 
                     variant="ghost"
                     size="icon"
                     className="relative"
-                    aria-label={unreadCount > 0 ? `Announcements, ${unreadCount} unread` : "Announcements"}
+                    aria-label={badgeCount > 0 ? `Announcements, ${badgeCount} unread` : "Announcements"}
                 >
                     <Bell className="size-5" />
-                    {unreadCount > 0 && (
+                    {badgeCount > 0 && (
                         <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-hazard text-[10px] font-bold text-hazard-foreground">
-                            {unreadCount}
+                            {badgeCount}
                         </span>
                     )}
                 </Button>

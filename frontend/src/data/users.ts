@@ -4,7 +4,7 @@ import type { AppUser } from "@/types/user";
 export type MockAccount = AppUser & { password: string };
 
 /** Password for every demo account below. */
-export const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "";
+export const DEMO_PASSWORD = "Demo@1234";
 
 // Mock accounts the login pages check against. All values are fake.
 // Email login: any email below + DEMO_PASSWORD. MyDigitalID login: any IC below.

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CircleUser, LayoutDashboard, LogIn, LogOut, ShieldCheck, Store, Ticket, UserPlus } from "lucide-react";
+import { CircleUser, LayoutDashboard, LogIn, LogOut, Settings, ShieldCheck, Store, Ticket, UserPlus } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,28 +11,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { initials, roleLabels } from "@/lib/user-display";
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";
 
 interface ProfileMenuProps {
     user: AppUser | null;
     onSignOut?: () => void;
-}
-
-const roleLabels: Record<AppUser["role"], string> = {
-    resident: "Resident",
-    business_premise: "Business Premise",
-    admin: "Admin",
-    super_admin: "Super Admin",
-};
-
-function initials(name: string) {
-    return name
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join("");
 }
 
 export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
@@ -64,6 +49,11 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
                         <DropdownMenuItem asChild>
                             <Link to={PATHS.profile}>
                                 <LayoutDashboard className="size-4" /> My Dashboard
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link to={PATHS.profileSettings}>
+                                <Settings className="size-4" /> Profile & Settings
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>

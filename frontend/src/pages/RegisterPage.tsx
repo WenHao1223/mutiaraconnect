@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AuthError, useAuth } from "@/lib/auth";
+import { AuthError, useAuth } from "@/lib/auth/auth";
 import { PATHS } from "@/routes";
 import AuthLayout from "@/pages/auth/AuthLayout";
 import MyDigitalIdButton from "@/pages/auth/MyDigitalIdButton";

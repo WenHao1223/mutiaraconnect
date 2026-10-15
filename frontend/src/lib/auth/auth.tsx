@@ -18,6 +18,9 @@ interface AuthContextValue {
     signInWithMyDigitalId: (ic: string) => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
     registerWithEmail: (input: { name: string; email: string; password: string }) => Promise<void>;
+    /** Changes the display name. Birth date and age come from the IC and cannot be edited. */
+    updateName: (name: string) => Promise<void>;
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
     signOut: () => void;
 }
 
@@ -26,6 +29,8 @@ type StoredAccount = AppUser & { passwordHash: string };
 
 const SESSION_KEY = "mutiaraconnect.session-email";
 const REGISTERED_KEY = "mutiaraconnect.registered-users";
+/** Profile edits (name, new password hash) for ANY account, including the read-only demo ones. */
+const OVERRIDES_KEY = "mutiaraconnect.account-overrides";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 const normalizeIc = (ic: string) => ic.replace(/\D/g, "");
@@ -55,12 +60,31 @@ function writeStorage(key: string, value: unknown) {
 
 const readRegistered = () => readStorage<StoredAccount[]>(REGISTERED_KEY, []);
 
-/** Strip secrets so they never reach React state. */
+type AccountOverride = { name?: string; passwordHash?: string };
+const readOverrides = () => readStorage<Record<string, AccountOverride>>(OVERRIDES_KEY, {});
+
+function saveOverride(email: string, patch: AccountOverride) {
+    const key = normalizeEmail(email);
+    const all = readOverrides();
+    writeStorage(OVERRIDES_KEY, { ...all, [key]: { ...all[key], ...patch } });
+}
+
+/** Strip secrets so they never reach React state, and apply any saved profile edits. */
 function toAppUser(account: MockAccount | StoredAccount): AppUser {
     const rest: Partial<MockAccount & StoredAccount> = { ...account };
     delete rest.password;
     delete rest.passwordHash;
+    const override = account.email ? readOverrides()[normalizeEmail(account.email)] : undefined;
+    if (override?.name) rest.name = override.name;
     return rest as AppUser;
+}
+
+/** A changed password (override) wins over the demo plain-text or the registered hash. */
+async function passwordMatches(account: MockAccount | StoredAccount, password: string) {
+    const override = account.email ? readOverrides()[normalizeEmail(account.email)] : undefined;
+    if (override?.passwordHash) return override.passwordHash === (await sha256(password));
+    if ("password" in account) return account.password === password;
+    return account.passwordHash === (await sha256(password));
 }
 
 function findByEmail(email: string) {
@@ -103,11 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             async signInWithEmail(email, password) {
                 await wait(500);
                 const account = findByEmail(email);
-                const ok =
-                    !!account &&
-                    ("password" in account
-                        ? account.password === password
-                        : account.passwordHash === (await sha256(password)));
+                const ok = !!account && (await passwordMatches(account, password));
                 if (!account || !ok) throw new AuthError("Incorrect email or password.");
                 startSession(account);
             },
@@ -123,6 +143,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
                 writeStorage(REGISTERED_KEY, [...readRegistered(), account]);
                 startSession(account);
+            },
+
+            async updateName(name) {
+                await wait(400);
+                const clean = name.trim();
+                if (clean.length < 2) throw new AuthError("Enter your full name.");
+                if (!user?.email) throw new AuthError("You need to be signed in to edit your profile.");
+                saveOverride(user.email, { name: clean });
+                setUserState({ ...user, name: clean });
+            },
+
+            async changePassword(currentPassword, newPassword) {
+                await wait(500);
+                if (!user?.email) throw new AuthError("You need to be signed in to change your password.");
+                const account = findByEmail(user.email);
+                if (!account || !(await passwordMatches(account, currentPassword))) {
+                    throw new AuthError("Your current password is incorrect.");
+                }
+                saveOverride(user.email, { passwordHash: await sha256(newPassword) });
             },
 
             signOut() {

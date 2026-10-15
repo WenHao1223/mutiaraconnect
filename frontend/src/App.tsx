@@ -1,6 +1,6 @@
 import { useRoutes } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth/auth";
 import { appRoutes } from "@/routes";
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
     return (
         <div className="flex min-h-svh flex-col">
             <Navbar user={user} onSignOut={signOut} />
-            <main className="flex flex-1 flex-col bg-white">{page}</main>
+            <main className="flex flex-1 flex-col bg-background">{page}</main>
         </div>
     );
 }
