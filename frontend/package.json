@@ -1,5 +1,6 @@
 {
-  "name": "cmt322-proj",
+  "name": "MutiaraConnect",
+  "description": "Community Information and Incident Response Portal for Penang LRT Mutiara Line",
   "private": true,
   "version": "0.0.0",
   "type": "module",
