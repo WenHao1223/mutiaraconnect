@@ -1,17 +1,20 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { compare as compareHash, hash as hashPassword } from "bcryptjs";
 import { demoUsers, type MockAccount } from "@/data/users";
 import type { AppUser, Gender } from "@/types/user";
 
 /**
  * MOCK AUTH (frontend only, no backend). Logic is real, storage is the browser:
  *  - Accounts = demo accounts in data/users.ts + accounts registered here
- *    (kept in localStorage, password stored as a SHA-256 hash).
- *  - Email login checks email + password against those accounts.
+ *    (kept in localStorage, password stored as a bcrypt hash).
+ *  - Email login checks email + password against those accounts using bcrypt.compare.
  *  - MyDigitalID login checks the MyKad IC against accounts that have one.
  * Replace the functions below with Supabase / MyDigitalID later; pages only use useAuth().
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export class AuthError extends Error { }
+
+const BCRYPT_COST = 10;
 
 interface AuthContextValue {
     user: AppUser | null;
@@ -34,11 +37,6 @@ const OVERRIDES_KEY = "mutiaraconnect.account-overrides";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 const normalizeIc = (ic: string) => ic.replace(/\D/g, "");
-
-async function sha256(text: string) {
-    const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 function readStorage<T>(key: string, fallback: T): T {
     try {
@@ -72,7 +70,6 @@ function saveOverride(email: string, patch: AccountOverride) {
 /** Strip secrets so they never reach React state, and apply any saved profile edits. */
 function toAppUser(account: MockAccount | StoredAccount): AppUser {
     const rest: Partial<MockAccount & StoredAccount> = { ...account };
-    delete rest.password;
     delete rest.passwordHash;
     const override = account.email ? readOverrides()[normalizeEmail(account.email)] : undefined;
     if (override?.name) rest.name = override.name;
@@ -80,12 +77,13 @@ function toAppUser(account: MockAccount | StoredAccount): AppUser {
     return rest as AppUser;
 }
 
-/** A changed password (override) wins over the demo plain-text or the registered hash. */
+/**
+ * A changed password (override) wins over the demo or registered hash.
+ * bcrypt.compare is constant-time and re-hashes the input with the stored salt.
+ */
 async function passwordMatches(account: MockAccount | StoredAccount, password: string) {
     const override = account.email ? readOverrides()[normalizeEmail(account.email)] : undefined;
-    if (override?.passwordHash) return override.passwordHash === (await sha256(password));
-    if ("password" in account) return account.password === password;
-    return account.passwordHash === (await sha256(password));
+    return compareHash(password, override?.passwordHash ?? account.passwordHash);
 }
 
 function findByEmail(email: string) {
@@ -142,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     email: email.trim(),
                     role: "resident", // self-registration is always a resident
                     ic,
-                    passwordHash: await sha256(password),
+                    passwordHash: await hashPassword(password, BCRYPT_COST),
                 };
                 writeStorage(REGISTERED_KEY, [...readRegistered(), account]);
                 startSession(account);
@@ -174,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (!account || !(await passwordMatches(account, currentPassword))) {
                     throw new AuthError("Your current password is incorrect.");
                 }
-                saveOverride(user.email, { passwordHash: await sha256(newPassword) });
+                saveOverride(user.email, { passwordHash: await hashPassword(newPassword, BCRYPT_COST) });
             },
 
             signOut() {
