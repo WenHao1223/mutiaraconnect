@@ -1,12 +1,16 @@
 import type { ReactElement } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
 import MapPage from "@/pages/MapPage";
+import LoginPage from "@/pages/LoginPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import Placeholder from "@/pages/Placeholder";
+import RegisterPage from "@/pages/RegisterPage";
 
 /** Every URL in the app. Use these instead of typing path strings anywhere else. */
 export const PATHS = {
     home: "/",
+    login: "/login",
+    register: "/register",
     construction: "/construction",
     constructionInfo: "/construction/info",
     constructionUpdates: "/construction/updates",
@@ -46,6 +50,9 @@ const pages: PageRoute[] = [
     { path: PATHS.business, label: "Business", element: <Placeholder title="Business" />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
     { path: PATHS.about, label: "About Us", element: <Placeholder title="About Us" />, nav: "main" },
+
+    { path: PATHS.login, label: "Sign in", element: <LoginPage /> },
+    { path: PATHS.register, label: "Register", element: <RegisterPage /> },
 
     { path: PATHS.announcements, label: "Announcements", element: <Placeholder title="Announcements" /> },
 

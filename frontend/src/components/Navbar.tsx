@@ -15,7 +15,6 @@ import type { AppUser } from "@/types/user";
 interface NavbarProps {
     /** null or undefined means an anonymous visitor. */
     user?: AppUser | null;
-    onSignIn?: () => void;
     onSignOut?: () => void;
     /** Pass real data from Supabase later. Falls back to sample data. */
     announcements?: Announcement[];
@@ -23,7 +22,6 @@ interface NavbarProps {
 
 export default function Navbar({
     user = null,
-    onSignIn,
     onSignOut,
     announcements = sampleAnnouncements,
 }: NavbarProps) {
@@ -50,7 +48,7 @@ export default function Navbar({
 
                 <div className="ml-auto flex items-center gap-1">
                     <AnnouncementsBell items={announcements} />
-                    <ProfileMenu user={user} onSignIn={onSignIn} onSignOut={onSignOut} />
+                    <ProfileMenu user={user} onSignOut={onSignOut} />
                 </div>
             </div>
         </header>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CircleUser, LayoutDashboard, LogIn, LogOut, ShieldCheck, Store, Ticket } from "lucide-react";
+import { CircleUser, LayoutDashboard, LogIn, LogOut, ShieldCheck, Store, Ticket, UserPlus } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import type { AppUser } from "@/types/user";
 
 interface ProfileMenuProps {
     user: AppUser | null;
-    onSignIn?: () => void;
     onSignOut?: () => void;
 }
 
@@ -36,7 +35,7 @@ function initials(name: string) {
         .join("");
 }
 
-export default function ProfileMenu({ user, onSignIn, onSignOut }: ProfileMenuProps) {
+export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -94,8 +93,15 @@ export default function ProfileMenu({ user, onSignIn, onSignOut }: ProfileMenuPr
                         <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
                             Browsing as a guest
                         </DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => onSignIn?.()}>
-                            <LogIn className="size-4" /> Sign in with MyDigitalID
+                        <DropdownMenuItem asChild>
+                            <Link to={PATHS.login}>
+                                <LogIn className="size-4" /> Sign in
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link to={PATHS.register}>
+                                <UserPlus className="size-4" /> Create account
+                            </Link>
                         </DropdownMenuItem>
                     </>
                 )}
