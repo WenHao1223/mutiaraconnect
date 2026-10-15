@@ -24,6 +24,8 @@ interface LocationPickerProps {
      * re-centre even when two places share the same coordinates.
      */
     recenterKey?: string;
+    /** Hide the address/hint line under the map (for callers that already show the place). */
+    hideCaption?: boolean;
 }
 
 /** Loads the Maps JS API and renders the picker, or explains how to enable it. */
@@ -45,7 +47,7 @@ export default function LocationPicker(props: LocationPickerProps) {
     );
 }
 
-function MapPicker({ value, onChange, readOnly, recenterKey }: LocationPickerProps) {
+function MapPicker({ value, onChange, readOnly, recenterKey, hideCaption }: LocationPickerProps) {
     const geocoding = useMapsLibrary("geocoding");
     const [resolving, setResolving] = useState(false);
 
@@ -101,28 +103,30 @@ function MapPicker({ value, onChange, readOnly, recenterKey }: LocationPickerPro
                 )}
             </Map>
 
-            <div className="flex items-start gap-1.5 text-sm">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                    {!value && "Click the map (or drag the pin) to mark where your shop is."}
-                    {value && resolving && "Resolving address…"}
-                    {value && !resolving && value.address}
-                    {value && !resolving && !value.address && (
-                        <span className="font-mono text-xs">
-                            {value.latitude.toFixed(5)}, {value.longitude.toFixed(5)}
-                        </span>
+            {!hideCaption && (
+                <div className="flex items-start gap-1.5 text-sm">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                        {!value && "Click the map (or drag the pin) to mark where your shop is."}
+                        {value && resolving && "Resolving address…"}
+                        {value && !resolving && value.address}
+                        {value && !resolving && !value.address && (
+                            <span className="font-mono text-xs">
+                                {value.latitude.toFixed(5)}, {value.longitude.toFixed(5)}
+                            </span>
+                        )}
+                    </p>
+                    {value && !readOnly && (
+                        <button
+                            type="button"
+                            className="ml-auto text-xs font-medium text-primary hover:underline"
+                            onClick={() => onChange(null)}
+                        >
+                            Clear pin
+                        </button>
                     )}
-                </p>
-                {value && !readOnly && (
-                    <button
-                        type="button"
-                        className="ml-auto text-xs font-medium text-primary hover:underline"
-                        onClick={() => onChange(null)}
-                    >
-                        Clear pin
-                    </button>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

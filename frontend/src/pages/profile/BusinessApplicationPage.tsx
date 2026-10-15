@@ -70,6 +70,7 @@ function BusinessDetails({ business }: { business: BusinessDetailsData }) {
                 <div className="space-y-1">
                     <LocationPicker
                         readOnly
+                        hideCaption
                         value={{
                             latitude: business.latitude as number,
                             longitude: business.longitude as number,
@@ -82,7 +83,7 @@ function BusinessDetails({ business }: { business: BusinessDetailsData }) {
                             href={mapsLink}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-primary hover:underline"
+                            className="inline-flex items-center gap-1 text-primary hover:underline italic"
                         >
                             Open in Google Maps <ExternalLink className="size-3" />
                         </a>
