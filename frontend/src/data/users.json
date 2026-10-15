@@ -1,0 +1,38 @@
+{
+    "resident": {
+        "name": "DEMO RESIDENT",
+        "email": "resident@example.com",
+        "role": "resident",
+        "myDigitalId": "MDID-0000001",
+        "ic": "900101-07-0001",
+        "gender": "female",
+        "passwordHash": "$2b$10$li41XRLiaC/MkxOEXvOMb.tMP3mgktezSWXs.lKyFDQLZ7jcJTlYa"
+    },
+    "business_premise": {
+        "name": "DEMO BUSINESS OWNER",
+        "email": "business@example.com",
+        "role": "business_premise",
+        "myDigitalId": "MDID-0000002",
+        "ic": "850505-07-0002",
+        "gender": "male",
+        "passwordHash": "$2b$10$li41XRLiaC/MkxOEXvOMb.tMP3mgktezSWXs.lKyFDQLZ7jcJTlYa"
+    },
+    "admin": {
+        "name": "DEMO ADMIN",
+        "email": "admin@example.com",
+        "role": "admin",
+        "myDigitalId": "MDID-0000003",
+        "ic": "880808-07-0003",
+        "gender": "female",
+        "passwordHash": "$2b$10$li41XRLiaC/MkxOEXvOMb.tMP3mgktezSWXs.lKyFDQLZ7jcJTlYa"
+    },
+    "super_admin": {
+        "name": "DEMO SUPER ADMIN",
+        "email": "superadmin@example.com",
+        "role": "super_admin",
+        "myDigitalId": "MDID-0000004",
+        "ic": "800303-07-0004",
+        "gender": "male",
+        "passwordHash": "$2b$10$li41XRLiaC/MkxOEXvOMb.tMP3mgktezSWXs.lKyFDQLZ7jcJTlYa"
+    }
+}

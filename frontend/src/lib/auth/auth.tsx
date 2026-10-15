@@ -1,11 +1,15 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { compare as compareHash, hash as hashPassword } from "bcryptjs";
-import { demoUsers, type MockAccount } from "@/data/users";
-import type { AppUser, Gender } from "@/types/user";
+import demoUsersData from "@/data/users.json";
+import type { AppUser, Gender, MockAccount } from "@/types/user";
+
+// @TODO: Replace with real data from Supabase
+/** Demo accounts from data/users.json, typed and keyed by role. */
+const demoUsers = demoUsersData as Record<AppUser["role"], MockAccount>;
 
 /**
  * MOCK AUTH (frontend only, no backend). Logic is real, storage is the browser:
- *  - Accounts = demo accounts in data/users.ts + accounts registered here
+ *  - Accounts = demo accounts in data/users.json + accounts registered here
  *    (kept in localStorage, password stored as a bcrypt hash).
  *  - Email login checks email + password against those accounts using bcrypt.compare.
  *  - MyDigitalID login checks the MyKad IC against accounts that have one.

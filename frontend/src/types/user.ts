@@ -11,3 +11,7 @@ export interface AppUser {
     ic?: string;
     gender?: Gender;
 }
+
+// @TODO: Replace with real data from Supabase
+/** A mock account the login can check. `passwordHash` is a bcrypt hash (demo data only). */
+export type MockAccount = AppUser & { passwordHash: string };

@@ -7,10 +7,14 @@ import ConstructionMenu from "@/components/navbar/ConstructionMenu";
 import MobileMenu from "@/components/navbar/MobileMenu";
 import ProfileMenu from "@/components/navbar/ProfileMenu";
 import { navStyles } from "@/components/navbar/navStyles";
-import { sampleAnnouncements } from "@/data/announcements";
+import announcementsData from "@/data/announcements.json";
 import { navRoutes } from "@/routes";
 import type { Announcement } from "@/types/announcement";
 import type { AppUser } from "@/types/user";
+
+// @TODO: Replace with real data from Supabase
+/** Sample announcements from data/announcements.json. */
+const sampleAnnouncements = announcementsData as Announcement[];
 
 interface NavbarProps {
     /** null or undefined means an anonymous visitor. */
