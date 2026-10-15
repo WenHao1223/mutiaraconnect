@@ -8,11 +8,11 @@ import type { BusinessProfile, MockAccount } from "@/types/user";
 // business@example.com. FB-2030 and FB-2027 belong to other people and only show up by ID lookup.
 const tickets = ticketData as Ticket[];
 
-/** The business premise each account owns, keyed by lower-cased email. */
-const businessByEmail = new Map<string, BusinessProfile>();
+/** The business premises each account owns, keyed by lower-cased email. */
+const businessByEmail = new Map<string, BusinessProfile[]>();
 for (const account of Object.values(usersData) as MockAccount[]) {
-    if (account.email && account.business) {
-        businessByEmail.set(account.email.toLowerCase(), account.business);
+    if (account.email && account.businesses?.length) {
+        businessByEmail.set(account.email.toLowerCase(), account.businesses);
     }
 }
 
@@ -27,14 +27,15 @@ const withinTolerance = (a?: number, b?: number) =>
  * business name matches the ticket's premise and their pinned locations are within tolerance.
  */
 export function isBusinessOwner(ticket: Ticket): boolean {
-    const business = ticket.submittedByEmail
+    const premises = ticket.submittedByEmail
         ? businessByEmail.get(ticket.submittedByEmail.toLowerCase())
         : undefined;
-    if (!business || !ticket.premise) return false;
-    return (
-        business.name === ticket.premise &&
-        withinTolerance(business.latitude, ticket.latitude) &&
-        withinTolerance(business.longitude, ticket.longitude)
+    if (!premises || !ticket.premise) return false;
+    return premises.some(
+        (premise) =>
+            premise.name === ticket.premise &&
+            withinTolerance(premise.latitude, ticket.latitude) &&
+            withinTolerance(premise.longitude, ticket.longitude),
     );
 }
 

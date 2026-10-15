@@ -1,26 +1,21 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { Link, Navigate } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, ExternalLink, Store } from "lucide-react";
+import { ArrowLeft, BadgeCheck, ExternalLink, Minus } from "lucide-react";
 import { toast } from "sonner";
 import AccessNotices from "@/components/business/AccessNotices";
-import FieldError from "@/components/custom/FieldError";
-import LocationPicker, { type PickedLocation } from "@/components/custom/LocationPicker";
+import PremiseForm from "@/components/business/PremiseForm";
+import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth/auth";
-import { findApplication, submitApplication, type BusinessApplication } from "@/lib/business";
+import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication, type BusinessApplication } from "@/lib/business";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
-
-interface ApplicationValues {
-    businessName: string;
-    registrationNumber: string;
-}
+import type { BusinessProfile } from "@/types/user";
 
 const statusLabels: Record<BusinessApplication["status"], string> = {
     pending: "Pending review",
@@ -39,11 +34,43 @@ interface BusinessDetailsData {
 const ignoreLocationChange = () => undefined;
 
 /** Read-only summary of a registered business, including the pinned shop location. */
-function BusinessDetails({ business }: { business: BusinessDetailsData }) {
+function BusinessDetails({ business, onRemove }: { business: BusinessDetailsData; onRemove?: () => void }) {
     const hasLocation = typeof business.latitude === "number" && typeof business.longitude === "number";
 
     return (
-        <div className="space-y-3 text-sm">
+        <div className="relative space-y-3 text-sm">
+            {onRemove && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 size-7 text-muted-foreground hover:text-destructive"
+                            aria-label={`Remove ${business.name}`}
+                        >
+                            <Minus className="size-4" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Remove this premise?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                "{business.name}" will be removed from your account. This can't be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={onRemove}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                                Remove
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
             <dl className="space-y-1">
                 <div>
                     <dt className="text-muted-foreground">Business name</dt>
@@ -98,21 +125,17 @@ export default function BusinessApplicationPage() {
     const { user } = useAuth();
     const applicantKey = user ? user.email ?? user.ic ?? user.name : "";
     const [application, setApplication] = useState<BusinessApplication | undefined>(() => findApplication(applicantKey));
-    const [location, setLocation] = useState<PickedLocation | null>(null);
-    const [locationError, setLocationError] = useState<string>();
-    const {
-        register,
-        handleSubmit,
-        reset,
-        formState: { errors },
-    } = useForm<ApplicationValues>();
+    const [extraPremises, setExtraPremises] = useState<BusinessProfile[]>(() => readPremises(applicantKey));
+    const [removedIds, setRemovedIds] = useState<string[]>(() => readRemovedPremiseIds(applicantKey));
 
     // Applying needs an account, so guests are sent to sign in and then brought back.
     if (!user) return <Navigate to={PATHS.login} state={{ from: PATHS.profileBusiness }} replace />;
 
     const isBusiness = user.role === "business_premise";
-    const shop = user.business;
-    const shopOrigin = shop ? { latitude: shop.latitude, longitude: shop.longitude } : undefined;
+    const premises: BusinessProfile[] = [...(user.businesses ?? []), ...extraPremises].filter(
+        (premise) => !removedIds.includes(premise.id),
+    );
+    const noticeOrigins = premises.map(({ name, latitude, longitude }) => ({ name, latitude, longitude }));
 
     const backLink = (
         <Link
@@ -128,7 +151,7 @@ export default function BusinessApplicationPage() {
             <h1 className="text-2xl font-semibold tracking-tight text-primary">Business account</h1>
             <p className="text-sm text-muted-foreground">
                 {isBusiness
-                    ? "Your registered shop, plus access notices for businesses in the area."
+                    ? "Your registered premises, plus access notices for businesses in the area."
                     : "Own a business in the area? Apply to upgrade this account to a business premise."}
             </p>
         </header>
@@ -136,37 +159,65 @@ export default function BusinessApplicationPage() {
 
     let content;
 
-    if (user.role === "business_premise") {
-        const business = user.business ?? (application && {
-            name: application.businessName,
-            registrationNumber: application.registrationNumber,
-            address: application.premiseAddress,
-            latitude: application.latitude,
-            longitude: application.longitude,
-        });
+    if (isBusiness) {
         content = (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                        <BadgeCheck className="size-4" /> Your business account
-                    </CardTitle>
-                    <CardDescription>This account is registered as a business premise.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {business ? (
-                        <BusinessDetails business={business} />
-                    ) : (
-                        <p className="text-sm text-muted-foreground">
-                            No shop details have been saved for this account yet.
-                        </p>
-                    )}
-                </CardContent>
-                <CardFooter>
-                    <Button asChild variant="outline">
-                        <Link to={PATHS.business}>Go to business tools</Link>
-                    </Button>
-                </CardFooter>
-            </Card>
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <BadgeCheck className="size-4" /> Your business premises
+                        </CardTitle>
+                        <CardDescription>
+                            {premises.length === 1
+                                ? "1 premise registered to this account."
+                                : `${premises.length} premises registered to this account.`}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {premises.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                                No shop details have been saved for this account yet.
+                            </p>
+                        ) : (
+                            premises.map((premise, index) => (
+                                <div key={premise.id}>
+                                    {index > 0 && <Separator className="mb-6" />}
+                                    <BusinessDetails
+                                        business={premise}
+                                        onRemove={() => {
+                                            removePremise(applicantKey, premise.id);
+                                            setRemovedIds((current) => [...current, premise.id]);
+                                            toast.success(`${premise.name} was removed from your account.`);
+                                        }}
+                                    />
+                                </div>
+                            ))
+                        )}
+                    </CardContent>
+                    <CardFooter>
+                        <Button asChild variant="outline">
+                            <Link to={PATHS.business}>Go to business tools</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+
+                <PremiseForm
+                    title="Add a premise"
+                    description="Register another shop location to this account."
+                    submitLabel="Add premise"
+                    onSubmit={({ businessName, registrationNumber, location }) => {
+                        const premise = addPremise(applicantKey, {
+                            name: businessName,
+                            registrationNumber,
+                            address: location.address,
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                        });
+                        setExtraPremises((current) => [...current, premise]);
+                        toast.success(`${premise.name} was added to your account.`);
+                    }}
+                />
+            </div>
         );
     } else if (application) {
         content = (
@@ -196,88 +247,24 @@ export default function BusinessApplicationPage() {
         );
     } else {
         content = (
-            <Card>
-                <form
-                    noValidate
-                    onSubmit={handleSubmit(({ businessName, registrationNumber }) => {
-                        if (!location) {
-                            setLocationError("Mark your shop location on the map.");
-                            return;
-                        }
-                        setLocationError(undefined);
-                        const applied = submitApplication({
-                            applicant: applicantKey,
-                            email: user.email,
-                            businessName: businessName.trim(),
-                            registrationNumber: registrationNumber.trim(),
-                            premiseAddress: location.address,
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                        });
-                        setApplication(applied);
-                        reset();
-                        setLocation(null);
-                        toast.success("Your business account application has been submitted.");
-                    })}
-                >
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                            <Store className="size-4" /> Apply for a business account
-                        </CardTitle>
-                        <CardDescription>Tell us about the business you'd like to register.</CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                        <div>
-                            <Label htmlFor="businessName">Business name</Label>
-                            <Input
-                                id="businessName"
-                                autoComplete="organization"
-                                maxLength={100}
-                                className="mt-1.5"
-                                aria-invalid={!!errors.businessName}
-                                {...register("businessName", {
-                                    required: "Enter your business name.",
-                                    validate: (v) => v.trim().length > 1 || "Enter your business name.",
-                                })}
-                            />
-                            <FieldError message={errors.businessName?.message} />
-                        </div>
-
-                        <div>
-                            <Label htmlFor="registrationNumber">Business registration number (SSM)</Label>
-                            <Input
-                                id="registrationNumber"
-                                maxLength={40}
-                                placeholder="e.g. 202301234567 (0012345-X)"
-                                className="mt-1.5"
-                                aria-invalid={!!errors.registrationNumber}
-                                {...register("registrationNumber", {
-                                    required: "Enter your business registration number.",
-                                    validate: (v) => v.trim().length > 2 || "Enter your business registration number.",
-                                })}
-                            />
-                            <FieldError message={errors.registrationNumber?.message} />
-                        </div>
-
-                        <div>
-                            <Label>Shop location</Label>
-                            <LocationPicker
-                                value={location}
-                                onChange={(next) => {
-                                    setLocation(next);
-                                    if (next) setLocationError(undefined);
-                                }}
-                            />
-                            <FieldError message={locationError} />
-                        </div>
-                    </CardContent>
-
-                    <CardFooter className="justify-end">
-                        <Button type="submit">Submit application</Button>
-                    </CardFooter>
-                </form>
-            </Card>
+            <PremiseForm
+                title="Apply for a business account"
+                description="Tell us about the business you'd like to register."
+                submitLabel="Submit application"
+                onSubmit={({ businessName, registrationNumber, location }) => {
+                    const applied = submitApplication({
+                        applicant: applicantKey,
+                        email: user.email,
+                        businessName,
+                        registrationNumber,
+                        premiseAddress: location.address,
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                    });
+                    setApplication(applied);
+                    toast.success("Your business account application has been submitted.");
+                }}
+            />
         );
     }
 
@@ -312,7 +299,7 @@ export default function BusinessApplicationPage() {
                             </Link>
                         </div>
 
-                        <AccessNotices origin={shopOrigin} />
+                        <AccessNotices origins={noticeOrigins} />
                     </aside>
                 </div>
             ) : (

@@ -15,13 +15,16 @@
         "myDigitalId": "MDID-0000002",
         "ic": "850505-07-0002",
         "gender": "male",
-        "business": {
-            "name": "Jelutong Hainan Kopitiam",
-            "registrationNumber": "202301234567 (0012345-X)",
-            "address": "18, Jalan Jelutong, 11600 Jelutong, Pulau Pinang",
-            "latitude": 5.3888,
-            "longitude": 100.316
-        },
+        "businesses": [
+            {
+                "id": "BP-KOPITIAM",
+                "name": "Jelutong Hainan Kopitiam",
+                "registrationNumber": "202301234567 (0012345-X)",
+                "address": "18, Jalan Jelutong, 11600 Jelutong, Pulau Pinang",
+                "latitude": 5.3888,
+                "longitude": 100.316
+            }
+        ],
         "passwordHash": "$2b$10$li41XRLiaC/MkxOEXvOMb.tMP3mgktezSWXs.lKyFDQLZ7jcJTlYa"
     },
     "admin": {

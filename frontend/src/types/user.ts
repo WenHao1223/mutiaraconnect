@@ -2,6 +2,8 @@ export type Gender = "male" | "female";
 
 /** Details of a verified business premise account (shop name, SSM number and pinned location). */
 export interface BusinessProfile {
+    /** Stable id so owners can add/remove premises. */
+    id: string;
     name: string;
     registrationNumber: string;
     address: string;
@@ -19,8 +21,8 @@ export interface AppUser {
     /** Malaysian IC (MyKad) number */
     ic?: string;
     gender?: Gender;
-    /** Only set for business premise accounts. */
-    business?: BusinessProfile;
+    /** Only set for business premise accounts. Owners can register several premises. */
+    businesses?: BusinessProfile[];
 }
 
 // @TODO: Replace with real data from Supabase
