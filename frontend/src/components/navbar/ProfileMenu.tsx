@@ -73,11 +73,13 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
                                 <Ticket className="size-4" /> My Tickets
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link to={PATHS.profileBusiness}>
-                                <Store className="size-4" /> Business Applications
-                            </Link>
-                        </DropdownMenuItem>
+                        {user.role === "business_premise" && (
+                            <DropdownMenuItem asChild>
+                                <Link to={PATHS.profileBusiness}>
+                                    <Store className="size-4" /> Business Applications
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
                         {(user.role === "admin" || user.role === "super_admin") && (
                             <DropdownMenuItem asChild>
                                 <Link to={PATHS.admin}>
