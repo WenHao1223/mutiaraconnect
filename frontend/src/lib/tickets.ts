@@ -16,9 +16,15 @@ for (const account of Object.values(usersData) as MockAccount[]) {
     }
 }
 
+/** Roughly 50 m of latitude/longitude slack, enough for GPS drift and imprecise pins. */
+const COORD_TOLERANCE = 0.0005;
+
+const withinTolerance = (a?: number, b?: number) =>
+    typeof a === "number" && typeof b === "number" && Math.abs(a - b) <= COORD_TOLERANCE;
+
 /**
  * True when the ticket was raised by the owner of the premise it is about, i.e. the reporter's
- * business name and pinned location (latitude/longitude) match the ticket's premise.
+ * business name matches the ticket's premise and their pinned locations are within tolerance.
  */
 export function isBusinessOwner(ticket: Ticket): boolean {
     const business = ticket.submittedByEmail
@@ -27,8 +33,8 @@ export function isBusinessOwner(ticket: Ticket): boolean {
     if (!business || !ticket.premise) return false;
     return (
         business.name === ticket.premise &&
-        business.latitude === ticket.latitude &&
-        business.longitude === ticket.longitude
+        withinTolerance(business.latitude, ticket.latitude) &&
+        withinTolerance(business.longitude, ticket.longitude)
     );
 }
 
