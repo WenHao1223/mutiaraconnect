@@ -146,7 +146,7 @@ export default function RegisterPage() {
                                 />
                             )}
                         />
-                        <Label htmlFor="agree" className="text-sm font-normal leading-snug">
+                        <Label htmlFor="agree" className="cursor-pointer text-sm font-normal leading-snug">
                             I agree to the Terms of Use and Privacy Policy.
                         </Label>
                     </div>
