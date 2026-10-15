@@ -1,55 +1,31 @@
-import { useState, type FormEvent } from "react";
 import { Search } from "lucide-react";
-import FieldError from "@/components/custom/FieldError";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { findTicket, normalizeTicketId } from "@/lib/tickets";
 
-/** "Track by ticket ID" box. Calls onFound with the normalized ID when a ticket exists. */
-export default function TicketLookup({ onFound }: { onFound: (id: string) => void }) {
-    const [value, setValue] = useState("");
-    const [error, setError] = useState<string>();
+interface TicketLookupProps {
+    value: string;
+    onChange: (value: string) => void;
+}
 
-    function handleSubmit(event: FormEvent) {
-        event.preventDefault();
-        if (!value.trim()) {
-            setError("Enter a ticket ID, for example FB-2041.");
-            return;
-        }
-        const id = normalizeTicketId(value);
-        if (!findTicket(id)) {
-            setError(`No ticket found for ${id}. Check the ID and try again.`);
-            return;
-        }
-        setError(undefined);
-        setValue("");
-        onFound(id);
-    }
-
+/** Filters the "Your tickets" list as you type — by ticket ID, category, status, premise or location. */
+export default function TicketLookup({ value, onChange }: TicketLookupProps) {
     return (
-        <form noValidate onSubmit={handleSubmit}>
-            <Label htmlFor="ticket-id">Track by ticket ID</Label>
-            <div className="mt-1.5 flex gap-2">
+        <div>
+            <Label htmlFor="ticket-id">Track ticket</Label>
+            <div className="relative mt-1.5">
+                <Search
+                    className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden
+                />
                 <Input
                     id="ticket-id"
                     value={value}
-                    placeholder="e.g. FB-2041"
+                    placeholder="ID, category, status or location"
                     autoComplete="off"
-                    aria-invalid={!!error}
-                    aria-describedby={error ? "ticket-id-error" : undefined}
-                    onChange={(e) => {
-                        setValue(e.target.value);
-                        if (error) setError(undefined);
-                    }}
+                    className="pl-8"
+                    onChange={(event) => onChange(event.target.value)}
                 />
-                <Button type="submit">
-                    <Search /> Track
-                </Button>
             </div>
-            <div id="ticket-id-error">
-                <FieldError message={error} />
-            </div>
-        </form>
+        </div>
     );
 }
