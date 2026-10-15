@@ -38,9 +38,10 @@ export default function PersonalDetailsCard({ user }: { user: AppUser }) {
             <form
                 noValidate
                 onSubmit={handleSubmit(async ({ name, gender }) => {
+                    const upperName = name.trim().toUpperCase();
                     try {
-                        await updateProfile({ name, gender: gender || undefined });
-                        reset({ name: name.trim(), gender });
+                        await updateProfile({ name: upperName, gender: gender || undefined });
+                        reset({ name: upperName, gender });
                         toast.success("Your details have been updated.");
                     } catch (err) {
                         setError(err instanceof AuthError ? "name" : "root", {
@@ -60,8 +61,9 @@ export default function PersonalDetailsCard({ user }: { user: AppUser }) {
                         <Input
                             id="name"
                             autoComplete="name"
+                            autoCapitalize="characters"
                             maxLength={100}
-                            className="mt-1.5"
+                            className="mt-1.5 uppercase"
                             aria-invalid={!!errors.name}
                             {...register("name", {
                                 required: "Enter your full name.",

@@ -64,7 +64,7 @@ export default function RegisterPage() {
                 className="space-y-4"
                 onSubmit={handleSubmit(async ({ name, ic, email, password }) => {
                     try {
-                        await registerWithEmail({ name: name.trim(), email, password, ic });
+                        await registerWithEmail({ name: name.trim().toUpperCase(), email, password, ic });
                         goBack();
                     } catch (err) {
                         if (err instanceof AuthError) setError("email", { message: err.message });
@@ -77,7 +77,8 @@ export default function RegisterPage() {
                     <Input
                         id="name"
                         autoComplete="name"
-                        className="mt-1.5"
+                        autoCapitalize="characters"
+                        className="mt-1.5 uppercase"
                         aria-invalid={!!errors.name}
                         {...register("name", { required: "Enter your full name.", validate: (v) => v.trim().length > 1 || "Enter your full name." })}
                     />

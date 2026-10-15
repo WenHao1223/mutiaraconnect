@@ -11,7 +11,7 @@ export const DEMO_PASSWORD_HASH = "$2b$10$li41XRLiaC/MkxOEXvOMb.tMP3mgktezSWXs.l
 // Remove this file once real auth (Supabase + MyDigitalID) is connected.
 export const demoUsers: Record<AppUser["role"], MockAccount> = {
     resident: {
-        name: "Demo Resident",
+        name: "DEMO RESIDENT",
         email: "resident@example.com",
         role: "resident",
         myDigitalId: "MDID-0000001",
@@ -20,7 +20,7 @@ export const demoUsers: Record<AppUser["role"], MockAccount> = {
         passwordHash: DEMO_PASSWORD_HASH,
     },
     business_premise: {
-        name: "Demo Business Owner",
+        name: "DEMO BUSINESS OWNER",
         email: "business@example.com",
         role: "business_premise",
         myDigitalId: "MDID-0000002",
@@ -29,7 +29,7 @@ export const demoUsers: Record<AppUser["role"], MockAccount> = {
         passwordHash: DEMO_PASSWORD_HASH,
     },
     admin: {
-        name: "Demo Admin",
+        name: "DEMO ADMIN",
         email: "admin@example.com",
         role: "admin",
         myDigitalId: "MDID-0000003",
@@ -38,7 +38,7 @@ export const demoUsers: Record<AppUser["role"], MockAccount> = {
         passwordHash: DEMO_PASSWORD_HASH,
     },
     super_admin: {
-        name: "Demo Super Admin",
+        name: "DEMO SUPER ADMIN",
         email: "superadmin@example.com",
         role: "super_admin",
         myDigitalId: "MDID-0000004",
