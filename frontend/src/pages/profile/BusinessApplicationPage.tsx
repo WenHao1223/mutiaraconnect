@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, BadgeCheck, ExternalLink, Store } from "lucide-react";
 import { toast } from "sonner";
+import AccessNotices from "@/components/business/AccessNotices";
 import FieldError from "@/components/custom/FieldError";
 import LocationPicker, { type PickedLocation } from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/auth";
 import { findApplication, submitApplication, type BusinessApplication } from "@/lib/business";
+import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 
 interface ApplicationValues {
@@ -108,6 +110,10 @@ export default function BusinessApplicationPage() {
     // Applying needs an account, so guests are sent to sign in and then brought back.
     if (!user) return <Navigate to={PATHS.login} state={{ from: PATHS.profileBusiness }} replace />;
 
+    const isBusiness = user.role === "business_premise";
+    const shop = user.business;
+    const shopOrigin = shop ? { latitude: shop.latitude, longitude: shop.longitude } : undefined;
+
     const backLink = (
         <Link
             to={PATHS.profileSettings}
@@ -121,7 +127,9 @@ export default function BusinessApplicationPage() {
         <header className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-primary">Business account</h1>
             <p className="text-sm text-muted-foreground">
-                Own a business in the area? Apply to upgrade this account to a business premise.
+                {isBusiness
+                    ? "Your registered shop, plus access notices for businesses in the area."
+                    : "Own a business in the area? Apply to upgrade this account to a business premise."}
             </p>
         </header>
     );
@@ -274,10 +282,42 @@ export default function BusinessApplicationPage() {
     }
 
     return (
-        <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-10">
+        <div className={cn("mx-auto w-full space-y-6 px-4 py-10", isBusiness ? "max-w-6xl" : "max-w-2xl")}>
             {backLink}
             {header}
-            {content}
+            {isBusiness ? (
+                <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
+                    <div className="space-y-6 lg:col-span-2">
+                        {content}
+
+                        <div className="space-y-2 rounded-lg border bg-card p-6 text-sm">
+                            <h3 className="text-lg font-semibold">Support desk</h3>
+                            <p>Komtar Level 1, Mon–Fri 9am–5pm</p>
+                            <p>Free signage for alternative entrances</p>
+                            <p>Delivery window coordination</p>
+                        </div>
+                    </div>
+                    <aside className="space-y-4">
+                        <div className="rounded-lg bg-primary p-6 text-primary-foreground">
+                            <h3 className="text-xl font-semibold">Is your shop affected?</h3>
+                            <p className="mt-2 text-sm opacity-90">
+                                Report blocked entrances, loading restrictions or lost parking. We'll forward it to
+                                the site team.
+                            </p>
+                            <Link
+                                to={PATHS.ticket}
+                                className="mt-4 inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90"
+                            >
+                                Report access issue
+                            </Link>
+                        </div>
+
+                        <AccessNotices origin={shopOrigin} />
+                    </aside>
+                </div>
+            ) : (
+                content
+            )}
         </div>
     );
 }

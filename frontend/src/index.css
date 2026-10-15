@@ -120,11 +120,15 @@
     --font-sans: system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
-/* Tailwind v4 defaults borders to currentColor, so restore the theme border. */
-*,
-::after,
-::before {
-    border-color: var(--border);
+/* Tailwind v4 defaults borders to currentColor, so restore the theme border.
+   Must live in @layer base: unlayered CSS would otherwise win over the
+   utilities layer and override every border-* colour (e.g. border-l-hazard). */
+@layer base {
+    *,
+    ::after,
+    ::before {
+        border-color: var(--border);
+    }
 }
 
 html,

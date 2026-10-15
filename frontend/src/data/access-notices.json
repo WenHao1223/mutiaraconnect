@@ -1,0 +1,32 @@
+[
+    {
+        "id": "AN-1042",
+        "business": "Kedai Kopi Hai Beng",
+        "area": "Macallum",
+        "affected": "Front entrance blocked by hoarding",
+        "alternative": "Enter via back lane, Lorong Macallum 3",
+        "until": "2026-11-30",
+        "latitude": 5.4095,
+        "longitude": 100.3282
+    },
+    {
+        "id": "AN-1045",
+        "business": "Lim's Hardware",
+        "area": "Jelutong",
+        "affected": "Loading bay restricted 8am-6pm",
+        "alternative": "Deliveries before 8am or after 6pm",
+        "until": "2026-11-15",
+        "latitude": 5.392,
+        "longitude": 100.312
+    },
+    {
+        "id": "AN-1051",
+        "business": "Nasi Kandar Seri Mutiara",
+        "area": "Komtar",
+        "affected": "Parking bays removed",
+        "alternative": "Free parking at Komtar Level 3 with receipt",
+        "until": "2026-12-15",
+        "latitude": 5.414,
+        "longitude": 100.331
+    }
+]
