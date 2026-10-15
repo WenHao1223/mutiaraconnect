@@ -1,6 +1,7 @@
-import { Clock, MapPin, MessageSquareText, Navigation, Paperclip, Store } from "lucide-react";
+import { BadgeCheck, Clock, MapPin, MessageSquareText, Navigation, Paperclip, Store } from "lucide-react";
 import LocationPicker from "@/components/custom/LocationPicker";
-import { categoryLabels, formatDate, formatDateTime, statusMeta } from "@/lib/tickets";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { categoryLabels, formatDate, formatDateTime, isBusinessOwner, statusMeta } from "@/lib/tickets";
 import { cn } from "@/lib/utils";
 import StatusBadge from "@/components/tickets/StatusBadge";
 import StatusProgress from "@/components/tickets/StatusProgress";
@@ -23,8 +24,24 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
         <article>
             <header className="flex items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-lg font-semibold">
-                        {ticket.id} · {categoryLabels[ticket.category]}
+                    <h2 className="flex items-center gap-1.5 text-lg font-semibold">
+                        <span>
+                            {ticket.id} · {categoryLabels[ticket.category]}
+                        </span>
+                        {isBusinessOwner(ticket) && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span
+                                        className="inline-flex text-primary"
+                                        tabIndex={0}
+                                        aria-label="Business owner verified"
+                                    >
+                                        <BadgeCheck className="size-4" />
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Business owner verified</TooltipContent>
+                            </Tooltip>
+                        )}
                     </h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
                         Submitted {formatDate(ticket.submittedAt)}

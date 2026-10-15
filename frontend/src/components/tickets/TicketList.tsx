@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Paperclip } from "lucide-react";
+import { BadgeCheck, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { categoryLabels, formatDate, isOpen } from "@/lib/tickets";
+import { categoryLabels, formatDate, isBusinessOwner, isOpen } from "@/lib/tickets";
 import StatusBadge from "@/components/tickets/StatusBadge";
 import type { Ticket } from "@/types/ticket";
 
@@ -64,8 +65,25 @@ export default function TicketList({ tickets, selectedId, onSelect }: TicketList
                                     )}
                                 >
                                     <span className="flex items-start justify-between gap-2">
-                                        <span className="text-sm font-semibold">
-                                            {ticket.id} · {categoryLabels[ticket.category]}
+                                        <span className="flex items-center gap-1 text-sm font-semibold">
+                                            <span>
+                                                {ticket.id} · {categoryLabels[ticket.category]}
+                                            </span>
+                                            {isBusinessOwner(ticket) && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <span
+                                                            className="inline-flex text-primary"
+                                                            aria-label="Business owner verified"
+                                                        >
+                                                            <BadgeCheck className="size-3.5" />
+                                                        </span>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        Business owner verified
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
                                         </span>
                                         <StatusBadge status={ticket.status} />
                                     </span>

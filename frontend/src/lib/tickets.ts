@@ -1,10 +1,36 @@
 import ticketData from "@/data/tickets.json";
+import usersData from "@/data/users.json";
 import type { Ticket, TicketCategory, TicketStatus } from "@/types/ticket";
+import type { BusinessProfile, MockAccount } from "@/types/user";
 
 // Mock data lives in data/tickets.json. Replace these two functions with Supabase queries later.
 // Tickets belong to the demo accounts in data/users.ts by email: resident@example.com and
 // business@example.com. FB-2030 and FB-2027 belong to other people and only show up by ID lookup.
 const tickets = ticketData as Ticket[];
+
+/** The business premise each account owns, keyed by lower-cased email. */
+const businessByEmail = new Map<string, BusinessProfile>();
+for (const account of Object.values(usersData) as MockAccount[]) {
+    if (account.email && account.business) {
+        businessByEmail.set(account.email.toLowerCase(), account.business);
+    }
+}
+
+/**
+ * True when the ticket was raised by the owner of the premise it is about, i.e. the reporter's
+ * business name and pinned location (latitude/longitude) match the ticket's premise.
+ */
+export function isBusinessOwner(ticket: Ticket): boolean {
+    const business = ticket.submittedByEmail
+        ? businessByEmail.get(ticket.submittedByEmail.toLowerCase())
+        : undefined;
+    if (!business || !ticket.premise) return false;
+    return (
+        business.name === ticket.premise &&
+        business.latitude === ticket.latitude &&
+        business.longitude === ticket.longitude
+    );
+}
 
 /** Tickets raised by one account, most recently updated first. */
 export function getTicketsForUser(email: string | undefined): Ticket[] {
