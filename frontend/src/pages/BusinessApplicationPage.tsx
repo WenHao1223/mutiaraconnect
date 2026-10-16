@@ -196,7 +196,7 @@ export default function BusinessApplicationPage() {
                     </CardContent>
                     <CardFooter>
                         <Button asChild variant="outline">
-                            <Link to={PATHS.business}>Go to business tools</Link>
+                            <Link to={PATHS.businessDashboard}>Go to business dashboard</Link>
                         </Button>
                     </CardFooter>
                 </Card>

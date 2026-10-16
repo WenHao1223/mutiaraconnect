@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CircleUser, LayoutDashboard, LogIn, LogOut, Settings, ShieldCheck, Store, Ticket, UserPlus } from "lucide-react";
+import { CircleUser, LayoutDashboard, LogIn, LogOut, Settings, ShieldCheck, Store, Ticket, UserPlus, type LucideIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,18 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { dashboardLabels, dashboardPathFor } from "@/lib/auth/access";
 import { initials, roleLabels } from "@/lib/settings/user-display";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";
+
+const dashboardIcons: Record<AppUser["role"], LucideIcon> = {
+    resident: LayoutDashboard,
+    business_premise: Store,
+    admin: ShieldCheck,
+    super_admin: ShieldCheck,
+};
 
 interface ProfileMenuProps {
     user: AppUser | null;
@@ -22,6 +30,8 @@ interface ProfileMenuProps {
 }
 
 export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
+    const DashboardIcon = user ? dashboardIcons[user.role] : LayoutDashboard;
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -64,8 +74,8 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
                         </div>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                            <Link to={PATHS.profile}>
-                                <LayoutDashboard className="size-4" /> My Dashboard
+                            <Link to={dashboardPathFor(user.role)}>
+                                <DashboardIcon className="size-4" /> {dashboardLabels[user.role]}
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
@@ -77,13 +87,6 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
                             <DropdownMenuItem asChild>
                                 <Link to={PATHS.profileBusiness}>
                                     <Store className="size-4" /> Business Applications
-                                </Link>
-                            </DropdownMenuItem>
-                        )}
-                        {(user.role === "admin" || user.role === "super_admin") && (
-                            <DropdownMenuItem asChild>
-                                <Link to={PATHS.admin}>
-                                    <ShieldCheck className="size-4" /> Admin Dashboard
                                 </Link>
                             </DropdownMenuItem>
                         )}

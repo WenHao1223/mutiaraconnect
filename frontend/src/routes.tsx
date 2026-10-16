@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
+import RequireRole from "@/components/auth/RequireRole";
 import MapPage from "@/pages/MapPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -7,6 +8,7 @@ import Placeholder from "@/pages/Placeholder";
 import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
+import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
 import TicketsPage from "@/pages/ProfileTicketsPage";
 
@@ -28,6 +30,7 @@ export const PATHS = {
     profileSettings: "/profile/settings",
     profileTickets: "/profile/tickets",
     profileBusiness: "/profile/business",
+    businessDashboard: "/business/dashboard",
     admin: "/admin",
 } as const;
 
@@ -61,11 +64,24 @@ const pages: PageRoute[] = [
 
     { path: PATHS.announcements, label: "Announcements", element: <Placeholder title="Announcements" /> },
 
-    { path: PATHS.profile, label: "My Dashboard", element: <Placeholder title="My Dashboard" /> },
+    { path: PATHS.profile, label: "My Dashboard", element: (
+        <RequireRole allow={["resident"]}>
+            <Placeholder title="My Dashboard" />
+        </RequireRole>
+    ) },
     { path: PATHS.profileSettings, label: "Account Settings", element: <ProfileSettingsPage /> },
     { path: PATHS.profileTickets, label: "My Tickets", element: <TicketsPage /> },
     { path: PATHS.profileBusiness, label: "Business Applications", element: <BusinessApplicationPage /> },
-    { path: PATHS.admin, label: "Admin Dashboard", element: <Placeholder title="Admin Dashboard" /> },
+    { path: PATHS.businessDashboard, label: "Business Dashboard", element: (
+        <RequireRole allow={["business_premise"]}>
+            <BusinessDashboardPage />
+        </RequireRole>
+    ) },
+    { path: PATHS.admin, label: "Admin Dashboard", element: (
+        <RequireRole allow={["admin", "super_admin"]}>
+            <Placeholder title="Admin Dashboard" />
+        </RequireRole>
+    ) },
 ];
 
 /** Passed to useRoutes() in App.tsx. */
