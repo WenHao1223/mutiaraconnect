@@ -1,0 +1,35 @@
+[
+    {
+        "id": "CS-301",
+        "title": "Komtar station diaphragm walls",
+        "description": "Diaphragm wall construction and ground anchors around the station box.",
+        "area": "Komtar",
+        "startsAt": "2026-10-01T08:00:00+08:00",
+        "endsAt": "2026-12-15T18:00:00+08:00",
+        "status": "ongoing",
+        "updatedBy": "DEMO ADMIN",
+        "updatedAt": "2026-10-13T10:00:00+08:00"
+    },
+    {
+        "id": "CS-305",
+        "title": "Jelutong viaduct segment erection",
+        "description": "Launching gantry erection of precast segments along the viaduct.",
+        "area": "Jelutong",
+        "startsAt": "2026-11-10T07:00:00+08:00",
+        "endsAt": "2027-02-28T18:00:00+08:00",
+        "status": "upcoming",
+        "updatedBy": "DEMO ADMIN",
+        "updatedAt": "2026-10-14T16:20:00+08:00"
+    },
+    {
+        "id": "CS-290",
+        "title": "Macallum utility relocation",
+        "description": "Relocation of water and telecoms services ahead of tunnelling.",
+        "area": "Macallum",
+        "startsAt": "2026-08-01T08:00:00+08:00",
+        "endsAt": "2026-10-05T18:00:00+08:00",
+        "status": "completed",
+        "updatedBy": "DEMO ADMIN",
+        "updatedAt": "2026-10-06T09:10:00+08:00"
+    }
+]

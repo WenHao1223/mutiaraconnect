@@ -1,6 +1,6 @@
 import ticketData from "@/data/tickets.json";
 import usersData from "@/data/users.json";
-import type { Ticket, TicketCategory, TicketStatus } from "@/types/ticket";
+import type { Ticket, TicketCategory, TicketStatus, TicketUpdate } from "@/types/ticket";
 import type { BusinessProfile, MockAccount } from "@/types/user";
 
 // Mock data lives in data/tickets.json. Replace these two functions with Supabase queries later.
@@ -29,6 +29,74 @@ function writeSubmittedTickets(list: Ticket[]) {
     } catch {
         /* storage unavailable: the report just won't survive a refresh */
     }
+}
+
+/**
+ * Admin status changes are layered on top of the seed/submitted tickets rather than editing
+ * them, so the original report stays intact. Replace with Supabase later.
+ */
+const ADMIN_UPDATES_KEY = "mutiaraconnect.ticket-updates";
+
+interface TicketPatch {
+    status: TicketStatus;
+    updates: TicketUpdate[];
+}
+
+function readPatches(): Record<string, TicketPatch> {
+    try {
+        const raw = localStorage.getItem(ADMIN_UPDATES_KEY);
+        return raw ? (JSON.parse(raw) as Record<string, TicketPatch>) : {};
+    } catch {
+        return {};
+    }
+}
+
+function writePatches(patches: Record<string, TicketPatch>) {
+    try {
+        localStorage.setItem(ADMIN_UPDATES_KEY, JSON.stringify(patches));
+    } catch {
+        /* storage unavailable: the change just won't survive a refresh */
+    }
+}
+
+/** The ticket with any admin updates appended and its status brought up to date. */
+function withPatch(ticket: Ticket): Ticket {
+    const patch = readPatches()[ticket.id];
+    if (!patch) return ticket;
+    const updates = [...ticket.updates, ...patch.updates];
+    return {
+        ...ticket,
+        status: patch.status,
+        updates,
+        updatedAt: updates[updates.length - 1]?.at ?? ticket.updatedAt,
+    };
+}
+
+function allBaseTickets(): Ticket[] {
+    return [...tickets, ...readSubmittedTickets()];
+}
+
+/** Every ticket, seed and submitted, with admin updates applied. Newest first. */
+export function getAllTickets(): Ticket[] {
+    return allBaseTickets()
+        .map(withPatch)
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/** Applies an admin status change and records it in the ticket's history. */
+export function updateTicketStatus(
+    id: string,
+    status: TicketStatus,
+    message: string,
+    by: string,
+): Ticket | undefined {
+    const base = allBaseTickets().find((ticket) => ticket.id === id);
+    if (!base) return undefined;
+    const patches = readPatches();
+    const update: TicketUpdate = { status, message, by, at: new Date().toISOString() };
+    patches[id] = { status, updates: [...(patches[id]?.updates ?? []), update] };
+    writePatches(patches);
+    return withPatch(base);
 }
 
 /** The business premises each account owns, keyed by lower-cased email. */
@@ -66,16 +134,12 @@ export function isBusinessOwner(ticket: Ticket): boolean {
 export function getTicketsForUser(email: string | undefined): Ticket[] {
     if (!email) return [];
     const target = email.trim().toLowerCase();
-    return [...tickets, ...readSubmittedTickets()]
-        .filter((t) => t.submittedByEmail?.toLowerCase() === target)
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    return getAllTickets().filter((t) => t.submittedByEmail?.toLowerCase() === target);
 }
 
 /** Resolved reports, newest first, for the public "recently resolved" board. */
 export function getResolvedTickets(): Ticket[] {
-    return tickets
-        .filter((ticket) => ticket.status === "resolved")
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    return getAllTickets().filter((ticket) => ticket.status === "resolved");
 }
 
 export interface NewTicketInput {
@@ -120,7 +184,7 @@ export function submitTicket(input: NewTicketInput): Ticket {
 
 /** Look a ticket up by its public tracking ID, e.g. "FB-2041". */
 export function findTicket(id: string): Ticket | undefined {
-    return tickets.find((t) => t.id === id);
+    return getAllTickets().find((t) => t.id === id);
 }
 
 /** Left-to-right order of the progress bar. */

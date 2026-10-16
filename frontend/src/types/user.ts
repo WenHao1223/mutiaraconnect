@@ -16,6 +16,8 @@ export interface AppUser {
     email?: string;
     /** Not logged in = no AppUser at all (null). Guests can browse and submit anonymously. */
     role: "resident" | "business_premise" | "admin" | "super_admin";
+    /** Super admins can deactivate accounts. Undefined counts as active. */
+    active?: boolean;
     /** Only set for users who signed in with MyDigitalID. */
     myDigitalId?: string;
     /** Malaysian IC (MyKad) number */

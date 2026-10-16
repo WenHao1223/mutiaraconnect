@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { compare as compareHash, hash as hashPassword } from "bcryptjs";
 import demoUsersData from "@/data/users.json";
+import { recordAudit } from "@/lib/admin/audit";
+import { readUsers } from "@/lib/admin/users";
 import type { AppUser, Gender, MockAccount } from "@/types/user";
 
 // @TODO: Replace with real data from Supabase
@@ -78,7 +80,24 @@ function toAppUser(account: MockAccount | StoredAccount): AppUser {
     const override = account.email ? readOverrides()[normalizeEmail(account.email)] : undefined;
     if (override?.name) rest.name = override.name;
     if (override?.gender) rest.gender = override.gender;
+    // Super-admin edits (role, active) win over the account's own details.
+    const email = account.email;
+    const managed = email
+        ? readUsers().find((user) => user.email.toLowerCase() === normalizeEmail(email))
+        : undefined;
+    if (managed) {
+        rest.role = managed.role;
+        rest.active = managed.active;
+    }
     return rest as AppUser;
+}
+
+/** False when a super admin has deactivated the account. */
+function isDeactivated(account: MockAccount | StoredAccount): boolean {
+    const email = account.email;
+    if (!email) return false;
+    const managed = readUsers().find((user) => user.email.toLowerCase() === normalizeEmail(email));
+    return managed ? !managed.active : false;
 }
 
 /**
@@ -112,6 +131,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const startSession = useCallback((account: MockAccount | StoredAccount) => {
         setUserState(toAppUser(account));
         writeStorage(SESSION_KEY, account.email ?? null);
+        recordAudit({
+            actor: account.email ?? account.name,
+            action: "sign_in",
+            detail: `Signed in (${account.role}).`,
+        });
     }, []);
 
     const value = useMemo<AuthContextValue>(
@@ -125,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const account = Object.values(demoUsers).find((a) => a.ic && normalizeIc(a.ic) === digits)
                     ?? readRegistered().find((a) => a.ic && normalizeIc(a.ic) === digits);
                 if (!account) throw new AuthError("No MyDigitalID account found for this IC number.");
+                if (isDeactivated(account)) throw new AuthError("This account has been deactivated.");
                 startSession(account);
             },
 
@@ -133,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const account = findByEmail(email);
                 const ok = !!account && (await passwordMatches(account, password));
                 if (!account || !ok) throw new AuthError("Incorrect email or password.");
+                if (isDeactivated(account)) throw new AuthError("This account has been deactivated.");
                 startSession(account);
             },
 
@@ -180,6 +206,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
 
             signOut() {
+                if (user) {
+                    recordAudit({
+                        actor: user.email ?? user.name,
+                        action: "sign_out",
+                        detail: "Signed out.",
+                    });
+                }
                 setUserState(null);
                 writeStorage(SESSION_KEY, null);
             },
