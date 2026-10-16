@@ -1,9 +1,7 @@
 import type { Coordinates } from "@/lib/maps/maps";
 
-/** Only access notices within this many km of the shop are listed. */
-export const VISIBLE_RADIUS_KM = 3;
-/** Notices within this many km of the shop get the amber highlight. */
-export const HIGHLIGHT_RADIUS_KM = 1;
+/** A business is affected by a closure or access notice when it is within this many km of it. */
+export const AFFECTED_RADIUS_KM = 0.25;
 
 const EARTH_RADIUS_KM = 6371;
 

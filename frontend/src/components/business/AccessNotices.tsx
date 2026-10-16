@@ -1,70 +1,72 @@
 import { ExternalLink } from "lucide-react";
 import MapsLink from "@/components/custom/MapsLink";
-import accessNotices from "@/data/access-notices.json";
-import { distanceInKm, formatDistance, HIGHLIGHT_RADIUS_KM, isWithinRadius, VISIBLE_RADIUS_KM } from "@/lib/maps/geo";
+import { readClosures } from "@/lib/admin/closures";
+import { AFFECTED_RADIUS_KM, distanceInKm, formatDistance, isWithinRadius } from "@/lib/maps/geo";
 import type { Coordinates } from "@/lib/maps/maps";
-import { cn } from "@/lib/utils";
-import type { AccessNotice } from "@/types/notice";
+import { formatDate } from "@/lib/tickets/tickets";
+import type { RoadClosure } from "@/types/road-closure";
 
-/** A shop the notice distances are measured from. */
+/** A shop the closure distances are measured from. */
 export interface PremiseOrigin extends Coordinates {
     name: string;
 }
 
-/** Board of access changes affecting businesses in the area. */
-export default function AccessNotices({
-    notices = accessNotices as AccessNotice[],
-    origins = [],
-}: {
-    notices?: AccessNotice[];
-    /** The owner's premises; notices near any of them are listed, closest ones highlighted. */
+interface AccessNoticesProps {
+    closures?: RoadClosure[];
+    /** The owner's premises; closures within range of any of them are listed. */
     origins?: PremiseOrigin[];
-}) {
+}
+
+/** Board of closures and access changes affecting businesses near their premises. */
+export default function AccessNotices({ closures, origins = [] }: AccessNoticesProps) {
+    const list = closures ?? readClosures();
     const hasOrigins = origins.length > 0;
 
-    const nearestOrigin = (notice: AccessNotice) =>
+    const nearestOrigin = (closure: RoadClosure) =>
         origins.reduce((best, origin) =>
-            distanceInKm(origin, notice) < distanceInKm(best, notice) ? origin : best,
+            distanceInKm(origin, closure) < distanceInKm(best, closure) ? origin : best,
         );
 
+    // Without premises to measure from, show everything; otherwise only nearby ones.
     const shown = hasOrigins
-        ? notices.filter((notice) => origins.some((origin) => isWithinRadius(origin, notice, VISIBLE_RADIUS_KM)))
-        : notices;
+        ? list.filter((closure) => origins.some((origin) => isWithinRadius(origin, closure, AFFECTED_RADIUS_KM)))
+        : list;
 
     return (
         <section className="space-y-4" aria-label="Access notices">
             <h2 className="text-2xl font-semibold">Access notices</h2>
-            {shown.map((notice) => {
-                const highlighted = hasOrigins
-                    ? origins.some((origin) => isWithinRadius(origin, notice, HIGHLIGHT_RADIUS_KM))
-                    : false;
-                const nearest = hasOrigins ? nearestOrigin(notice) : undefined;
+            {shown.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                    No closures or access changes within {Math.round(AFFECTED_RADIUS_KM * 1000)} m of your
+                    premises.
+                </p>
+            )}
+            {shown.map((closure) => {
+                const nearest = hasOrigins ? nearestOrigin(closure) : undefined;
                 return (
-                    <article
-                        key={notice.id}
-                        className={cn(
-                            "rounded-lg border border-l-4 bg-card p-5",
-                            highlighted ? "border-l-hazard" : "border-l-border",
-                        )}
-                    >
+                    <article key={closure.id} className="rounded-lg border border-l-4 border-l-hazard bg-card p-5">
                         <div className="flex justify-between gap-3">
-                            <h3 className="text-lg font-semibold">{notice.business}</h3>
-                            <span className="text-xs text-muted-foreground">{notice.area}</span>
+                            <h3 className="text-lg font-semibold">{closure.title}</h3>
+                            <span className="text-xs text-muted-foreground">{closure.area}</span>
                         </div>
-                        <p className="mt-2 text-sm">
-                            <span className="font-semibold">Affected:</span> {notice.affected}
-                        </p>
-                        <p className="mt-1 text-sm">
-                            <span className="font-semibold">Alternative:</span> {notice.alternative}
-                        </p>
-                        <p className="mt-2 text-xs text-muted-foreground">Until {notice.until}</p>
+                        {closure.reason && (
+                            <p className="mt-2 text-sm">
+                                <span className="font-semibold">Reason:</span> {closure.reason}
+                            </p>
+                        )}
+                        {closure.alternative && (
+                            <p className="mt-1 text-sm">
+                                <span className="font-semibold">Alternative:</span> {closure.alternative}
+                            </p>
+                        )}
+                        <p className="mt-2 text-xs text-muted-foreground">Until {formatDate(closure.endAt)}</p>
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                            <MapsLink location={notice} className="shrink-0 whitespace-nowrap text-xs">
+                            <MapsLink location={closure} className="shrink-0 whitespace-nowrap text-xs">
                                 Open in Google Maps <ExternalLink className="size-3" aria-hidden />
                             </MapsLink>
                             {nearest && (
                                 <span className="text-xs text-muted-foreground">
-                                    {formatDistance(distanceInKm(nearest, notice))} from{" "}
+                                    {formatDistance(distanceInKm(nearest, closure))} from{" "}
                                     {origins.length > 1 ? nearest.name : "your nearest premise"}
                                 </span>
                             )}
@@ -72,19 +74,6 @@ export default function AccessNotices({
                     </article>
                 );
             })}
-            {hasOrigins && (
-                <div className="space-y-1.5 rounded-lg border bg-muted/50 p-3 text-xs text-muted-foreground">
-                    <p className="font-medium text-foreground">Legend</p>
-                    <p className="flex items-center gap-2">
-                        <span className="h-3 w-1 shrink-0 rounded-full bg-hazard" aria-hidden />
-                        Within {HIGHLIGHT_RADIUS_KM} km of a premise — highlighted
-                    </p>
-                    <p className="flex items-center gap-2">
-                        <span className="h-3 w-1 shrink-0 rounded-full bg-border" aria-hidden />
-                        Notices beyond {VISIBLE_RADIUS_KM} km of every premise are hidden
-                    </p>
-                </div>
-            )}
         </section>
     );
 }
