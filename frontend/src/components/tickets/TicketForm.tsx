@@ -24,6 +24,8 @@ export interface TicketFormValues {
 interface TicketFormProps {
     /** The reporter's premises; picking one also fills in the location. */
     premises?: BusinessProfile[];
+    /** Show the anonymous toggle. Hidden when the reporter is not signed in. */
+    showAnonymous?: boolean;
     onSubmit: (values: TicketFormValues) => void;
     onCancel?: () => void;
 }
@@ -33,7 +35,12 @@ const categories = Object.entries(categoryLabels) as [TicketCategory, string][];
 const OTHER = "__other__";
 
 /** Collects a report: category, description and a pinned location. */
-export default function TicketForm({ premises = [], onSubmit, onCancel }: TicketFormProps) {
+export default function TicketForm({
+    premises = [],
+    showAnonymous = true,
+    onSubmit,
+    onCancel,
+}: TicketFormProps) {
     const [category, setCategory] = useState<TicketCategory>();
     const [categoryError, setCategoryError] = useState<string>();
     const [location, setLocation] = useState<PickedLocation | null>(null);
@@ -186,15 +193,17 @@ export default function TicketForm({ premises = [], onSubmit, onCancel }: Ticket
                 <FieldError message={locationError} />
             </div>
 
-            <SubmitAnonymously
-                checked={anonymous}
-                onCheckedChange={setAnonymous}
-                description={
-                    premises.length > 0
-                        ? "Your account is not linked to this report. Your business name is hidden and it will not show a verified badge."
-                        : "Your account is not linked to this report."
-                }
-            />
+            {showAnonymous && (
+                <SubmitAnonymously
+                    checked={anonymous}
+                    onCheckedChange={setAnonymous}
+                    description={
+                        premises.length > 0
+                            ? "Your account is not linked to this report. Your business name is hidden and it will not show a verified badge."
+                            : "Your account is not linked to this report."
+                    }
+                />
+            )}
 
             <div className="flex justify-end gap-2">
                 {onCancel && (

@@ -16,6 +16,8 @@ export interface FeedbackFormValues {
 }
 
 interface FeedbackFormProps {
+    /** Show the anonymous toggle. Hidden when the reporter is not signed in. */
+    showAnonymous?: boolean;
     onSubmit: (values: FeedbackFormValues) => void;
     onCancel?: () => void;
 }
@@ -23,7 +25,7 @@ interface FeedbackFormProps {
 const categories = Object.entries(feedbackLabels) as [FeedbackCategory, string][];
 
 /** A short, account-free way to tell the project team what is working and what is not. */
-export default function FeedbackForm({ onSubmit, onCancel }: FeedbackFormProps) {
+export default function FeedbackForm({ showAnonymous = true, onSubmit, onCancel }: FeedbackFormProps) {
     const [category, setCategory] = useState<FeedbackCategory>();
     const [categoryError, setCategoryError] = useState<string>();
     const [anonymous, setAnonymous] = useState(false);
@@ -90,11 +92,13 @@ export default function FeedbackForm({ onSubmit, onCancel }: FeedbackFormProps) 
                 <FieldError message={errors.message?.message} />
             </div>
 
-            <SubmitAnonymously
-                checked={anonymous}
-                onCheckedChange={setAnonymous}
-                description="Your account is not linked to this feedback."
-            />
+            {showAnonymous && (
+                <SubmitAnonymously
+                    checked={anonymous}
+                    onCheckedChange={setAnonymous}
+                    description="Your account is not linked to this feedback."
+                />
+            )}
 
             <div className="flex justify-end gap-2">
                 {onCancel && (

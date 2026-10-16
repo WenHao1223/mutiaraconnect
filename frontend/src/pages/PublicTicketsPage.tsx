@@ -154,6 +154,7 @@ export default function PublicTicketsPage() {
                                 <div className="mt-4">
                                     <TicketForm
                                         premises={premises}
+                                        showAnonymous={!!user}
                                         onSubmit={openTicket}
                                         onCancel={() => setPanel("tickets")}
                                     />
@@ -168,7 +169,11 @@ export default function PublicTicketsPage() {
                                     </Button>
                                 </div>
                                 <div className="mt-4">
-                                    <FeedbackForm onSubmit={openFeedback} onCancel={() => setPanel("tickets")} />
+                                    <FeedbackForm
+                                        showAnonymous={!!user}
+                                        onSubmit={openFeedback}
+                                        onCancel={() => setPanel("tickets")}
+                                    />
                                 </div>
                             </>
                         ) : user ? (
