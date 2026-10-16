@@ -7,6 +7,7 @@ import NotFoundPage from "@/pages/NotFoundPage";
 import Placeholder from "@/pages/Placeholder";
 import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
@@ -79,7 +80,7 @@ const pages: PageRoute[] = [
     ) },
     { path: PATHS.admin, label: "Admin Dashboard", element: (
         <RequireRole allow={["admin", "super_admin"]}>
-            <Placeholder title="Admin Dashboard" />
+            <AdminDashboardPage />
         </RequireRole>
     ) },
 ];

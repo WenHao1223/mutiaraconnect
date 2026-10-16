@@ -7,27 +7,23 @@ import ConstructionMenu from "@/components/navbar/ConstructionMenu";
 import MobileMenu from "@/components/navbar/MobileMenu";
 import ProfileMenu from "@/components/navbar/ProfileMenu";
 import { navStyles } from "@/components/navbar/navStyles";
-import announcementsData from "@/data/announcements.json";
+import { readAnnouncements } from "@/lib/admin/announcements";
 import { navRoutes } from "@/routes";
 import type { Announcement } from "@/types/announcement";
 import type { AppUser } from "@/types/user";
-
-// @TODO: Replace with real data from Supabase
-/** Sample announcements from data/announcements.json. */
-const sampleAnnouncements = announcementsData as Announcement[];
 
 interface NavbarProps {
     /** null or undefined means an anonymous visitor. */
     user?: AppUser | null;
     onSignOut?: () => void;
-    /** Pass real data from Supabase later. Falls back to sample data. */
+    /** Pass real data from Supabase later. Falls back to stored announcements. */
     announcements?: Announcement[];
 }
 
 export default function Navbar({
     user = null,
     onSignOut,
-    announcements = sampleAnnouncements,
+    announcements = readAnnouncements(),
 }: NavbarProps) {
     return (
         <header className="sticky top-0 z-40 border-b bg-card">
