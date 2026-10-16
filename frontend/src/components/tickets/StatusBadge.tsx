@@ -1,6 +1,6 @@
 import { badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { statusMeta } from "@/lib/tickets";
+import { statusMeta } from "@/lib/tickets/tickets";
 import type { TicketStatus } from "@/types/ticket";
 
 /** A span (not Badge's div) so it can sit inside buttons and other inline content. */

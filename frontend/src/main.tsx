@@ -2,11 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
-import App from "./App.tsx";
+import App from "./App";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/lib/auth/auth.tsx";
-import { SettingsProvider } from "@/lib/settings";
+import { AuthProvider } from "@/lib/auth/auth";
+import { SettingsProvider } from "@/lib/settings/settings";
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>

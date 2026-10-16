@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { STATUS_ORDER, statusMeta } from "@/lib/tickets";
+import { STATUS_ORDER, statusMeta } from "@/lib/tickets/tickets";
 import type { TicketStatus } from "@/types/ticket";
 
 /** Four-step bar: Received, Under Review, In Progress, Resolved. */

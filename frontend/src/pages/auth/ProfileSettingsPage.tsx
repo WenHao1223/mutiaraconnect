@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth/auth";
-import { initials, roleLabels } from "@/lib/user-display";
+import { initials, roleLabels } from "@/lib/settings/user-display";
 import BusinessAccountCard from "@/pages/profile/BusinessAccountCard";
 import PasswordCard from "@/pages/profile/PasswordCard";
 import PersonalDetailsCard from "@/pages/profile/PersonalDetailsCard";

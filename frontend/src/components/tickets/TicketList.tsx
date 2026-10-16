@@ -3,7 +3,7 @@ import { BadgeCheck, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { categoryLabels, formatDate, isBusinessOwner, isOpen } from "@/lib/tickets";
+import { categoryLabels, formatDate, isBusinessOwner, isOpen } from "@/lib/tickets/tickets";
 import StatusBadge from "@/components/tickets/StatusBadge";
 import type { Ticket } from "@/types/ticket";
 

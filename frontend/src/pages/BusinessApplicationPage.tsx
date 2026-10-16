@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth/auth";
-import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication, type BusinessApplication } from "@/lib/business";
+import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication, type BusinessApplication } from "@/lib/business/business";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { BusinessProfile } from "@/types/user";

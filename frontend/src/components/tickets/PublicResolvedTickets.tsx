@@ -1,5 +1,5 @@
 import { BadgeCheck } from "lucide-react";
-import { categoryLabels, formatDate } from "@/lib/tickets";
+import { categoryLabels, formatDate } from "@/lib/tickets/tickets";
 import type { Ticket } from "@/types/ticket";
 
 /** Public, anonymised feed of already-resolved reports. Reporter and premise are never shown. */

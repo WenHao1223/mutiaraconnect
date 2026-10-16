@@ -11,7 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { initials, roleLabels } from "@/lib/user-display";
+import { initials, roleLabels } from "@/lib/settings/user-display";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";

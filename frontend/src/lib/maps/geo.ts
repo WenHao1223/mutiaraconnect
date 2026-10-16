@@ -1,4 +1,4 @@
-import type { Coordinates } from "@/lib/maps";
+import type { Coordinates } from "@/lib/maps/maps";
 
 /** Only access notices within this many km of the shop are listed. */
 export const VISIBLE_RADIUS_KM = 3;

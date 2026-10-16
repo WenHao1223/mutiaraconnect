@@ -5,7 +5,7 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AnnouncementItem from "@/components/navbar/AnnoucementItem";
-import { useSettings } from "@/lib/settings";
+import { useSettings } from "@/lib/settings/settings";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
 

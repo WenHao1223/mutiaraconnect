@@ -2,7 +2,7 @@ import { BadgeCheck, Clock, MapPin, MessageSquareText, Navigation, Paperclip, St
 import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { categoryLabels, formatDate, formatDateTime, isBusinessOwner, statusMeta } from "@/lib/tickets";
+import { categoryLabels, formatDate, formatDateTime, isBusinessOwner, statusMeta } from "@/lib/tickets/tickets";
 import { cn } from "@/lib/utils";
 import StatusBadge from "@/components/tickets/StatusBadge";
 import StatusProgress from "@/components/tickets/StatusProgress";

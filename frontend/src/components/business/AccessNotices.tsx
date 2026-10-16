@@ -1,8 +1,8 @@
 import { ExternalLink } from "lucide-react";
 import MapsLink from "@/components/custom/MapsLink";
 import accessNotices from "@/data/access-notices.json";
-import { distanceInKm, formatDistance, HIGHLIGHT_RADIUS_KM, isWithinRadius, VISIBLE_RADIUS_KM } from "@/lib/geo";
-import type { Coordinates } from "@/lib/maps";
+import { distanceInKm, formatDistance, HIGHLIGHT_RADIUS_KM, isWithinRadius, VISIBLE_RADIUS_KM } from "@/lib/maps/geo";
+import type { Coordinates } from "@/lib/maps/maps";
 import { cn } from "@/lib/utils";
 import type { AccessNotice } from "@/types/notice";
 

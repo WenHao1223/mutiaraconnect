@@ -4,7 +4,7 @@ import {
     googleMapsDirectionsUrl,
     googleMapsSearchUrl,
     type Coordinates,
-} from "@/lib/maps";
+} from "@/lib/maps/maps";
 
 interface MapsLinkProps {
     /** Pin coordinates, or a place name used when no pin is available. */

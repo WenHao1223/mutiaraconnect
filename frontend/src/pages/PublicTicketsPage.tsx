@@ -10,14 +10,14 @@ import TicketList from "@/components/tickets/TicketList";
 import TicketLookup from "@/components/tickets/TicketLookup";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth";
-import { readPremises, readRemovedPremiseIds } from "@/lib/business";
-import { submitFeedback } from "@/lib/feedback";
+import { readPremises, readRemovedPremiseIds } from "@/lib/business/business";
+import { submitFeedback } from "@/lib/tickets/feedback";
 import {
     getResolvedTickets,
     getTicketsForUser,
     matchesTicketQuery,
     submitTicket,
-} from "@/lib/tickets";
+} from "@/lib/tickets/tickets";
 import { PATHS } from "@/routes";
 import type { Ticket } from "@/types/ticket";
 
