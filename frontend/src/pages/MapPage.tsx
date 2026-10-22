@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import ClosureInfoCard from "@/components/map/ClosureInfoCard";
 import ClosureMap from "@/components/map/ClosureMap";
+import ClosurePanel from "@/components/map/ClosurePanel";
 import MapLegend from "@/components/map/MapLegend";
+import { useGeolocation } from "@/hooks/use-geolocation";
 import { activeClosures } from "@/lib/admin/closures";
 import type { ClosureKind } from "@/types/road-closure";
 
@@ -10,7 +11,15 @@ export default function MapPage() {
     // Read once on mount; ended closures are not shown on the public map.
     const [closures] = useState(() => activeClosures());
     const [selectedId, setSelectedId] = useState<string | undefined>();
+    const [panelOpen, setPanelOpen] = useState(true);
     const [visible, setVisible] = useState<Record<ClosureKind, boolean>>({ closure: true, access: true });
+    const { location, status: locationStatus, error: locationError, requestLocation } = useGeolocation();
+
+    // Selecting a pin (on the map or in the list) reveals the details panel.
+    const selectClosure = (id: string | undefined) => {
+        setSelectedId(id);
+        if (id) setPanelOpen(true);
+    };
 
     const counts = useMemo(
         () => ({
@@ -25,23 +34,35 @@ export default function MapPage() {
     return (
         <div className="relative flex min-h-[32rem] flex-1 bg-background" aria-label="Road closure map">
             <div className="absolute inset-0">
-                <ClosureMap closures={shown} selectedId={selected?.id} onSelect={setSelectedId} />
+                <ClosureMap
+                    closures={shown}
+                    selectedId={selected?.id}
+                    userLocation={location}
+                    onSelect={selectClosure}
+                />
             </div>
 
-            <div className="pointer-events-none relative flex w-full flex-col justify-between gap-3 p-3">
-                <div className="pointer-events-auto self-start">
+            <div className="pointer-events-none absolute inset-x-0 top-0 p-3">
+                <div className="pointer-events-auto inline-flex">
                     <MapLegend
                         visible={visible}
                         counts={counts}
                         onToggle={(kind) => setVisible((prev) => ({ ...prev, [kind]: !prev[kind] }))}
                     />
                 </div>
-                {selected && (
-                    <div className="pointer-events-auto">
-                        <ClosureInfoCard closure={selected} onClose={() => setSelectedId(undefined)} />
-                    </div>
-                )}
             </div>
+
+            <ClosurePanel
+                closures={shown}
+                selectedId={selected?.id}
+                onSelect={selectClosure}
+                open={panelOpen}
+                onOpenChange={setPanelOpen}
+                location={location}
+                locationStatus={locationStatus}
+                locationError={locationError}
+                onRequestLocation={requestLocation}
+            />
         </div>
     );
 }

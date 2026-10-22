@@ -10,7 +10,7 @@ import RegisterPage from "@/pages/RegisterPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
-import PublicTicketsPage from "@/pages/PublicTicketsPage";
+import PublicTicketsPage from "../PublicTicketsPage";
 import TicketsPage from "@/pages/ProfileTicketsPage";
 
 /** Every URL in the app. Use these instead of typing path strings anywhere else. */

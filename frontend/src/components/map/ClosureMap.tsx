@@ -1,16 +1,19 @@
 import { useEffect, useRef } from "react";
 import { AdvancedMarker, APIProvider, Map, Pin, useMap } from "@vis.gl/react-google-maps";
 import { KIND_STYLE, MAP_ID, MAPS_API_KEY, PENANG_CENTER } from "@/lib/maps/mapConfig";
+import type { Coordinates } from "@/lib/maps/maps";
 import type { RoadClosure } from "@/types/road-closure";
 
 interface ClosureMapProps {
     closures: RoadClosure[];
     selectedId?: string;
+    /** The visitor's shared position, shown as a blue dot. */
+    userLocation?: Coordinates;
     onSelect: (id: string | undefined) => void;
 }
 
 /** Google Map with one pin per closure / access notice. */
-export default function ClosureMap({ closures, selectedId, onSelect }: ClosureMapProps) {
+export default function ClosureMap({ closures, selectedId, userLocation, onSelect }: ClosureMapProps) {
     if (!MAPS_API_KEY) {
         return (
             <div className="flex h-full min-h-80 items-center justify-center p-6 text-center text-sm text-muted-foreground">
@@ -55,6 +58,18 @@ export default function ClosureMap({ closures, selectedId, onSelect }: ClosureMa
                         </AdvancedMarker>
                     );
                 })}
+                {userLocation && (
+                    <AdvancedMarker
+                        position={{ lat: userLocation.latitude, lng: userLocation.longitude }}
+                        title="Your location"
+                        zIndex={20}
+                    >
+                        <div
+                            className="pointer-events-none size-4 rounded-full border-2 border-white bg-blue-500 shadow-md"
+                            aria-label="Your location"
+                        />
+                    </AdvancedMarker>
+                )}
                 <FocusSelected closures={closures} selectedId={selectedId} />
             </Map>
         </APIProvider>
