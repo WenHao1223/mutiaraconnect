@@ -1,27 +1,28 @@
+import type { ApplicationStatus, BusinessApplication, BusinessType } from "@/types/business";
 import type { BusinessProfile } from "@/types/user";
 
 /**
  * MOCK BUSINESS APPLICATIONS (frontend only, no backend).
- * A resident can apply to upgrade to a business premise account; the application
- * is kept in localStorage while "pending". Replace with Supabase later.
+ * A resident can apply to upgrade to a business premise account; an admin then approves
+ * or rejects it. Kept in localStorage, one per applicant. Replace with Supabase later.
  */
-export interface BusinessApplication {
-    /** Identifies the applicant (email, falling back to IC or name). */
-    applicant: string;
-    email?: string;
-    businessName: string;
-    registrationNumber: string;
-    /** Human-readable address resolved from the pinned map location. */
-    premiseAddress: string;
-    /** Shop coordinates picked on the map. */
-    latitude: number;
-    longitude: number;
-    status: "pending" | "approved" | "rejected";
-    submittedAt: string;
-}
-
 const APPLICATIONS_KEY = "mutiaraconnect.business-applications";
 const normalizeKey = (key: string) => key.trim().toLowerCase();
+
+export const businessTypeLabels: Record<BusinessType, string> = {
+    food_beverage: "Food & beverage",
+    retail: "Retail",
+    services: "Services",
+    health: "Health & wellness",
+    lodging: "Lodging",
+    other: "Other",
+};
+
+export const applicationStatusMeta: Record<ApplicationStatus, { label: string; badge: string }> = {
+    pending: { label: "Pending review", badge: "border-hazard/40 bg-hazard/15 text-amber-800" },
+    approved: { label: "Approved", badge: "border-success/30 bg-success/10 text-green-800" },
+    rejected: { label: "Rejected", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+};
 
 function readStorage<T>(key: string, fallback: T): T {
     try {
@@ -40,11 +41,16 @@ export function findApplication(applicant?: string): BusinessApplication | undef
     return readApplications().find((application) => normalizeKey(application.applicant) === target);
 }
 
-export function submitApplication(
-    input: Omit<BusinessApplication, "status" | "submittedAt">,
-): BusinessApplication {
+export type NewApplicationInput = Omit<
+    BusinessApplication,
+    "id" | "status" | "submittedAt" | "rejectionReason" | "reviewedBy" | "reviewedAt"
+>;
+
+/** Files a new application, replacing any earlier (e.g. rejected) one from the same applicant. */
+export function submitApplication(input: NewApplicationInput): BusinessApplication {
     const application: BusinessApplication = {
         ...input,
+        id: `BA-${Date.now().toString(36)}`,
         status: "pending",
         submittedAt: new Date().toISOString(),
     };

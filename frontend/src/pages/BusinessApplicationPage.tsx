@@ -1,26 +1,34 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, ExternalLink, Minus } from "lucide-react";
+import { ArrowLeft, BadgeCheck, ClipboardCheck, ExternalLink, Minus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import AccessNotices from "@/components/business/AccessNotices";
+import ApplicationDetail from "@/components/business/ApplicationDetail";
 import PremiseForm from "@/components/business/PremiseForm";
 import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth/auth";
-import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication, type BusinessApplication } from "@/lib/business/business";
+import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication } from "@/lib/business/business";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
+import type { ApplicationStatus, BusinessApplication } from "@/types/business";
 import type { BusinessProfile } from "@/types/user";
 
-const statusLabels: Record<BusinessApplication["status"], string> = {
-    pending: "Pending review",
-    approved: "Approved",
-    rejected: "Rejected",
+/** Coloured left edge, like the access notice cards. */
+const statusEdges: Record<ApplicationStatus, string> = {
+    pending: "border-l-hazard",
+    approved: "border-l-success",
+    rejected: "border-l-destructive",
+};
+
+const statusDescriptions: Record<ApplicationStatus, string> = {
+    pending: "We've received your application. Track its progress here.",
+    approved: "Your application has been approved.",
+    rejected: "Your application wasn't approved. See the reason below and apply again.",
 };
 
 interface BusinessDetailsData {
@@ -127,6 +135,8 @@ export default function BusinessApplicationPage() {
     const [application, setApplication] = useState<BusinessApplication | undefined>(() => findApplication(applicantKey));
     const [extraPremises, setExtraPremises] = useState<BusinessProfile[]>(() => readPremises(applicantKey));
     const [removedIds, setRemovedIds] = useState<string[]>(() => readRemovedPremiseIds(applicantKey));
+    // A rejected applicant can open the form again to submit a fresh application.
+    const [reapplying, setReapplying] = useState(false);
 
     // Applying needs an account, so guests are sent to sign in and then brought back.
     if (!user) return <Navigate to={PATHS.login} state={{ from: PATHS.profileBusiness }} replace />;
@@ -219,30 +229,25 @@ export default function BusinessApplicationPage() {
                 />
             </div>
         );
-    } else if (application) {
+    } else if (application && !reapplying) {
         content = (
-            <Card>
+            <Card className={cn("border-l-4", statusEdges[application.status])}>
                 <CardHeader>
-                    <CardTitle className="text-lg">Your application</CardTitle>
-                    <CardDescription>We'll email you once a decision has been made.</CardDescription>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                        <ClipboardCheck className="size-4" /> Application status
+                    </CardTitle>
+                    <CardDescription>{statusDescriptions[application.status]}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">Status</span>
-                        <Badge variant={application.status === "approved" ? "default" : "secondary"}>
-                            {statusLabels[application.status]}
-                        </Badge>
-                    </div>
-                    <BusinessDetails
-                        business={{
-                            name: application.businessName,
-                            registrationNumber: application.registrationNumber,
-                            address: application.premiseAddress,
-                            latitude: application.latitude,
-                            longitude: application.longitude,
-                        }}
-                    />
+                <CardContent>
+                    <ApplicationDetail application={application} />
                 </CardContent>
+                {application.status === "rejected" && (
+                    <CardFooter>
+                        <Button variant="outline" onClick={() => setReapplying(true)}>
+                            <RotateCcw className="size-4" /> Apply again
+                        </Button>
+                    </CardFooter>
+                )}
             </Card>
         );
     } else {
@@ -251,17 +256,23 @@ export default function BusinessApplicationPage() {
                 title="Apply for a business account"
                 description="Tell us about the business you'd like to register."
                 submitLabel="Submit application"
-                onSubmit={({ businessName, registrationNumber, location }) => {
+                withApplicationDetails
+                onSubmit={({ businessName, registrationNumber, location, businessType, contactPhone, documents }) => {
                     const applied = submitApplication({
                         applicant: applicantKey,
                         email: user.email,
+                        applicantName: user.name,
                         businessName,
                         registrationNumber,
+                        businessType: businessType ?? "other",
+                        contactPhone: contactPhone ?? "",
+                        documents: documents ?? [],
                         premiseAddress: location.address,
                         latitude: location.latitude,
                         longitude: location.longitude,
                     });
                     setApplication(applied);
+                    setReapplying(false);
                     toast.success("Your business account application has been submitted.");
                 }}
             />
