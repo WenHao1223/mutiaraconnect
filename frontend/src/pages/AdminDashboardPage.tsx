@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BellRing, CalendarClock, LayoutDashboard, ScrollText, Ticket, Users, type LucideIcon } from "lucide-react";
+import { BellRing, CalendarClock, LayoutDashboard, ScrollText, Store, Ticket, Users, type LucideIcon } from "lucide-react";
 import AdminOverview from "@/components/admin/AdminOverview";
 import AuditLog from "@/components/admin/AuditLog";
 import ClosureManager from "@/components/admin/ClosureManager";
@@ -7,11 +7,12 @@ import NotificationsManager from "@/components/admin/NotificationsManager";
 import ScheduleManager from "@/components/admin/ScheduleManager";
 import TicketAdmin from "@/components/admin/TicketAdmin";
 import UserManagement from "@/components/admin/UserManagement";
+import ApplicationReview from "@/components/business/ApplicationReview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth/auth";
 import { roleLabels } from "@/lib/settings/user-display";
 
-type AdminTab = "overview" | "tickets" | "operations" | "notifications" | "users" | "audit";
+type AdminTab = "overview" | "tickets" | "operations" | "notifications" | "businesses" | "users" | "audit";
 
 interface AdminTabItem {
     value: AdminTab;
@@ -30,6 +31,7 @@ export default function AdminDashboardPage() {
         { value: "tickets", label: "Tickets", icon: Ticket },
         { value: "operations", label: "Closures & schedule", icon: CalendarClock },
         { value: "notifications", label: "Notifications", icon: BellRing },
+        { value: "businesses", label: "Businesses", icon: Store },
         ...(isSuperAdmin
             ? [
                   { value: "users" as const, label: "Users", icon: Users },
@@ -84,6 +86,11 @@ export default function AdminDashboardPage() {
                     {tab === "notifications" && (
                         <TabsContent value="notifications">
                             <NotificationsManager />
+                        </TabsContent>
+                    )}
+                    {tab === "businesses" && (
+                        <TabsContent value="businesses">
+                            <ApplicationReview />
                         </TabsContent>
                     )}
                     {isSuperAdmin && tab === "users" && (

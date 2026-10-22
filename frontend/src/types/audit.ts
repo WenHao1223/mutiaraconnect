@@ -10,7 +10,8 @@ export type AuditAction =
     | "schedule_create"
     | "schedule_update"
     | "announcement"
-    | "business_notice";
+    | "business_notice"
+    | "business_application";
 
 /** One audit entry: who did what and when. */
 export interface AuditLogEntry {

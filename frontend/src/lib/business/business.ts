@@ -65,6 +65,25 @@ export function submitApplication(input: NewApplicationInput): BusinessApplicati
     return application;
 }
 
+/** Records an admin's decision. Use approveApplication / rejectApplication in review.ts. */
+export function saveDecision(
+    id: string,
+    decision: Pick<BusinessApplication, "status" | "rejectionReason" | "reviewedBy">,
+): BusinessApplication | undefined {
+    let updated: BusinessApplication | undefined;
+    const next = readApplications().map((application) => {
+        if (application.id !== id) return application;
+        updated = { ...application, ...decision, reviewedAt: new Date().toISOString() };
+        return updated;
+    });
+    try {
+        localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(next));
+    } catch {
+        /* storage unavailable: the decision just won't survive a refresh */
+    }
+    return updated;
+}
+
 const PREMISES_KEY = "mutiaraconnect.business-premises";
 
 /** Extra premises owners added, keyed by owner (email/IC/name). */
@@ -124,4 +143,13 @@ export function removePremise(owner: string, id: string): void {
             /* storage unavailable: the removal just won't survive a refresh */
         }
     }
+}
+
+/**
+ * An owner's current premises: the account's seeded ones plus any added in this browser
+ * (including the one from an approved application), minus any the owner removed.
+ */
+export function premisesFor(owner: string | undefined, seeded: BusinessProfile[] = []): BusinessProfile[] {
+    const removed = new Set(readRemovedPremiseIds(owner));
+    return [...seeded, ...readPremises(owner)].filter((premise) => !removed.has(premise.id));
 }
