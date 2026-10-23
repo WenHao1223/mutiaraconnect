@@ -1,32 +1,10 @@
+import linesData from "@/data/lrt-lines.json";
 import stationsData from "@/data/lrt-stations.json";
 import type { LrtLineInfo, LrtLineSegment, LrtStation } from "@/types/lrt";
 
 const stations = stationsData as LrtStation[];
 
-export const LRT_LINES: LrtLineInfo[] = [
-    {
-        id: "island_mainline",
-        name: "Mutiara Line (Island Corridor)",
-        badge: "Mutiara Mainline",
-        color: "#0055b8",
-        lengthKm: 25.0,
-        stationCount: 19,
-        AlignmentType: "Elevated Viaduct",
-        summary:
-            "Runs north–south along the eastern corridor of Penang Island from Silicon Island through Penang International Airport, Bayan Lepas FIZ, USM/Sungai Dua, and Jelutong to Komtar in George Town.",
-    },
-    {
-        id: "cross_channel",
-        name: "Cross-Channel Alignment (Komtar / Bandar Sri Pinang – Penang Sentral)",
-        badge: "Cross-Channel Link",
-        color: "#f59e0b",
-        lengthKm: 4.5,
-        stationCount: 2,
-        AlignmentType: "Elevated Marine Cable-Stayed Bridge",
-        summary:
-            "Branches east from Bandar Sri Pinang across the Penang Strait (with 62m navigational clearance) to Penang Sentral in Butterworth for direct interchange with KTMB ETS, Komuter Utara, and Rapid Ferry.",
-    },
-];
+export const LRT_LINES = linesData as LrtLineInfo[];
 
 /** Returns all LRT stations ordered by station code (S01 -> S20). */
 export function readLrtStations(): LrtStation[] {
