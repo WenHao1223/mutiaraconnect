@@ -8,9 +8,13 @@ import type { Announcement } from "@/types/announcement";
  * then kept in localStorage so admin-published items show up in the navbar bell
  * and public announcements page in real time. Replace with Supabase later.
  */
-const ANNOUNCEMENTS_KEY = "mutiaraconnect.announcements.v2";
-const READ_ANNOUNCEMENTS_KEY = "mutiaraconnect.announcements.read";
-const ANNOUNCEMENTS_EVENT = "mutiaraconnect:announcements-changed";
+const ANNOUNCEMENTS_KEY =
+    (import.meta.env.VITE_ANNOUNCEMENTS_STORAGE_KEY as string | undefined) ?? "mutiaraconnect.announcements.v2";
+const READ_ANNOUNCEMENTS_KEY =
+    (import.meta.env.VITE_ANNOUNCEMENTS_READ_STORAGE_KEY as string | undefined) ??
+    "mutiaraconnect.announcements.read";
+const ANNOUNCEMENTS_EVENT =
+    (import.meta.env.VITE_ANNOUNCEMENTS_EVENT as string | undefined) ?? "mutiaraconnect:announcements-changed";
 
 const seed = announcementsData as Announcement[];
 
