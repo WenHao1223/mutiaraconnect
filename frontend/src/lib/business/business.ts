@@ -1,4 +1,8 @@
+import { activeClosures } from "@/lib/admin/closures";
+import { readSchedule } from "@/lib/admin/schedule";
 import type { ApplicationStatus, BusinessApplication, BusinessType } from "@/types/business";
+import type { ClosureKind, RoadClosure } from "@/types/road-closure";
+import type { ConstructionSchedule } from "@/types/schedule";
 import type { BusinessProfile } from "@/types/user";
 
 /**
@@ -153,3 +157,34 @@ export function premisesFor(owner: string | undefined, seeded: BusinessProfile[]
     const removed = new Set(readRemovedPremiseIds(owner));
     return [...seeded, ...readPremises(owner)].filter((premise) => !removed.has(premise.id));
 }
+
+/**
+ * Closures and access notices businesses should still see: not ended (activeClosures) and not
+ * past their "until" date. Access notices are never marked ended, so the date is what retires them.
+ */
+export function currentNotices(): RoadClosure[] {
+    const now = Date.now();
+    return activeClosures().filter((closure) => new Date(closure.endAt).getTime() >= now);
+}
+
+/**
+ * Construction works near a premise that aren't finished yet. Schedule items have an area name
+ * but no pin, so they match when the premise's address mentions that area (e.g. "Jelutong").
+ */
+export function worksNear(premise: BusinessProfile): ConstructionSchedule[] {
+    const now = Date.now();
+    const address = premise.address.toLowerCase();
+    return readSchedule().filter(
+        (item) =>
+            item.status !== "completed" &&
+            new Date(item.endsAt).getTime() >= now &&
+            address.includes(item.area.toLowerCase()),
+    );
+}
+
+/** Colours per notice type, matching the announcement bell's closure / construction / general tags. */
+export const noticeTypeStyles: Record<ClosureKind | "construction", { label: string; tag: string; edge: string }> = {
+    closure: { label: "Road closure", tag: "bg-destructive/10 text-destructive", edge: "border-l-destructive" },
+    construction: { label: "Construction", tag: "bg-hazard/20 text-amber-900", edge: "border-l-hazard" },
+    access: { label: "Access info", tag: "bg-info/10 text-info", edge: "border-l-info" },
+};

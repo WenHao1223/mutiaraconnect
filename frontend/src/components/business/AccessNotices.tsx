@@ -1,9 +1,11 @@
 import { ExternalLink } from "lucide-react";
 import MapsLink from "@/components/custom/MapsLink";
 import { readClosures } from "@/lib/admin/closures";
+import { noticeTypeStyles } from "@/lib/business/business";
 import { AFFECTED_RADIUS_KM, distanceInKm, formatDistance, isWithinRadius } from "@/lib/maps/geo";
 import type { Coordinates } from "@/lib/maps/maps";
 import { formatDate } from "@/lib/tickets/tickets";
+import { cn } from "@/lib/utils";
 import type { RoadClosure } from "@/types/road-closure";
 
 /** A shop the closure distances are measured from. */
@@ -15,10 +17,12 @@ interface AccessNoticesProps {
     closures?: RoadClosure[];
     /** The owner's premises; closures within range of any of them are listed. */
     origins?: PremiseOrigin[];
+    /** Heading above the list. Defaults to "Access notices". */
+    title?: string;
 }
 
 /** Board of closures and access changes affecting businesses near their premises. */
-export default function AccessNotices({ closures, origins = [] }: AccessNoticesProps) {
+export default function AccessNotices({ closures, origins = [], title = "Access notices" }: AccessNoticesProps) {
     const list = closures ?? readClosures();
     const hasOrigins = origins.length > 0;
 
@@ -33,8 +37,8 @@ export default function AccessNotices({ closures, origins = [] }: AccessNoticesP
         : list;
 
     return (
-        <section className="space-y-4" aria-label="Access notices">
-            <h2 className="text-2xl font-semibold">Access notices</h2>
+        <section className="space-y-4" aria-label={title}>
+            <h2 className="text-2xl font-semibold">{title}</h2>
             {shown.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                     No closures or access changes within {Math.round(AFFECTED_RADIUS_KM * 1000)} m of your
@@ -44,9 +48,22 @@ export default function AccessNotices({ closures, origins = [] }: AccessNoticesP
             {shown.map((closure) => {
                 const nearest = hasOrigins ? nearestOrigin(closure) : undefined;
                 return (
-                    <article key={closure.id} className="rounded-lg border border-l-4 border-l-hazard bg-card p-5">
+                    <article
+                        key={closure.id}
+                        className={cn("rounded-lg border border-l-4 bg-card p-5", noticeTypeStyles[closure.kind].edge)}
+                    >
                         <div className="flex justify-between gap-3">
-                            <h3 className="text-lg font-semibold">{closure.title}</h3>
+                            <div>
+                                <span
+                                    className={cn(
+                                        "rounded px-1.5 py-0.5 text-[11px] font-medium",
+                                        noticeTypeStyles[closure.kind].tag,
+                                    )}
+                                >
+                                    {noticeTypeStyles[closure.kind].label}
+                                </span>
+                                <h3 className="mt-1.5 text-lg font-semibold">{closure.title}</h3>
+                            </div>
                             <span className="text-xs text-muted-foreground">{closure.area}</span>
                         </div>
                         {closure.reason && (

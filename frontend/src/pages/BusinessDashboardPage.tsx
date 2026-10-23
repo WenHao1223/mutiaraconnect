@@ -9,9 +9,8 @@ import TicketList from "@/components/tickets/TicketList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { readClosures } from "@/lib/admin/closures";
 import { useAuth } from "@/lib/auth/auth";
-import { premisesFor } from "@/lib/business/business";
+import { currentNotices, premisesFor } from "@/lib/business/business";
 import { AFFECTED_RADIUS_KM, isWithinRadius } from "@/lib/maps/geo";
 import { getTicketsForUser, isOpen } from "@/lib/tickets/tickets";
 import { PATHS } from "@/routes";
@@ -32,7 +31,7 @@ export default function BusinessDashboardPage() {
     const premises = premisesFor(user.email ?? user.ic ?? user.name, user.businesses);
     const origins = premises.map(({ name, latitude, longitude }) => ({ name, latitude, longitude }));
     // Same rule AccessNotices uses to decide what to list.
-    const nearby = readClosures().filter((closure) =>
+    const nearby = currentNotices().filter((closure) =>
         origins.some((origin) => isWithinRadius(origin, closure, AFFECTED_RADIUS_KM)),
     );
     const tickets = getTicketsForUser(user.email);
