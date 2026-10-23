@@ -19,6 +19,7 @@ const actionLabels: Record<AuditAction, string> = {
     announcement: "Announcement",
     business_notice: "Business notice",
     business_application: "Business application",
+    business_support: "Business support",
 };
 
 /** Super admin tool: a read-only trail of who did what and when. */

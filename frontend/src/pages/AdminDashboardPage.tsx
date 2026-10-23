@@ -8,6 +8,7 @@ import ScheduleManager from "@/components/admin/ScheduleManager";
 import TicketAdmin from "@/components/admin/TicketAdmin";
 import UserManagement from "@/components/admin/UserManagement";
 import ApplicationReview from "@/components/business/ApplicationReview";
+import SupportRequestAdmin from "@/components/business/SupportRequestAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth/auth";
 import { roleLabels } from "@/lib/settings/user-display";
@@ -89,8 +90,9 @@ export default function AdminDashboardPage() {
                         </TabsContent>
                     )}
                     {tab === "businesses" && (
-                        <TabsContent value="businesses">
+                        <TabsContent value="businesses" className="space-y-8">
                             <ApplicationReview />
+                            <SupportRequestAdmin />
                         </TabsContent>
                     )}
                     {isSuperAdmin && tab === "users" && (

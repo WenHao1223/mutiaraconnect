@@ -35,3 +35,30 @@ export interface BusinessApplication {
     /** ISO 8601 timestamp of the decision. */
     reviewedAt?: string;
 }
+
+/** Help a business can ask the support desk for. */
+export type SupportRequestType = "signage" | "delivery" | "parking";
+
+export type SupportRequestStatus = "pending" | "arranged" | "declined";
+
+/** A business owner's request to the support desk, answered by an admin. */
+export interface SupportRequest {
+    /** Public reference, e.g. "SR-1001". */
+    id: string;
+    /** Key the owner's premises are stored under (email, falling back to IC or name). */
+    owner: string;
+    ownerName: string;
+    premiseId: string;
+    premiseName: string;
+    type: SupportRequestType;
+    /** What the owner needs, e.g. "A sign at the back lane entrance". */
+    note: string;
+    status: SupportRequestStatus;
+    /** ISO 8601 timestamp. */
+    submittedAt: string;
+    /** The admin's answer, shown to the owner. */
+    reply?: string;
+    repliedBy?: string;
+    /** ISO 8601 timestamp. */
+    repliedAt?: string;
+}

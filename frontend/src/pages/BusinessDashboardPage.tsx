@@ -1,34 +1,37 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, BadgeCheck, Clock, ExternalLink, LifeBuoy, MapPin, Navigation, Signpost, Store, Ticket as TicketIcon, Truck } from "lucide-react";
+import { AlertTriangle, BadgeCheck, ClipboardList, Clock, ExternalLink, LifeBuoy, MapPin, MessageSquarePlus, Navigation, Store, Ticket as TicketIcon } from "lucide-react";
 import SummaryCard from "@/components/admin/SummaryCard";
 import AccessNotices from "@/components/business/AccessNotices";
+import SupportRequestDialog from "@/components/business/SupportRequestDialog";
+import SupportStatusBadge from "@/components/business/SupportStatusBadge";
 import MapsLink from "@/components/custom/MapsLink";
 import TicketDetail from "@/components/tickets/TicketDetail";
 import TicketList from "@/components/tickets/TicketList";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth/auth";
 import { currentNotices, premisesFor } from "@/lib/business/business";
+import { supportRequestsFor, supportTypeLabels } from "@/lib/business/support";
 import { AFFECTED_RADIUS_KM, isWithinRadius } from "@/lib/maps/geo";
-import { getTicketsForUser, isOpen } from "@/lib/tickets/tickets";
+import { formatDate, formatDateTime, getTicketsForUser, isOpen } from "@/lib/tickets/tickets";
 import { PATHS } from "@/routes";
-
-/** What the support desk offers affected businesses. */
-const supportServices = [
-    { icon: Signpost, title: "Free signage for alternative entrances" },
-    { icon: Truck, title: "Delivery window coordination" },
-];
 
 /** Business Dashboard: home for business premise accounts (route is guarded by RequireRole). */
 export default function BusinessDashboardPage() {
     const { user } = useAuth();
     const [selectedId, setSelectedId] = useState<string>();
+    const owner = user ? user.email ?? user.ic ?? user.name : "";
+    const [requests, setRequests] = useState(() => supportRequestsFor(owner));
+    const [requesting, setRequesting] = useState(false);
+    const [viewingRequests, setViewingRequests] = useState(false);
 
     if (!user) return null;
 
-    const premises = premisesFor(user.email ?? user.ic ?? user.name, user.businesses);
+    const premises = premisesFor(owner, user.businesses);
     const origins = premises.map(({ name, latitude, longitude }) => ({ name, latitude, longitude }));
     // Same rule AccessNotices uses to decide what to list.
     const nearby = currentNotices().filter((closure) =>
@@ -156,27 +159,94 @@ export default function BusinessDashboardPage() {
                                             <Clock className="size-4" aria-hidden /> Mon–Fri, 9am–5pm
                                         </span>
                                     </p>
-                                    <ul className="mt-4 flex flex-wrap gap-2">
-                                        {supportServices.map(({ icon: Icon, title }) => (
-                                            <li
-                                                key={title}
-                                                className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-medium"
-                                            >
-                                                <Icon className="size-4" aria-hidden /> {title}
-                                            </li>
-                                        ))}
-                                    </ul>
                                 </div>
-                                <MapsLink
-                                    location="Komtar, George Town, Penang"
-                                    mode="directions"
-                                    className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-foreground hover:no-underline hover:opacity-90"
-                                >
-                                    <Navigation className="size-4" aria-hidden /> Visit the desk
-                                </MapsLink>
+                                <div className="flex flex-wrap gap-2">
+                                    <MapsLink
+                                        location="Komtar, George Town, Penang"
+                                        mode="directions"
+                                        className="rounded-md border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:no-underline hover:bg-white/10"
+                                    >
+                                        <Navigation className="size-4" aria-hidden /> Visit the desk
+                                    </MapsLink>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRequesting(true)}
+                                        className="inline-flex items-center gap-1 rounded-md bg-white px-4 py-2 text-sm font-semibold text-foreground hover:opacity-90"
+                                    >
+                                        <MessageSquarePlus className="size-4" aria-hidden /> Request support
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewingRequests(true)}
+                                        className="inline-flex items-center gap-1 rounded-md border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+                                    >
+                                        <ClipboardList className="size-4" aria-hidden /> My requests ({requests.length})
+                                    </button>
+                                </div>
                             </div>
                         </section>
                     </div>
+
+                    <Dialog open={viewingRequests} onOpenChange={setViewingRequests}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>My support requests</DialogTitle>
+                                <DialogDescription>Click a request to see its details and the reply.</DialogDescription>
+                            </DialogHeader>
+                            {requests.length === 0 ? (
+                                <p className="rounded-lg bg-muted px-4 py-6 text-center text-sm text-muted-foreground">
+                                    No support requests yet.
+                                </p>
+                            ) : (
+                                <Accordion type="single" collapsible className="max-h-[60vh] overflow-y-auto">
+                                    {requests.map((request) => (
+                                        <AccordionItem key={request.id} value={request.id}>
+                                            <AccordionTrigger className="gap-3">
+                                                <span className="flex-1">
+                                                    {request.id} · {supportTypeLabels[request.type]}
+                                                    <span className="block text-xs font-normal text-muted-foreground">
+                                                        {request.premiseName}
+                                                    </span>
+                                                </span>
+                                                <SupportStatusBadge status={request.status} />
+                                            </AccordionTrigger>
+                                            <AccordionContent className="space-y-2">
+                                                <p>{request.note}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Requested {formatDate(request.submittedAt)}
+                                                </p>
+                                                {request.reply ? (
+                                                    <div className="rounded-lg bg-muted px-4 py-3">
+                                                        <p>
+                                                            <span className="font-semibold">Response:</span> {request.reply}
+                                                        </p>
+                                                        {request.repliedAt && (
+                                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                                {request.repliedBy} · {formatDateTime(request.repliedAt)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <p className="rounded-lg bg-muted px-4 py-3 text-muted-foreground">
+                                                        No reply yet. The support desk will get back to you soon.
+                                                    </p>
+                                                )}
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            )}
+                        </DialogContent>
+                    </Dialog>
+
+                    <SupportRequestDialog
+                        owner={owner}
+                        ownerName={user.name}
+                        premises={premises}
+                        open={requesting}
+                        onOpenChange={setRequesting}
+                        onSubmitted={(request) => setRequests((current) => [request, ...current])}
+                    />
 
                     <aside className="space-y-4">
                         <div className="rounded-lg bg-primary p-6 text-primary-foreground">
