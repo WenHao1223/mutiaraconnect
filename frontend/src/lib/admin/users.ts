@@ -1,6 +1,7 @@
 import usersData from "@/data/users.json";
 import { recordAudit } from "@/lib/admin/audit";
 import { readJson, writeJson } from "@/lib/admin/store";
+import { premisesFor } from "@/lib/business/business";
 import type { AppUser, BusinessProfile, MockAccount } from "@/types/user";
 
 /**
@@ -62,7 +63,10 @@ export function readAllPremises(): BusinessProfile[] {
         ...Object.values(usersData as Record<string, MockAccount>),
         ...readJson<RegisteredAccount[]>(REGISTERED_KEY, []),
     ];
-    return accounts.flatMap((account) => account.businesses ?? []);
+    // Includes premises added in this browser, e.g. from an approved business application.
+    return accounts.flatMap((account) =>
+        premisesFor(account.email ?? account.ic ?? account.name, account.businesses),
+    );
 }
 
 function saveOverride(email: string, patch: UserOverride): void {

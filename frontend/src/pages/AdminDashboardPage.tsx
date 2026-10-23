@@ -1,4 +1,4 @@
-import { BellRing, CalendarClock, LayoutDashboard, ScrollText, Ticket, Users, type LucideIcon } from "lucide-react";
+import { BellRing, CalendarClock, LayoutDashboard, ScrollText, Store, Ticket, Users, type LucideIcon } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminOverview from "@/components/admin/AdminOverview";
 import AuditLog from "@/components/admin/AuditLog";
@@ -7,6 +7,8 @@ import NotificationsManager from "@/components/admin/NotificationsManager";
 import ScheduleManager from "@/components/admin/ScheduleManager";
 import TicketAdmin from "@/components/admin/TicketAdmin";
 import UserManagement from "@/components/admin/UserManagement";
+import ApplicationReview from "@/components/business/ApplicationReview";
+import SupportRequestAdmin from "@/components/business/SupportRequestAdmin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth/auth";
 import { roleLabels } from "@/lib/settings/user-display";
@@ -24,6 +26,7 @@ const ADMIN_TABS = [
     { value: "tickets", label: "Tickets", icon: Ticket, superAdminOnly: false },
     { value: "operations", label: "Closures & schedule", icon: CalendarClock, superAdminOnly: false },
     { value: "notifications", label: "Notifications", icon: BellRing, superAdminOnly: false },
+    { value: "businesses", label: "Business", icon: Store, superAdminOnly: false },
     { value: "users", label: "Users", icon: Users, superAdminOnly: true },
     { value: "audit", label: "Audit log", icon: ScrollText, superAdminOnly: true },
 ] as const satisfies readonly AdminTabItem[];
@@ -67,7 +70,7 @@ export default function AdminDashboardPage() {
                     </p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-primary">Admin Dashboard</h1>
                     <p className="mt-1 text-muted-foreground">
-                        Manage reports, closures, the construction schedule and public notifications.
+                        Manage tickets, closures, the construction schedule and public notifications.
                     </p>
                 </div>
             </section>
@@ -102,6 +105,12 @@ export default function AdminDashboardPage() {
                     {tab === "notifications" && (
                         <TabsContent value="notifications">
                             <NotificationsManager />
+                        </TabsContent>
+                    )}
+                    {tab === "businesses" && (
+                        <TabsContent value="businesses" className="grid gap-6 lg:grid-cols-2 lg:items-start">
+                            <ApplicationReview />
+                            <SupportRequestAdmin />
                         </TabsContent>
                     )}
                     {isSuperAdmin && tab === "users" && (

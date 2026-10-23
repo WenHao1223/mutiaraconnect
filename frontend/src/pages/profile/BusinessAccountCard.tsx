@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { findApplication } from "@/lib/business/business";
+import { findApplication, premisesFor } from "@/lib/business/business";
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";
 
@@ -17,7 +17,8 @@ export default function BusinessAccountCard({ user }: { user: AppUser }) {
     if (user.role === "admin" || user.role === "super_admin") return null;
 
     const application = findApplication(user.email ?? user.ic ?? user.name);
-    const businesses = user.role === "business_premise" ? user.businesses ?? [] : [];
+    const businesses =
+        user.role === "business_premise" ? premisesFor(user.email ?? user.ic ?? user.name, user.businesses) : [];
 
     const description =
         user.role === "business_premise"
@@ -45,9 +46,9 @@ export default function BusinessAccountCard({ user }: { user: AppUser }) {
                     </div>
                 )}
                 <Button asChild>
-                    <Link to={PATHS.profileBusiness}>
+                    <Link to={user.role === "business_premise" ? PATHS.businessDashboard : PATHS.profileBusiness}>
                         {user.role === "business_premise"
-                            ? "View business account"
+                            ? "Go to business dashboard"
                             : application
                                 ? "View your application"
                                 : "Apply for a business account"}

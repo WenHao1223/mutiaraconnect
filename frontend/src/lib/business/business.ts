@@ -1,27 +1,32 @@
+import { activeClosures } from "@/lib/admin/closures";
+import { readSchedule } from "@/lib/admin/schedule";
+import type { ApplicationStatus, BusinessApplication, BusinessType } from "@/types/business";
+import type { ClosureKind, RoadClosure } from "@/types/road-closure";
+import type { ConstructionSchedule } from "@/types/schedule";
 import type { BusinessProfile } from "@/types/user";
 
 /**
  * MOCK BUSINESS APPLICATIONS (frontend only, no backend).
- * A resident can apply to upgrade to a business premise account; the application
- * is kept in localStorage while "pending". Replace with Supabase later.
+ * A resident can apply to upgrade to a business premise account; an admin then approves
+ * or rejects it. Kept in localStorage, one per applicant. Replace with Supabase later.
  */
-export interface BusinessApplication {
-    /** Identifies the applicant (email, falling back to IC or name). */
-    applicant: string;
-    email?: string;
-    businessName: string;
-    registrationNumber: string;
-    /** Human-readable address resolved from the pinned map location. */
-    premiseAddress: string;
-    /** Shop coordinates picked on the map. */
-    latitude: number;
-    longitude: number;
-    status: "pending" | "approved" | "rejected";
-    submittedAt: string;
-}
-
 const APPLICATIONS_KEY = "mutiaraconnect.business-applications";
 const normalizeKey = (key: string) => key.trim().toLowerCase();
+
+export const businessTypeLabels: Record<BusinessType, string> = {
+    food_beverage: "Food & beverage",
+    retail: "Retail",
+    services: "Services",
+    health: "Health & wellness",
+    lodging: "Lodging",
+    other: "Other",
+};
+
+export const applicationStatusMeta: Record<ApplicationStatus, { label: string; badge: string }> = {
+    pending: { label: "Pending review", badge: "border-hazard/40 bg-hazard/15 text-amber-800" },
+    approved: { label: "Approved", badge: "border-success/30 bg-success/10 text-green-800" },
+    rejected: { label: "Rejected", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+};
 
 function readStorage<T>(key: string, fallback: T): T {
     try {
@@ -40,11 +45,16 @@ export function findApplication(applicant?: string): BusinessApplication | undef
     return readApplications().find((application) => normalizeKey(application.applicant) === target);
 }
 
-export function submitApplication(
-    input: Omit<BusinessApplication, "status" | "submittedAt">,
-): BusinessApplication {
+export type NewApplicationInput = Omit<
+    BusinessApplication,
+    "id" | "status" | "submittedAt" | "rejectionReason" | "reviewedBy" | "reviewedAt"
+>;
+
+/** Files a new application, replacing any earlier (e.g. rejected) one from the same applicant. */
+export function submitApplication(input: NewApplicationInput): BusinessApplication {
     const application: BusinessApplication = {
         ...input,
+        id: `BA-${Date.now().toString(36)}`,
         status: "pending",
         submittedAt: new Date().toISOString(),
     };
@@ -57,6 +67,25 @@ export function submitApplication(
         /* storage unavailable: the application just won't survive a refresh */
     }
     return application;
+}
+
+/** Records an admin's decision. Use approveApplication / rejectApplication in review.ts. */
+export function saveDecision(
+    id: string,
+    decision: Pick<BusinessApplication, "status" | "rejectionReason" | "reviewedBy">,
+): BusinessApplication | undefined {
+    let updated: BusinessApplication | undefined;
+    const next = readApplications().map((application) => {
+        if (application.id !== id) return application;
+        updated = { ...application, ...decision, reviewedAt: new Date().toISOString() };
+        return updated;
+    });
+    try {
+        localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(next));
+    } catch {
+        /* storage unavailable: the decision just won't survive a refresh */
+    }
+    return updated;
 }
 
 const PREMISES_KEY = "mutiaraconnect.business-premises";
@@ -119,3 +148,43 @@ export function removePremise(owner: string, id: string): void {
         }
     }
 }
+
+/**
+ * An owner's current premises: the account's seeded ones plus any added in this browser
+ * (including the one from an approved application), minus any the owner removed.
+ */
+export function premisesFor(owner: string | undefined, seeded: BusinessProfile[] = []): BusinessProfile[] {
+    const removed = new Set(readRemovedPremiseIds(owner));
+    return [...seeded, ...readPremises(owner)].filter((premise) => !removed.has(premise.id));
+}
+
+/**
+ * Closures and access notices businesses should still see: not ended (activeClosures) and not
+ * past their "until" date. Access notices are never marked ended, so the date is what retires them.
+ */
+export function currentNotices(): RoadClosure[] {
+    const now = Date.now();
+    return activeClosures().filter((closure) => new Date(closure.endAt).getTime() >= now);
+}
+
+/**
+ * Construction works near a premise that aren't finished yet. Schedule items have an area name
+ * but no pin, so they match when the premise's address mentions that area (e.g. "Jelutong").
+ */
+export function worksNear(premise: BusinessProfile): ConstructionSchedule[] {
+    const now = Date.now();
+    const address = premise.address.toLowerCase();
+    return readSchedule().filter(
+        (item) =>
+            item.status !== "completed" &&
+            new Date(item.endsAt).getTime() >= now &&
+            address.includes(item.area.toLowerCase()),
+    );
+}
+
+/** Colours per notice type, matching the announcement bell's closure / construction / general tags. */
+export const noticeTypeStyles: Record<ClosureKind | "construction", { label: string; tag: string; edge: string }> = {
+    closure: { label: "Road closure", tag: "bg-destructive/10 text-destructive", edge: "border-l-destructive" },
+    construction: { label: "Construction", tag: "bg-hazard/20 text-amber-900", edge: "border-l-hazard" },
+    access: { label: "Access info", tag: "bg-info/10 text-info", edge: "border-l-info" },
+};

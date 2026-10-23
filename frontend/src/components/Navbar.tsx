@@ -48,6 +48,7 @@ export default function Navbar({
                         <NavLink
                             key={item.path}
                             to={item.path}
+                            end
                             className={({ isActive }) =>
                                 cn(navStyles.desktopLink, isActive && navStyles.desktopActive)
                             }

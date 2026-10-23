@@ -11,6 +11,7 @@ import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AnnouncementsPage from "@/pages/AnnouncementsPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
+import BusinessNoticesPage from "@/pages/BusinessNoticesPage";
 import ConstructionInfoPage from "@/pages/ConstructionInfoPage";
 import ConstructionUpdatesPage from "@/pages/ConstructionUpdatesPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
@@ -60,7 +61,7 @@ const pages: PageRoute[] = [
 
     { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
     { path: PATHS.ticket, label: "Ticket", element: <PublicTicketsPage />, nav: "main" },
-    { path: PATHS.business, label: "Business", element: <Placeholder title="Business" />, nav: "main" },
+    { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
     { path: PATHS.about, label: "About Us", element: <Placeholder title="About Us" />, nav: "main" },
 
