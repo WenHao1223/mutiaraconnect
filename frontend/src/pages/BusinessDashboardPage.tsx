@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { AlertTriangle, BadgeCheck, ClipboardList, Clock, ExternalLink, LifeBuoy, MapPin, MessageSquarePlus, Navigation, Store, Ticket as TicketIcon } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Clock, ExternalLink, LifeBuoy, MapPin, MessageSquarePlus, Navigation, Store, Ticket as TicketIcon } from "lucide-react";
 import SummaryCard from "@/components/admin/SummaryCard";
 import AccessNotices from "@/components/business/AccessNotices";
 import SupportRequestDialog from "@/components/business/SupportRequestDialog";
@@ -12,8 +12,8 @@ import TicketList from "@/components/tickets/TicketList";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth/auth";
 import { currentNotices, premisesFor } from "@/lib/business/business";
 import { supportRequestsFor, supportTypeLabels } from "@/lib/business/support";
@@ -28,7 +28,7 @@ export default function BusinessDashboardPage() {
     const owner = user ? user.email ?? user.ic ?? user.name : "";
     const [requests, setRequests] = useState(() => supportRequestsFor(owner));
     const [requesting, setRequesting] = useState(false);
-    const [viewingRequests, setViewingRequests] = useState(false);
+    const [tab, setTab] = useState<"tickets" | "requests">("tickets");
 
     if (!user) return null;
 
@@ -110,135 +110,99 @@ export default function BusinessDashboardPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <TicketIcon className="size-4" /> Your tickets
+                                    <TicketIcon className="size-4" /> Your tickets &amp; requests
                                 </CardTitle>
-                                <CardDescription>Access issues and other tickets about your premises.</CardDescription>
+                                <CardDescription>
+                                    Tickets you raised about your premises, and help you asked the support desk for.
+                                </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-6">
-                                {tickets.length === 0 ? (
-                                    <p className="rounded-lg bg-muted px-4 py-6 text-center text-sm text-muted-foreground">
-                                        No tickets yet.
-                                    </p>
-                                ) : (
-                                    <TicketList
-                                        tickets={tickets}
-                                        selectedId={selected?.id}
-                                        // Clicking the open ticket again closes it.
-                                        onSelect={(id) => setSelectedId((current) => (current === id ? undefined : id))}
-                                    />
-                                )}
-                                {selected && (
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="mb-3 text-xs font-medium text-primary hover:underline"
-                                            onClick={() => setSelectedId(undefined)}
-                                        >
-                                            ✕ Close details
-                                        </button>
-                                        <TicketDetail ticket={selected} />
-                                    </div>
-                                )}
+                            <CardContent>
+                                <Tabs value={tab} onValueChange={(value) => setTab(value as "tickets" | "requests")}>
+                                    <TabsList>
+                                        <TabsTrigger value="tickets">
+                                            <TicketIcon className="mr-1.5 size-4" aria-hidden /> Tickets ({tickets.length})
+                                        </TabsTrigger>
+                                        <TabsTrigger value="requests">
+                                            <LifeBuoy className="mr-1.5 size-4" aria-hidden /> Support requests ({requests.length})
+                                        </TabsTrigger>
+                                    </TabsList>
+
+                                    <TabsContent value="tickets" className="mt-4 space-y-6">
+                                        {tickets.length === 0 ? (
+                                            <p className="rounded-lg bg-muted px-4 py-6 text-center text-sm text-muted-foreground">
+                                                No tickets yet.
+                                            </p>
+                                        ) : (
+                                            <TicketList
+                                                tickets={tickets}
+                                                selectedId={selected?.id}
+                                                // Clicking the open ticket again closes it.
+                                                onSelect={(id) => setSelectedId((current) => (current === id ? undefined : id))}
+                                            />
+                                        )}
+                                        {selected && (
+                                            <div>
+                                                <button
+                                                    type="button"
+                                                    className="mb-3 text-xs font-medium text-primary hover:underline"
+                                                    onClick={() => setSelectedId(undefined)}
+                                                >
+                                                    ✕ Close details
+                                                </button>
+                                                <TicketDetail ticket={selected} />
+                                            </div>
+                                        )}
+                                    </TabsContent>
+
+                                    <TabsContent value="requests" className="mt-4">
+                                        {requests.length === 0 ? (
+                                            <p className="rounded-lg bg-muted px-4 py-6 text-center text-sm text-muted-foreground">
+                                                No support requests yet. Use Request support on the right.
+                                            </p>
+                                        ) : (
+                                            <Accordion type="single" collapsible>
+                                                {requests.map((request) => (
+                                                    <AccordionItem key={request.id} value={request.id}>
+                                                        <AccordionTrigger className="gap-3">
+                                                            <span className="flex-1">
+                                                                {request.id} · {supportTypeLabels[request.type]}
+                                                                <span className="block text-xs font-normal text-muted-foreground">
+                                                                    {request.premiseName}
+                                                                </span>
+                                                            </span>
+                                                            <SupportStatusBadge status={request.status} />
+                                                        </AccordionTrigger>
+                                                        <AccordionContent className="space-y-2">
+                                                            <p>{request.note}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Requested {formatDate(request.submittedAt)}
+                                                            </p>
+                                                            {request.reply ? (
+                                                                <div className="rounded-lg bg-muted px-4 py-3">
+                                                                    <p>
+                                                                        <span className="font-semibold">Response:</span> {request.reply}
+                                                                    </p>
+                                                                    {request.repliedAt && (
+                                                                        <p className="mt-1 text-xs text-muted-foreground">
+                                                                            {request.repliedBy} · {formatDateTime(request.repliedAt)}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="rounded-lg bg-muted px-4 py-3 text-muted-foreground">
+                                                                    No reply yet. The support desk will get back to you soon.
+                                                                </p>
+                                                            )}
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                ))}
+                                            </Accordion>
+                                        )}
+                                    </TabsContent>
+                                </Tabs>
                             </CardContent>
                         </Card>
-
-                        {/* Same shape as the "Is your shop affected?" box, in LRT Teal. */}
-                        <section className="rounded-lg bg-secondary p-6 text-white" aria-labelledby="support-desk">
-                            <div className="flex flex-wrap items-end justify-between gap-4">
-                                <div>
-                                    <h3 id="support-desk" className="flex items-center gap-2 text-xl font-semibold">
-                                        <LifeBuoy className="size-5" aria-hidden /> Need help during the works?
-                                    </h3>
-                                    <p className="mt-2 text-sm opacity-90">
-                                        Our support desk is here for businesses affected by the construction.
-                                    </p>
-                                    <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
-                                        <span className="inline-flex items-center gap-1.5">
-                                            <MapPin className="size-4" aria-hidden /> Komtar Level 1
-                                        </span>
-                                        <span className="inline-flex items-center gap-1.5">
-                                            <Clock className="size-4" aria-hidden /> Mon–Fri, 9am–5pm
-                                        </span>
-                                    </p>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    <MapsLink
-                                        location="Komtar, George Town, Penang"
-                                        mode="directions"
-                                        className="rounded-md border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:no-underline hover:bg-white/10"
-                                    >
-                                        <Navigation className="size-4" aria-hidden /> Visit the desk
-                                    </MapsLink>
-                                    <button
-                                        type="button"
-                                        onClick={() => setRequesting(true)}
-                                        className="inline-flex items-center gap-1 rounded-md bg-white px-4 py-2 text-sm font-semibold text-foreground hover:opacity-90"
-                                    >
-                                        <MessageSquarePlus className="size-4" aria-hidden /> Request support
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setViewingRequests(true)}
-                                        className="inline-flex items-center gap-1 rounded-md border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-                                    >
-                                        <ClipboardList className="size-4" aria-hidden /> My requests ({requests.length})
-                                    </button>
-                                </div>
-                            </div>
-                        </section>
                     </div>
-
-                    <Dialog open={viewingRequests} onOpenChange={setViewingRequests}>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>My support requests</DialogTitle>
-                                <DialogDescription>Click a request to see its details and the reply.</DialogDescription>
-                            </DialogHeader>
-                            {requests.length === 0 ? (
-                                <p className="rounded-lg bg-muted px-4 py-6 text-center text-sm text-muted-foreground">
-                                    No support requests yet.
-                                </p>
-                            ) : (
-                                <Accordion type="single" collapsible className="max-h-[60vh] overflow-y-auto">
-                                    {requests.map((request) => (
-                                        <AccordionItem key={request.id} value={request.id}>
-                                            <AccordionTrigger className="gap-3">
-                                                <span className="flex-1">
-                                                    {request.id} · {supportTypeLabels[request.type]}
-                                                    <span className="block text-xs font-normal text-muted-foreground">
-                                                        {request.premiseName}
-                                                    </span>
-                                                </span>
-                                                <SupportStatusBadge status={request.status} />
-                                            </AccordionTrigger>
-                                            <AccordionContent className="space-y-2">
-                                                <p>{request.note}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Requested {formatDate(request.submittedAt)}
-                                                </p>
-                                                {request.reply ? (
-                                                    <div className="rounded-lg bg-muted px-4 py-3">
-                                                        <p>
-                                                            <span className="font-semibold">Response:</span> {request.reply}
-                                                        </p>
-                                                        {request.repliedAt && (
-                                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                                {request.repliedBy} · {formatDateTime(request.repliedAt)}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <p className="rounded-lg bg-muted px-4 py-3 text-muted-foreground">
-                                                        No reply yet. The support desk will get back to you soon.
-                                                    </p>
-                                                )}
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))}
-                                </Accordion>
-                            )}
-                        </DialogContent>
-                    </Dialog>
 
                     <SupportRequestDialog
                         owner={owner}
@@ -248,6 +212,7 @@ export default function BusinessDashboardPage() {
                         onOpenChange={setRequesting}
                         onSubmitted={(request) => {
                             setRequests((current) => [request, ...current]);
+                            setTab("requests");
                             toast.success(`Support request ${request.id} sent.`);
                         }}
                     />
@@ -256,8 +221,8 @@ export default function BusinessDashboardPage() {
                         <div className="rounded-lg bg-primary p-6 text-primary-foreground">
                             <h3 className="text-xl font-semibold">Is your shop affected?</h3>
                             <p className="mt-2 text-sm opacity-90">
-                                Report blocked entrances, loading restrictions or lost parking. We'll forward it to
-                                the site team.
+                                Report a problem like a blocked entrance or lost parking. It becomes a ticket for the
+                                site team.
                             </p>
                             <Link
                                 to={PATHS.profileTickets}
@@ -265,6 +230,41 @@ export default function BusinessDashboardPage() {
                             >
                                 Report access issue
                             </Link>
+                        </div>
+
+                        {/* Same shape as the box above, in LRT Teal. */}
+                        <div className="rounded-lg bg-secondary p-6 text-white">
+                            <h3 className="flex items-center gap-2 text-xl font-semibold">
+                                <LifeBuoy className="size-5" aria-hidden /> Need help during the works?
+                            </h3>
+                            <p className="mt-2 text-sm opacity-90">
+                                Ask the support desk for free signage, delivery-window coordination or alternative
+                                parking.
+                            </p>
+                            <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
+                                <span className="inline-flex items-center gap-1.5">
+                                    <MapPin className="size-4" aria-hidden /> Komtar Level 1
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <Clock className="size-4" aria-hidden /> Mon–Fri, 9am–5pm
+                                </span>
+                            </p>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setRequesting(true)}
+                                    className="inline-flex items-center gap-1 rounded-md bg-white px-4 py-2 text-sm font-semibold text-foreground hover:opacity-90"
+                                >
+                                    <MessageSquarePlus className="size-4" aria-hidden /> Request support
+                                </button>
+                                <MapsLink
+                                    location="Komtar, George Town, Penang"
+                                    mode="directions"
+                                    className="rounded-md border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:no-underline hover:bg-white/10"
+                                >
+                                    <Navigation className="size-4" aria-hidden /> Visit the desk
+                                </MapsLink>
+                            </div>
                         </div>
 
                         <AccessNotices closures={nearby} origins={origins} />
