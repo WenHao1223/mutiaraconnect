@@ -1,4 +1,4 @@
-import { MapPin, Navigation, Store } from "lucide-react";
+import { ExternalLink, MapPin, Store } from "lucide-react";
 import AccessNotices from "@/components/business/AccessNotices";
 import MapsLink from "@/components/custom/MapsLink";
 import { badgeVariants } from "@/components/ui/badge";
@@ -83,8 +83,8 @@ export default function BusinessNoticesPage() {
                                                 <MapPin className="size-4" aria-hidden />
                                                 {premise.address || "Pinned on the map"}
                                             </span>
-                                            <MapsLink location={premise} mode="directions">
-                                                <Navigation className="size-3.5" aria-hidden /> Navigate
+                                            <MapsLink location={premise}>
+                                                Open in Google Maps <ExternalLink className="size-3" aria-hidden />
                                             </MapsLink>
                                         </CardDescription>
                                     </CardHeader>

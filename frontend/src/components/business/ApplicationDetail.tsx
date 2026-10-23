@@ -1,4 +1,4 @@
-import { Clock, FileText, Hash, MapPin, Navigation, Phone, Store } from "lucide-react";
+import { Clock, ExternalLink, FileText, Hash, MapPin, Phone, Store } from "lucide-react";
 import ApplicationProgress from "@/components/business/ApplicationProgress";
 import ApplicationStatusBadge from "@/components/business/ApplicationStatusBadge";
 import LocationPicker from "@/components/custom/LocationPicker";
@@ -45,8 +45,8 @@ export default function ApplicationDetail({ application }: { application: Busine
                         <MapPin className="size-4 text-muted-foreground" aria-hidden />
                         {application.premiseAddress || "Pinned on the map"}
                     </span>
-                    <MapsLink location={application} mode="directions">
-                        <Navigation className="size-3.5" aria-hidden /> Navigate
+                    <MapsLink location={application}>
+                        Open in Google Maps <ExternalLink className="size-3" aria-hidden />
                     </MapsLink>
                 </div>
                 <LocationPicker

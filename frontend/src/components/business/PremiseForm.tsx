@@ -193,7 +193,7 @@ export default function PremiseForm({
                                     {...register("contactPhone", {
                                         validate: (v) =>
                                             PHONE_PATTERN.test(v.replace(/[\s-]/g, "")) ||
-                                            "Enter a Malaysian phone number.",
+                                            "Enter a Malaysian phone number, e.g. 04-226 1234 or 011-1234 5678.",
                                     })}
                                 />
                                 <FieldError message={errors.contactPhone?.message} />

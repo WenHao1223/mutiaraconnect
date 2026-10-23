@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { AlertTriangle, BadgeCheck, ClipboardList, Clock, ExternalLink, LifeBuoy, MapPin, MessageSquarePlus, Navigation, Store, Ticket as TicketIcon } from "lucide-react";
 import SummaryCard from "@/components/admin/SummaryCard";
 import AccessNotices from "@/components/business/AccessNotices";
@@ -245,7 +246,10 @@ export default function BusinessDashboardPage() {
                         premises={premises}
                         open={requesting}
                         onOpenChange={setRequesting}
-                        onSubmitted={(request) => setRequests((current) => [request, ...current])}
+                        onSubmitted={(request) => {
+                            setRequests((current) => [request, ...current]);
+                            toast.success(`Support request ${request.id} sent.`);
+                        }}
                     />
 
                     <aside className="space-y-4">
