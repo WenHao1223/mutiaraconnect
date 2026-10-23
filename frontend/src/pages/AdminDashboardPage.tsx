@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { BellRing, CalendarClock, LayoutDashboard, ScrollText, Ticket, Users, type LucideIcon } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AdminOverview from "@/components/admin/AdminOverview";
 import AuditLog from "@/components/admin/AuditLog";
 import ClosureManager from "@/components/admin/ClosureManager";
@@ -13,6 +13,17 @@ import { roleLabels } from "@/lib/settings/user-display";
 
 type AdminTab = "overview" | "tickets" | "operations" | "notifications" | "users" | "audit";
 
+const ADMIN_TABS: AdminTab[] = ["overview", "tickets", "operations", "notifications", "users", "audit"];
+const SUPER_ADMIN_TABS: AdminTab[] = ["users", "audit"];
+
+/** Resolve a tab id from the URL hash (e.g. /admin#notifications) with role-aware fallbacks. */
+function readTabFromHash(hash: string, isSuperAdmin: boolean): AdminTab {
+    const value = hash.replace(/^#/, "") as AdminTab;
+    if (!ADMIN_TABS.includes(value)) return "overview";
+    if (!isSuperAdmin && SUPER_ADMIN_TABS.includes(value)) return "overview";
+    return value;
+}
+
 interface AdminTabItem {
     value: AdminTab;
     label: string;
@@ -23,7 +34,16 @@ interface AdminTabItem {
 export default function AdminDashboardPage() {
     const { user } = useAuth();
     const isSuperAdmin = user?.role === "super_admin";
-    const [tab, setTab] = useState<AdminTab>("overview");
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // The hash is the single source of truth so tabs can be opened directly,
+    // e.g. /admin#notifications, and browser back/forward stays in sync.
+    const tab = readTabFromHash(location.hash, Boolean(isSuperAdmin));
+
+    function handleTabChange(value: string) {
+        navigate({ hash: `#${value}` }, { replace: true });
+    }
 
     const tabs: AdminTabItem[] = [
         { value: "overview", label: "Overview", icon: LayoutDashboard },
@@ -55,7 +75,7 @@ export default function AdminDashboardPage() {
             </section>
 
             <div className="mx-auto max-w-7xl px-4 py-8">
-                <Tabs value={tab} onValueChange={(value) => setTab(value as AdminTab)}>
+                <Tabs value={tab} onValueChange={handleTabChange}>
                     <TabsList className="flex h-auto flex-wrap justify-start gap-1">
                         {tabs.map(({ value, label, icon: Icon }) => (
                             <TabsTrigger key={value} value={value}>

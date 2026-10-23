@@ -216,7 +216,7 @@ export default function AnnouncementsPage() {
 
                             {isAdmin && (
                                 <Button asChild variant="secondary" size="sm">
-                                    <Link to={PATHS.admin}>Manage in Admin</Link>
+                                    <Link to={`${PATHS.admin}#notifications`}>Manage in Admin</Link>
                                 </Button>
                             )}
                         </div>
