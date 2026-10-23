@@ -46,9 +46,9 @@ export default function BusinessAccountCard({ user }: { user: AppUser }) {
                     </div>
                 )}
                 <Button asChild>
-                    <Link to={PATHS.profileBusiness}>
+                    <Link to={user.role === "business_premise" ? PATHS.businessDashboard : PATHS.profileBusiness}>
                         {user.role === "business_premise"
-                            ? "View business account"
+                            ? "Go to business dashboard"
                             : application
                                 ? "View your application"
                                 : "Apply for a business account"}

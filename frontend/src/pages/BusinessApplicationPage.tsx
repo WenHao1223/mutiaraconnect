@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, BadgeCheck, ClipboardCheck, ExternalLink, Minus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import AccessNotices from "@/components/business/AccessNotices";
 import ApplicationDetail from "@/components/business/ApplicationDetail";
 import PremiseForm from "@/components/business/PremiseForm";
 import LocationPicker from "@/components/custom/LocationPicker";
@@ -145,14 +144,13 @@ export default function BusinessApplicationPage() {
     const premises: BusinessProfile[] = [...(user.businesses ?? []), ...extraPremises].filter(
         (premise) => !removedIds.includes(premise.id),
     );
-    const noticeOrigins = premises.map(({ name, latitude, longitude }) => ({ name, latitude, longitude }));
 
     const backLink = (
         <Link
-            to={PATHS.profileSettings}
+            to={isBusiness ? PATHS.businessDashboard : PATHS.profileSettings}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
-            <ArrowLeft className="size-4" /> Back to profile
+            <ArrowLeft className="size-4" /> {isBusiness ? "Back to business dashboard" : "Back to profile"}
         </Link>
     );
 
@@ -161,7 +159,7 @@ export default function BusinessApplicationPage() {
             <h1 className="text-2xl font-semibold tracking-tight text-primary">Business account</h1>
             <p className="text-sm text-muted-foreground">
                 {isBusiness
-                    ? "Your registered premises, plus access notices for businesses in the area."
+                    ? "Your registered premises. Nearby notices are on your business dashboard."
                     : "Own a business in the area? Apply to upgrade this account to a business premise."}
             </p>
         </header>
@@ -204,11 +202,6 @@ export default function BusinessApplicationPage() {
                             ))
                         )}
                     </CardContent>
-                    <CardFooter>
-                        <Button asChild variant="outline">
-                            <Link to={PATHS.businessDashboard}>Go to business dashboard</Link>
-                        </Button>
-                    </CardFooter>
                 </Card>
 
                 <PremiseForm
@@ -280,42 +273,10 @@ export default function BusinessApplicationPage() {
     }
 
     return (
-        <div className={cn("mx-auto w-full space-y-6 px-4 py-10", isBusiness ? "max-w-6xl" : "max-w-2xl")}>
+        <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-10">
             {backLink}
             {header}
-            {isBusiness ? (
-                <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
-                    <div className="space-y-6 lg:col-span-2">
-                        {content}
-
-                        <div className="space-y-2 rounded-lg border bg-card p-6 text-sm">
-                            <h3 className="text-lg font-semibold">Support desk</h3>
-                            <p>Komtar Level 1, Mon–Fri 9am–5pm</p>
-                            <p>Free signage for alternative entrances</p>
-                            <p>Delivery window coordination</p>
-                        </div>
-                    </div>
-                    <aside className="space-y-4">
-                        <div className="rounded-lg bg-primary p-6 text-primary-foreground">
-                            <h3 className="text-xl font-semibold">Is your shop affected?</h3>
-                            <p className="mt-2 text-sm opacity-90">
-                                Report blocked entrances, loading restrictions or lost parking. We'll forward it to
-                                the site team.
-                            </p>
-                            <Link
-                                to={PATHS.profileTickets}
-                                className="mt-4 inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90"
-                            >
-                                Report access issue
-                            </Link>
-                        </div>
-
-                        <AccessNotices origins={noticeOrigins} />
-                    </aside>
-                </div>
-            ) : (
-                content
-            )}
+            {content}
         </div>
     );
 }
