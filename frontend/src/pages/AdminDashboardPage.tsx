@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
                         </TabsContent>
                     )}
                     {tab === "businesses" && (
-                        <TabsContent value="businesses" className="space-y-8">
+                        <TabsContent value="businesses" className="grid gap-6 lg:grid-cols-2 lg:items-start">
                             <ApplicationReview />
                             <SupportRequestAdmin />
                         </TabsContent>

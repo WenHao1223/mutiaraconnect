@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { Check, CircleParking, Clock, Inbox, Signpost, Store, Truck, UserRound, X, type LucideIcon } from "lucide-react";
+import { Check, CircleParking, Clock, ExternalLink, Inbox, MapPin, Search, Signpost, Store, Truck, UserRound, X, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import SupportStatusBadge from "@/components/business/SupportStatusBadge";
+import LocationPicker from "@/components/custom/LocationPicker";
+import MapsLink from "@/components/custom/MapsLink";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { readAllPremises } from "@/lib/admin/users";
 import { useAuth } from "@/lib/auth/auth";
 import {
     readSupportRequests,
@@ -21,31 +26,49 @@ type Decision = Exclude<SupportRequestStatus, "pending">;
 
 const filters: Filter[] = ["pending", "arranged", "declined", "all"];
 
+const ignoreLocationChange = () => undefined;
+
 const typeIcons: Record<SupportRequestType, LucideIcon> = {
     signage: Signpost,
     delivery: Truck,
     parking: CircleParking,
 };
 
-/** Admin tool, laid out like ApplicationReview: support requests on the left, the selected one on the right. */
+/** Admin tool, laid out like ApplicationReview: a list of requests; clicking one opens it in a pop-up. */
 export default function SupportRequestAdmin() {
     const { user } = useAuth();
     const actor = user?.email ?? user?.name ?? "Admin";
 
     const [requests, setRequests] = useState(() => readSupportRequests());
     const [filter, setFilter] = useState<Filter>("pending");
+    const [query, setQuery] = useState("");
     const [selectedId, setSelectedId] = useState<string>();
     const [editing, setEditing] = useState(false);
     const [reply, setReply] = useState("");
 
     const count = (value: Filter) =>
         value === "all" ? requests.length : requests.filter((request) => request.status === value).length;
-    const visible = requests.filter((request) => filter === "all" || request.status === filter);
-    const selected = visible.find((request) => request.id === selectedId) ?? visible[0];
+    const text = query.trim().toLowerCase();
+    const visible = requests.filter(
+        (request) =>
+            (filter === "all" || request.status === filter) &&
+            [request.id, request.premiseName, request.ownerName, supportTypeLabels[request.type]]
+                .join(" ")
+                .toLowerCase()
+                .includes(text),
+    );
+
+    /** Typing searches every status, so a match isn't hidden by the Pending filter. */
+    function search(text: string) {
+        setQuery(text);
+        if (text.trim()) setFilter("all");
+    }
+
+    const selected = requests.find((request) => request.id === selectedId);
     // Pending requests always show the reply form; answered ones only after "Edit response".
     const showForm = !!selected && (selected.status === "pending" || editing);
 
-    function select(id: string) {
+    function select(id: string | undefined) {
         setSelectedId(id);
         setEditing(false);
         setReply("");
@@ -56,22 +79,31 @@ export default function SupportRequestAdmin() {
         const message = reply.trim() || `Request ${supportStatusMeta[decision].label.toLowerCase()}.`;
         respondToSupportRequest(selected.id, decision, message, actor);
         setRequests(readSupportRequests());
-        setSelectedId(selected.id);
-        setFilter("all");
-        setEditing(false);
-        setReply("");
+        select(undefined);
         toast.success(`${selected.id} marked ${supportStatusMeta[decision].label.toLowerCase()}.`);
     }
 
     const TypeIcon = selected ? typeIcons[selected.type] : Inbox;
+    // The request only stores which premise; its pin comes from the premise itself (gone if the owner removed it).
+    const premise = selected ? readAllPremises().find((item) => item.id === selected.premiseId) : undefined;
 
     return (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
-            <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
                 <h2 className="text-lg font-semibold">Support requests</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                     {count("pending") === 0 ? "Nothing waiting for a reply." : `${count("pending")} waiting for a reply.`}
                 </p>
+
+                <div className="relative mt-3">
+                    <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                    <Input
+                        value={query}
+                        onChange={(event) => search(event.target.value)}
+                        placeholder="Search ID, premise, owner or type…"
+                        className="pl-8"
+                        aria-label="Search support requests"
+                    />
+                </div>
 
                 <div role="group" aria-label="Filter support requests" className="mt-3 flex flex-wrap gap-1.5">
                     {filters.map((value) => (
@@ -129,97 +161,129 @@ export default function SupportRequestAdmin() {
                         })}
                     </ul>
                 )}
-            </div>
 
-            {selected && (
-                <article className="rounded-xl border bg-card p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
-                    <header className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                            <span className="rounded-lg bg-secondary/15 p-2.5 text-secondary">
-                                <TypeIcon className="size-5" aria-hidden />
-                            </span>
-                            <div>
-                                <h2 className="text-lg font-semibold">{supportTypeLabels[selected.type]}</h2>
-                                <p className="mt-0.5 text-sm text-muted-foreground">
-                                    {selected.id} · Requested {formatDate(selected.submittedAt)}
-                                </p>
+            <Dialog open={!!selected} onOpenChange={(isOpen) => !isOpen && select(undefined)}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+                    {selected && (
+                        <>
+                            <DialogHeader className="sr-only">
+                                <DialogTitle>Support request {selected.id}</DialogTitle>
+                                <DialogDescription>Arrange or decline the request and reply to the business.</DialogDescription>
+                            </DialogHeader>
+                            <header className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                    <span className="rounded-lg bg-secondary/15 p-2.5 text-secondary">
+                                        <TypeIcon className="size-5" aria-hidden />
+                                    </span>
+                                    <div>
+                                        <h2 className="text-lg font-semibold">{supportTypeLabels[selected.type]}</h2>
+                                        <p className="mt-0.5 text-sm text-muted-foreground">
+                                            {selected.id} · Requested {formatDate(selected.submittedAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <SupportStatusBadge status={selected.status} className="mt-6 shrink-0" />
+                            </header>
+
+                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                                <span className="inline-flex items-center gap-1.5">
+                                    <Store className="size-4" aria-hidden /> {selected.premiseName}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <UserRound className="size-4" aria-hidden /> {selected.ownerName}
+                                </span>
                             </div>
-                        </div>
-                        <SupportStatusBadge status={selected.status} />
-                    </header>
 
-                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-1.5">
-                            <Store className="size-4" aria-hidden /> {selected.premiseName}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5">
-                            <UserRound className="size-4" aria-hidden /> {selected.ownerName}
-                        </span>
-                    </div>
+                            {premise && (
+                                <section className="mt-4" aria-label="Premise location">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                                        <span className="inline-flex items-center gap-1.5 font-medium">
+                                            <MapPin className="size-4 text-muted-foreground" aria-hidden />
+                                            {premise.address || "Pinned on the map"}
+                                        </span>
+                                        <MapsLink location={premise}>
+                                            Open in Google Maps <ExternalLink className="size-3" aria-hidden />
+                                        </MapsLink>
+                                    </div>
+                                    <LocationPicker
+                                        readOnly
+                                        hideCaption
+                                        recenterKey={selected.id}
+                                        value={{
+                                            latitude: premise.latitude,
+                                            longitude: premise.longitude,
+                                            address: premise.address,
+                                        }}
+                                        onChange={ignoreLocationChange}
+                                    />
+                                </section>
+                            )}
 
-                    <p className="mt-4 text-sm">{selected.note}</p>
+                            <p className="mt-4 text-sm">{selected.note}</p>
 
-                    {selected.reply && !editing && (
-                        <div className="mt-5 rounded-lg bg-muted px-4 py-3 text-sm">
-                            <p>
-                                <span className="font-semibold">Response:</span> {selected.reply}
-                            </p>
-                            {selected.repliedAt && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                    {selected.repliedBy} · {formatDateTime(selected.repliedAt)}
+                            {selected.reply && !editing && (
+                                <div className="mt-5 rounded-lg bg-muted px-4 py-3 text-sm">
+                                    <p>
+                                        <span className="font-semibold">Response:</span> {selected.reply}
+                                    </p>
+                                    {selected.repliedAt && (
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {selected.repliedBy} · {formatDateTime(selected.repliedAt)}
+                                        </p>
+                                    )}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-3"
+                                        onClick={() => {
+                                            setReply(selected.reply ?? "");
+                                            setEditing(true);
+                                        }}
+                                    >
+                                        Edit response
+                                    </Button>
+                                </div>
+                            )}
+
+                            {selected.status === "pending" && (
+                                <p className="mt-5 flex items-start gap-2 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+                                    <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
+                                    No reply yet. Arrange or decline it below.
                                 </p>
                             )}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="mt-3"
-                                onClick={() => {
-                                    setReply(selected.reply ?? "");
-                                    setEditing(true);
-                                }}
-                            >
-                                Edit response
-                            </Button>
-                        </div>
-                    )}
 
-                    {selected.status === "pending" && (
-                        <p className="mt-5 flex items-start gap-2 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
-                            <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
-                            No reply yet. Arrange or decline it below.
-                        </p>
+                            {showForm && (
+                                <div className="mt-5 space-y-3 border-t pt-4">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="support-reply">Message to the business</Label>
+                                        <Textarea
+                                            id="support-reply"
+                                            rows={3}
+                                            maxLength={500}
+                                            value={reply}
+                                            onChange={(event) => setReply(event.target.value)}
+                                            placeholder="e.g. Two signs will be put up at the back lane by Friday."
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap justify-end gap-2">
+                                        {editing && (
+                                            <Button variant="ghost" onClick={() => setEditing(false)}>
+                                                Cancel
+                                            </Button>
+                                        )}
+                                        <Button variant="outline" onClick={() => respond("declined")}>
+                                            <X className="size-4" /> Decline
+                                        </Button>
+                                        <Button onClick={() => respond("arranged")}>
+                                            <Check className="size-4" /> Arrange
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
-
-                    {showForm && (
-                        <div className="mt-5 space-y-3 border-t pt-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="support-reply">Message to the business</Label>
-                                <Textarea
-                                    id="support-reply"
-                                    rows={3}
-                                    maxLength={500}
-                                    value={reply}
-                                    onChange={(event) => setReply(event.target.value)}
-                                    placeholder="e.g. Two signs will be put up at the back lane by Friday."
-                                />
-                            </div>
-                            <div className="flex flex-wrap justify-end gap-2">
-                                {editing && (
-                                    <Button variant="ghost" onClick={() => setEditing(false)}>
-                                        Cancel
-                                    </Button>
-                                )}
-                                <Button variant="outline" onClick={() => respond("declined")}>
-                                    <X className="size-4" /> Decline
-                                </Button>
-                                <Button onClick={() => respond("arranged")}>
-                                    <Check className="size-4" /> Arrange
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </article>
-            )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
