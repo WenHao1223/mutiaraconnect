@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
@@ -8,7 +7,7 @@ import ConstructionMenu from "@/components/navbar/ConstructionMenu";
 import MobileMenu from "@/components/navbar/MobileMenu";
 import ProfileMenu from "@/components/navbar/ProfileMenu";
 import { navStyles } from "@/components/navbar/navStyles";
-import { readAnnouncements, subscribeAnnouncements } from "@/lib/admin/announcements";
+import { readAnnouncements } from "@/lib/admin/announcements";
 import { navRoutes } from "@/routes";
 import type { Announcement } from "@/types/announcement";
 import type { AppUser } from "@/types/user";
@@ -24,18 +23,8 @@ interface NavbarProps {
 export default function Navbar({
     user = null,
     onSignOut,
-    announcements,
+    announcements = readAnnouncements(),
 }: NavbarProps) {
-    const [storedAnnouncements, setStoredAnnouncements] = useState<Announcement[]>(() => readAnnouncements());
-
-    useEffect(() => {
-        return subscribeAnnouncements(() => {
-            setStoredAnnouncements(readAnnouncements());
-        });
-    }, []);
-
-    const items = announcements ?? storedAnnouncements;
-
     return (
         <header className="sticky top-0 z-40 border-b bg-card">
             <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4">
@@ -58,7 +47,7 @@ export default function Navbar({
                 </nav>
 
                 <div className="ml-auto flex items-center gap-1">
-                    <AnnouncementsBell items={items} />
+                    <AnnouncementsBell items={announcements} />
                     <ProfileMenu user={user} onSignOut={onSignOut} />
                 </div>
             </div>

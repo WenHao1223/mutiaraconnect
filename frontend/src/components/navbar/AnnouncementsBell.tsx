@@ -1,48 +1,26 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Bell } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AnnouncementItem from "@/components/navbar/AnnoucementItem";
-import {
-    markAllAnnouncementsRead,
-    markAnnouncementRead,
-    readReadAnnouncementIds,
-    subscribeAnnouncements,
-} from "@/lib/admin/announcements";
 import { useSettings } from "@/lib/settings/settings";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
 
 export default function AnnouncementsBell({ items }: { items: Announcement[] }) {
-    const [open, setOpen] = useState(false);
-    const [readIds, setReadIds] = useState<string[]>(() => readReadAnnouncementIds());
+    const [readIds, setReadIds] = useState<string[]>([]);
     const { notificationsEnabled } = useSettings();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        return subscribeAnnouncements(() => {
-            setReadIds(readReadAnnouncementIds());
-        });
-    }, []);
-
     const unreadCount = items.filter((item) => !readIds.includes(item.id)).length;
     // Paused notifications hide the badge; the list itself is still readable.
     const badgeCount = notificationsEnabled ? unreadCount : 0;
 
-    const handleReadItem = (id: string) => {
-        setReadIds(markAnnouncementRead(id));
-        setOpen(false);
-        navigate(PATHS.announcements);
-    };
-
-    const handleMarkAllRead = () => {
-        setReadIds(markAllAnnouncementsRead(items.map((item) => item.id)));
-    };
+    const markRead = (id: string) =>
+        setReadIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover>
             <PopoverTrigger asChild>
                 <Button
                     variant="ghost"
@@ -66,7 +44,7 @@ export default function AnnouncementsBell({ items }: { items: Announcement[] }) 
                         <button
                             type="button"
                             className="text-xs font-medium text-primary hover:underline"
-                            onClick={handleMarkAllRead}
+                            onClick={() => setReadIds(items.map((item) => item.id))}
                         >
                             Mark all as read
                         </button>
@@ -84,20 +62,14 @@ export default function AnnouncementsBell({ items }: { items: Announcement[] }) 
                             <AnnouncementItem
                                 announcement={item}
                                 isUnread={!readIds.includes(item.id)}
-                                onRead={() => handleReadItem(item.id)}
+                                onRead={() => markRead(item.id)}
                             />
                         </li>
                     ))}
                 </ul>
 
                 <div className="border-t p-2">
-                    <Button
-                        asChild
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-primary"
-                        onClick={() => setOpen(false)}
-                    >
+                    <Button asChild variant="ghost" size="sm" className="w-full text-primary">
                         <Link to={PATHS.announcements}>View all announcements</Link>
                     </Button>
                 </div>

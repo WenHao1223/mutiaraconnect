@@ -1,68 +1,23 @@
 [
     {
-        "id": "AN-101",
-        "title": "Weekend Lane Contraction Along Jalan Magazine & Komtar",
-        "body": "Two-lane contraflow will be in effect near Komtar Interchange (S19) from Saturday 10:00 PM to Monday 5:00 AM to facilitate diaphragm wall cage lowering and concrete pouring.",
+        "id": "a1",
+        "title": "Sample: Lane closure this weekend",
+        "body": "Replace this with a real announcement from the database.",
         "time": "2 hours ago",
-        "type": "closure",
-        "area": "Komtar",
-        "pinned": true,
-        "publishedAt": "2026-10-17T06:00:00+08:00",
-        "createdBy": "MRT Corp Corridor Control"
+        "type": "closure"
     },
     {
-        "id": "AN-102",
-        "title": "Night Viaduct Segment Launching at Bayan Lepas FIZ",
-        "body": "Precast box girder segment launching using overhead gantry cranes will take place along Jalan Sultan Azlan Shah between FIZ North (S07) and Jalan Tengah (S08) from 11:00 PM to 5:00 AM.",
-        "time": "5 hours ago",
-        "type": "construction",
-        "area": "Bayan Lepas",
-        "pinned": true,
-        "publishedAt": "2026-10-17T03:00:00+08:00",
-        "createdBy": "SRS Consortium Engineering"
-    },
-    {
-        "id": "AN-103",
-        "title": "Geotechnical & Marine Barge Survey in Penang Strait",
-        "body": "Marine borehole investigation barges are operating along the Cross-Channel Link alignment between Bandar Sri Pinang (S17) and Penang Sentral (S20). Ferry operations remain unaffected.",
+        "id": "a2",
+        "title": "Sample: Night works near a station site",
+        "body": "Expect noise between 10 PM and 5 AM.",
         "time": "Yesterday",
-        "type": "construction",
-        "area": "Butterworth",
-        "pinned": false,
-        "publishedAt": "2026-10-16T10:30:00+08:00",
-        "createdBy": "Marine Works Package Team"
+        "type": "construction"
     },
     {
-        "id": "AN-104",
-        "title": "Covered Pedestrian Walkway Realigned at USM & Sungai Dua",
-        "body": "A new barrier-free covered walkway with solar lighting and tactile paving has opened outside USM main gate near Station S13 (Gelugor / USM) to maintain safe student and resident access.",
-        "time": "2 days ago",
-        "type": "general",
-        "area": "Gelugor",
-        "pinned": false,
-        "publishedAt": "2026-10-15T09:15:00+08:00",
-        "createdBy": "Community Liaison Unit"
-    },
-    {
-        "id": "AN-105",
-        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
-        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "id": "a3",
+        "title": "Sample: Ticket form is now open",
+        "body": "Residents can now submit and track ticket online.",
         "time": "3 days ago",
-        "type": "construction",
-        "area": "Macallum",
-        "pinned": false,
-        "publishedAt": "2026-10-14T14:20:00+08:00",
-        "createdBy": "MRT Corp Corridor Control"
-    },
-    {
-        "id": "AN-106",
-        "title": "Public Feedback & Business Premise Support Portal Open",
-        "body": "Residents and shop owners along the 29.5 km Mutiara Line corridor can submit noise, dust, or access reports online and request temporary business signage support.",
-        "time": "4 days ago",
-        "type": "general",
-        "area": "George Town",
-        "pinned": false,
-        "publishedAt": "2026-10-13T11:00:00+08:00",
-        "createdBy": "MutiaraConnect Admin"
+        "type": "general"
     }
 ]

@@ -26,7 +26,7 @@ export default function ConstructionMenu() {
                     <ChevronDown className="size-4" aria-hidden="true" />
                 </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
+            <DropdownMenuContent align="start" className="w-44">
                 {navRoutes.construction.map((item) => (
                     <DropdownMenuItem key={item.path} asChild>
                         <Link to={item.path}>{item.label}</Link>
