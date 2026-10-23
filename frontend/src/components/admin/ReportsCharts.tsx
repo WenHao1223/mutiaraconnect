@@ -14,11 +14,11 @@ const STATUS_COLORS: Record<TicketStatus, string> = {
 };
 
 const countConfig = {
-    count: { label: "Reports", color: "#2563eb" },
+    count: { label: "Tickets", color: "#2563eb" },
 } satisfies ChartConfig;
 
 const statusConfig = {
-    value: { label: "Reports" },
+    value: { label: "Tickets" },
     ...Object.fromEntries(
         STATUS_ORDER.map((status) => [status, { label: statusMeta[status].label, color: STATUS_COLORS[status] }]),
     ),
@@ -60,7 +60,7 @@ export default function ReportsCharts({ tickets }: { tickets: Ticket[] }) {
         <div className="grid gap-6 lg:grid-cols-2">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Reports by category</CardTitle>
+                    <CardTitle className="text-lg">Tickets by category</CardTitle>
                     <CardDescription>What people are reporting.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -91,7 +91,7 @@ export default function ReportsCharts({ tickets }: { tickets: Ticket[] }) {
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Reports over time</CardTitle>
+                    <CardTitle className="text-lg">Tickets over time</CardTitle>
                     <CardDescription>Daily submissions.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -116,7 +116,7 @@ export default function ReportsCharts({ tickets }: { tickets: Ticket[] }) {
             <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle className="text-lg">Status breakdown</CardTitle>
-                    <CardDescription>Where every report currently sits.</CardDescription>
+                    <CardDescription>Where every ticket currently sits.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={statusConfig} className="mx-auto h-64 w-full max-w-md">

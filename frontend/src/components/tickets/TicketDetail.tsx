@@ -68,7 +68,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
 
             <p className="mt-4 text-sm">{ticket.description}</p>
 
-            <section className="mt-4" aria-label="Reported location">
+            <section className="mt-4" aria-label="Ticket location">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                     <span className="inline-flex items-center gap-1.5 font-medium">
                         <MapPin className="size-4 text-muted-foreground" aria-hidden /> {ticket.location}
@@ -99,7 +99,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket }) {
             {ticket.status === "received" ? (
                 <p className="mt-5 flex items-start gap-2 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
                     <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
-                    No response yet. A team member will review your report soon.
+                    No response yet. A team member will review your ticket soon.
                 </p>
             ) : (
                 <div className="mt-5 rounded-lg bg-muted px-4 py-3 text-sm">

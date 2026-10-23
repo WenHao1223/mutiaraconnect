@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
                     </p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-primary">Admin Dashboard</h1>
                     <p className="mt-1 text-muted-foreground">
-                        Manage reports, closures, the construction schedule and public notifications.
+                        Manage tickets, closures, the construction schedule and public notifications.
                     </p>
                 </div>
             </section>

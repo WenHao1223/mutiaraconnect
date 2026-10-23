@@ -67,7 +67,7 @@ export default function PublicTicketsPage() {
         setSelectedId(ticket.id);
         setQuery("");
         setPanel("tickets");
-        toast.success(`Report ${ticket.id} submitted.`);
+        toast.success(`Ticket ${ticket.id} submitted.`);
     }
 
     function openFeedback(values: FeedbackFormValues) {
@@ -93,7 +93,7 @@ export default function PublicTicketsPage() {
                     </h1>
                     <p className="mt-1 max-w-2xl text-muted-foreground">
                         Report an issue along the Mutiara LRT corridor, tell us how we are doing, or
-                        see what has already been resolved. Reports can be filed without an account.
+                        see what has already been resolved. Tickets can be submitted without an account.
                     </p>
                 </div>
             </section>
@@ -182,7 +182,7 @@ export default function PublicTicketsPage() {
                                     <h2 className="text-lg font-semibold">Your tickets</h2>
                                     <Button size="sm" onClick={() => setPanel("ticket-form")}>
                                         <Plus className="size-4" />
-                                        New report
+                                        New ticket
                                     </Button>
                                 </div>
 
@@ -199,14 +199,14 @@ export default function PublicTicketsPage() {
                                             />
                                             <p className="mt-2 text-sm font-medium">No tickets yet</p>
                                             <p className="mt-1 text-sm text-muted-foreground">
-                                                Reports you submit will show up here.
+                                                Tickets you submit will show up here.
                                             </p>
                                             <Button
                                                 className="mt-4"
                                                 size="sm"
                                                 onClick={() => setPanel("ticket-form")}
                                             >
-                                                Submit a report
+                                                Submit a ticket
                                             </Button>
                                         </div>
                                     ) : visible.length === 0 ? (
@@ -239,9 +239,9 @@ export default function PublicTicketsPage() {
                         ) : (
                             <div className="py-6 text-center">
                                 <TicketIcon className="mx-auto size-8 text-muted-foreground" aria-hidden />
-                                <p className="mt-2 text-sm font-medium">Track your reports</p>
+                                <p className="mt-2 text-sm font-medium">Track your tickets</p>
                                 <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                                    Sign in to follow the progress of everything you have reported.
+                                    Sign in to follow the progress of every ticket you have submitted.
                                     You can still send a ticket without an account.
                                 </p>
                                 <Button className="mt-4" size="sm" asChild>
@@ -265,7 +265,7 @@ export default function PublicTicketsPage() {
                                     className="mb-3 text-xs font-medium text-primary hover:underline"
                                     onClick={() => setSelectedId(undefined)}
                                 >
-                                    ← Back to resolved reports
+                                    ← Back to resolved tickets
                                 </button>
                                 <TicketDetail ticket={selected} />
                             </>

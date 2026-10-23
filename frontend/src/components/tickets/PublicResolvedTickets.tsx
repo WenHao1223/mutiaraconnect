@@ -11,7 +11,7 @@ export default function PublicResolvedTickets({ tickets }: { tickets: Ticket[] }
                 <h2 className="text-lg font-semibold">Recently resolved</h2>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-                Reports that have been fixed, shared anonymously so you can see the work in
+                Tickets that have been fixed, shared anonymously so you can see the work in
                 progress.
             </p>
 
@@ -35,7 +35,7 @@ export default function PublicResolvedTickets({ tickets }: { tickets: Ticket[] }
                                     <span className="ml-auto">{formatDate(ticket.updatedAt)}</span>
                                 </div>
                                 <p className="mt-1.5 text-sm">{outcome.message}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">Anonymous report</p>
+                                <p className="mt-1 text-xs text-muted-foreground">Anonymous ticket</p>
                             </li>
                         );
                     })}

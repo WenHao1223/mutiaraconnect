@@ -118,7 +118,7 @@ export default function TicketForm({
                     }}
                 >
                     <SelectTrigger className="mt-1.5" aria-invalid={!!categoryError}>
-                        <SelectValue placeholder="What is the report about?" />
+                        <SelectValue placeholder="What is the ticket about?" />
                     </SelectTrigger>
                     <SelectContent>
                         {categories.map(([value, label]) => (
@@ -199,8 +199,8 @@ export default function TicketForm({
                     onCheckedChange={setAnonymous}
                     description={
                         premises.length > 0
-                            ? "Your account is not linked to this report. Your business name is hidden and it will not show a verified badge."
-                            : "Your account is not linked to this report."
+                            ? "Your account is not linked to this ticket. Your business name is hidden and it will not show a verified badge."
+                            : "Your account is not linked to this ticket."
                     }
                 />
             )}
@@ -211,7 +211,7 @@ export default function TicketForm({
                         Cancel
                     </Button>
                 )}
-                <Button type="submit">Submit report</Button>
+                <Button type="submit">Submit ticket</Button>
             </div>
         </form>
     );
