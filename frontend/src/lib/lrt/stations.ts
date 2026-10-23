@@ -1,0 +1,28 @@
+import linesData from "@/data/lrt-lines.json";
+import stationsData from "@/data/lrt-stations.json";
+import type { LrtLineInfo, LrtLineSegment, LrtStation } from "@/types/lrt";
+
+const stations = stationsData as LrtStation[];
+
+export const LRT_LINES = linesData as LrtLineInfo[];
+
+/** Returns all LRT stations ordered by station code (S01 -> S20). */
+export function readLrtStations(): LrtStation[] {
+    return [...stations].sort((a, b) => a.code.localeCompare(b.code));
+}
+
+/** Returns stations filtered by line segment. */
+export function readStationsByLine(line?: LrtLineSegment | "all"): LrtStation[] {
+    const all = readLrtStations();
+    if (!line || line === "all") return all;
+    if (line === "cross_channel") {
+        // Include Bandar Sri Pinang (S17) as the interchange origin plus Penang Sentral (S20)
+        return all.filter((station) => station.line === "cross_channel" || station.code === "S17");
+    }
+    return all.filter((station) => station.line === line);
+}
+
+/** Unique corridor area names for dropdowns in Admin and filter bars. */
+export function getStationAreas(): string[] {
+    return Array.from(new Set(stations.map((station) => station.area)));
+}
