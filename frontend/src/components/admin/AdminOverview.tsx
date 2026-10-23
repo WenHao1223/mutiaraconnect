@@ -18,9 +18,9 @@ export default function AdminOverview() {
     return (
         <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                <SummaryCard label="Total reports" value={tickets.length} icon={FolderOpen} hint="All time" />
+                <SummaryCard label="Total tickets" value={tickets.length} icon={FolderOpen} hint="All time" />
                 <SummaryCard
-                    label="Open reports"
+                    label="Open tickets"
                     value={open}
                     icon={AlertTriangle}
                     tone="bg-hazard/15 text-amber-700"

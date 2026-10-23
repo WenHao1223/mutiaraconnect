@@ -172,7 +172,7 @@ export function submitTicket(input: NewTicketInput): Ticket {
         updates: [
             {
                 status: "received",
-                message: "Report received. We'll assign it to the site team shortly.",
+                message: "Ticket received. We'll assign it to the site team shortly.",
                 by: "System",
                 at: now,
             },

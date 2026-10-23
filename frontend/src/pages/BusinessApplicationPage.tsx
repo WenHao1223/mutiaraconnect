@@ -1,26 +1,33 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, ExternalLink, Minus } from "lucide-react";
+import { ArrowLeft, BadgeCheck, ClipboardCheck, ExternalLink, Minus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import AccessNotices from "@/components/business/AccessNotices";
+import ApplicationDetail from "@/components/business/ApplicationDetail";
 import PremiseForm from "@/components/business/PremiseForm";
 import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth/auth";
-import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication, type BusinessApplication } from "@/lib/business/business";
+import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication } from "@/lib/business/business";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
+import type { ApplicationStatus, BusinessApplication } from "@/types/business";
 import type { BusinessProfile } from "@/types/user";
 
-const statusLabels: Record<BusinessApplication["status"], string> = {
-    pending: "Pending review",
-    approved: "Approved",
-    rejected: "Rejected",
+/** Coloured left edge, like the access notice cards. */
+const statusEdges: Record<ApplicationStatus, string> = {
+    pending: "border-l-hazard",
+    approved: "border-l-success",
+    rejected: "border-l-destructive",
+};
+
+const statusDescriptions: Record<ApplicationStatus, string> = {
+    pending: "We've received your application. Track its progress here.",
+    approved: "Your application has been approved.",
+    rejected: "Your application wasn't approved. See the reason below and apply again.",
 };
 
 interface BusinessDetailsData {
@@ -127,6 +134,8 @@ export default function BusinessApplicationPage() {
     const [application, setApplication] = useState<BusinessApplication | undefined>(() => findApplication(applicantKey));
     const [extraPremises, setExtraPremises] = useState<BusinessProfile[]>(() => readPremises(applicantKey));
     const [removedIds, setRemovedIds] = useState<string[]>(() => readRemovedPremiseIds(applicantKey));
+    // A rejected applicant can open the form again to submit a fresh application.
+    const [reapplying, setReapplying] = useState(false);
 
     // Applying needs an account, so guests are sent to sign in and then brought back.
     if (!user) return <Navigate to={PATHS.login} state={{ from: PATHS.profileBusiness }} replace />;
@@ -135,23 +144,22 @@ export default function BusinessApplicationPage() {
     const premises: BusinessProfile[] = [...(user.businesses ?? []), ...extraPremises].filter(
         (premise) => !removedIds.includes(premise.id),
     );
-    const noticeOrigins = premises.map(({ name, latitude, longitude }) => ({ name, latitude, longitude }));
 
     const backLink = (
         <Link
-            to={PATHS.profileSettings}
+            to={isBusiness ? PATHS.businessDashboard : PATHS.profileSettings}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
-            <ArrowLeft className="size-4" /> Back to profile
+            <ArrowLeft className="size-4" /> {isBusiness ? "Back to business dashboard" : "Back to profile"}
         </Link>
     );
 
     const header = (
         <header className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-primary">Business account</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-primary">Business Account</h1>
             <p className="text-sm text-muted-foreground">
                 {isBusiness
-                    ? "Your registered premises, plus access notices for businesses in the area."
+                    ? "Your registered premises. Nearby notices are on your business dashboard."
                     : "Own a business in the area? Apply to upgrade this account to a business premise."}
             </p>
         </header>
@@ -194,11 +202,6 @@ export default function BusinessApplicationPage() {
                             ))
                         )}
                     </CardContent>
-                    <CardFooter>
-                        <Button asChild variant="outline">
-                            <Link to={PATHS.businessDashboard}>Go to business dashboard</Link>
-                        </Button>
-                    </CardFooter>
                 </Card>
 
                 <PremiseForm
@@ -219,30 +222,25 @@ export default function BusinessApplicationPage() {
                 />
             </div>
         );
-    } else if (application) {
+    } else if (application && !reapplying) {
         content = (
-            <Card>
+            <Card className={cn("border-l-4", statusEdges[application.status])}>
                 <CardHeader>
-                    <CardTitle className="text-lg">Your application</CardTitle>
-                    <CardDescription>We'll email you once a decision has been made.</CardDescription>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                        <ClipboardCheck className="size-4" /> Application status
+                    </CardTitle>
+                    <CardDescription>{statusDescriptions[application.status]}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">Status</span>
-                        <Badge variant={application.status === "approved" ? "default" : "secondary"}>
-                            {statusLabels[application.status]}
-                        </Badge>
-                    </div>
-                    <BusinessDetails
-                        business={{
-                            name: application.businessName,
-                            registrationNumber: application.registrationNumber,
-                            address: application.premiseAddress,
-                            latitude: application.latitude,
-                            longitude: application.longitude,
-                        }}
-                    />
+                <CardContent>
+                    <ApplicationDetail application={application} />
                 </CardContent>
+                {application.status === "rejected" && (
+                    <CardFooter>
+                        <Button variant="outline" onClick={() => setReapplying(true)}>
+                            <RotateCcw className="size-4" /> Apply again
+                        </Button>
+                    </CardFooter>
+                )}
             </Card>
         );
     } else {
@@ -251,17 +249,23 @@ export default function BusinessApplicationPage() {
                 title="Apply for a business account"
                 description="Tell us about the business you'd like to register."
                 submitLabel="Submit application"
-                onSubmit={({ businessName, registrationNumber, location }) => {
+                withApplicationDetails
+                onSubmit={({ businessName, registrationNumber, location, businessType, contactPhone, documents }) => {
                     const applied = submitApplication({
                         applicant: applicantKey,
                         email: user.email,
+                        applicantName: user.name,
                         businessName,
                         registrationNumber,
+                        businessType: businessType ?? "other",
+                        contactPhone: contactPhone ?? "",
+                        documents: documents ?? [],
                         premiseAddress: location.address,
                         latitude: location.latitude,
                         longitude: location.longitude,
                     });
                     setApplication(applied);
+                    setReapplying(false);
                     toast.success("Your business account application has been submitted.");
                 }}
             />
@@ -269,42 +273,10 @@ export default function BusinessApplicationPage() {
     }
 
     return (
-        <div className={cn("mx-auto w-full space-y-6 px-4 py-10", isBusiness ? "max-w-6xl" : "max-w-2xl")}>
+        <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-10">
             {backLink}
             {header}
-            {isBusiness ? (
-                <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
-                    <div className="space-y-6 lg:col-span-2">
-                        {content}
-
-                        <div className="space-y-2 rounded-lg border bg-card p-6 text-sm">
-                            <h3 className="text-lg font-semibold">Support desk</h3>
-                            <p>Komtar Level 1, Mon–Fri 9am–5pm</p>
-                            <p>Free signage for alternative entrances</p>
-                            <p>Delivery window coordination</p>
-                        </div>
-                    </div>
-                    <aside className="space-y-4">
-                        <div className="rounded-lg bg-primary p-6 text-primary-foreground">
-                            <h3 className="text-xl font-semibold">Is your shop affected?</h3>
-                            <p className="mt-2 text-sm opacity-90">
-                                Report blocked entrances, loading restrictions or lost parking. We'll forward it to
-                                the site team.
-                            </p>
-                            <Link
-                                to={PATHS.profileTickets}
-                                className="mt-4 inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90"
-                            >
-                                Report access issue
-                            </Link>
-                        </div>
-
-                        <AccessNotices origins={noticeOrigins} />
-                    </aside>
-                </div>
-            ) : (
-                content
-            )}
+            {content}
         </div>
     );
 }

@@ -15,8 +15,8 @@ import type { Ticket } from "@/types/ticket";
 import type { AppUser } from "@/types/user";
 
 const subtitles: Partial<Record<AppUser["role"], string>> = {
-    resident: "Follow the reports you have raised until the responsible team responds.",
-    business_premise: "Follow reports about your premise until the responsible team responds.",
+    resident: "Follow the tickets you have raised until the responsible team responds.",
+    business_premise: "Follow tickets about your premise until the responsible team responds.",
 };
 
 /** My Tickets: shared by residents and business premises. Admins manage tickets elsewhere. */
@@ -73,7 +73,7 @@ function TicketsView({ user }: { user: AppUser }) {
         setSelectedId(ticket.id);
         setQuery("");
         setShowForm(false);
-        toast.success(`Report ${ticket.id} submitted.`);
+        toast.success(`Ticket ${ticket.id} submitted.`);
     }
 
     return (
@@ -102,7 +102,7 @@ function TicketsView({ user }: { user: AppUser }) {
                                 onClick={() => setShowForm((open) => !open)}
                             >
                                 {!showForm && <Plus className="size-4" />}
-                                {showForm ? "Close" : "New report"}
+                                {showForm ? "Close" : "New ticket"}
                             </Button>
                         )}
                     </div>
@@ -130,10 +130,10 @@ function TicketsView({ user }: { user: AppUser }) {
                                         />
                                         <p className="mt-2 text-sm font-medium">No tickets yet</p>
                                         <p className="mt-1 text-sm text-muted-foreground">
-                                            Reports you submit will show up here.
+                                            Tickets you submit will show up here.
                                         </p>
                                         <Button className="mt-4" size="sm" onClick={() => setShowForm(true)}>
-                                            Submit a report
+                                            Submit a ticket
                                         </Button>
                                     </div>
                                 ) : visible.length === 0 ? (

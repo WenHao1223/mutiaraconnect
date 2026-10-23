@@ -41,9 +41,9 @@ export default function TicketAdmin() {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Reports</CardTitle>
+                    <CardTitle className="text-lg">Tickets</CardTitle>
                     <CardDescription>
-                        {visible.length} of {tickets.length} reports
+                        {visible.length} of {tickets.length} tickets
                     </CardDescription>
                     <div className="flex flex-wrap items-center gap-3 pt-3">
                         <div className="relative min-w-56 flex-1">
@@ -117,7 +117,7 @@ export default function TicketAdmin() {
                             {visible.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                                        No reports match these filters.
+                                        No tickets match these filters.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -128,8 +128,8 @@ export default function TicketAdmin() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Where reports are raised</CardTitle>
-                    <CardDescription>Pins for every geolocated report.</CardDescription>
+                    <CardTitle className="text-lg">Where tickets are raised</CardTitle>
+                    <CardDescription>Pins for every geolocated ticket.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <TicketsMap tickets={visible} selectedId={selectedId} />
