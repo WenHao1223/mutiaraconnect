@@ -11,23 +11,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth/auth";
 import { roleLabels } from "@/lib/settings/user-display";
 
-type AdminTab = "overview" | "tickets" | "operations" | "notifications" | "users" | "audit";
+interface AdminTabItem {
+    value: string;
+    label: string;
+    icon: LucideIcon;
+    superAdminOnly?: boolean;
+}
 
-const ADMIN_TABS: AdminTab[] = ["overview", "tickets", "operations", "notifications", "users", "audit"];
-const SUPER_ADMIN_TABS: AdminTab[] = ["users", "audit"];
+/** Single source of truth for the admin tabs: ids, labels, icons and access level. */
+const ADMIN_TABS = [
+    { value: "overview", label: "Overview", icon: LayoutDashboard, superAdminOnly: false },
+    { value: "tickets", label: "Tickets", icon: Ticket, superAdminOnly: false },
+    { value: "operations", label: "Closures & schedule", icon: CalendarClock, superAdminOnly: false },
+    { value: "notifications", label: "Notifications", icon: BellRing, superAdminOnly: false },
+    { value: "users", label: "Users", icon: Users, superAdminOnly: true },
+    { value: "audit", label: "Audit log", icon: ScrollText, superAdminOnly: true },
+] as const satisfies readonly AdminTabItem[];
+
+type AdminTab = (typeof ADMIN_TABS)[number]["value"];
 
 /** Resolve a tab id from the URL hash (e.g. /admin#notifications) with role-aware fallbacks. */
 function readTabFromHash(hash: string, isSuperAdmin: boolean): AdminTab {
-    const value = hash.replace(/^#/, "") as AdminTab;
-    if (!ADMIN_TABS.includes(value)) return "overview";
-    if (!isSuperAdmin && SUPER_ADMIN_TABS.includes(value)) return "overview";
-    return value;
-}
-
-interface AdminTabItem {
-    value: AdminTab;
-    label: string;
-    icon: LucideIcon;
+    const value = hash.replace(/^#/, "");
+    const match = ADMIN_TABS.find((item) => item.value === value);
+    if (!match) return "overview";
+    if (match.superAdminOnly && !isSuperAdmin) return "overview";
+    return match.value;
 }
 
 /** Admin & super admin console. Super admins additionally get Users and Audit log. */
@@ -45,18 +54,7 @@ export default function AdminDashboardPage() {
         navigate({ hash: `#${value}` }, { replace: true });
     }
 
-    const tabs: AdminTabItem[] = [
-        { value: "overview", label: "Overview", icon: LayoutDashboard },
-        { value: "tickets", label: "Tickets", icon: Ticket },
-        { value: "operations", label: "Closures & schedule", icon: CalendarClock },
-        { value: "notifications", label: "Notifications", icon: BellRing },
-        ...(isSuperAdmin
-            ? [
-                  { value: "users" as const, label: "Users", icon: Users },
-                  { value: "audit" as const, label: "Audit log", icon: ScrollText },
-              ]
-            : []),
-    ];
+    const tabs = ADMIN_TABS.filter((item) => isSuperAdmin || !item.superAdminOnly);
 
     if (!user) return null;
 
