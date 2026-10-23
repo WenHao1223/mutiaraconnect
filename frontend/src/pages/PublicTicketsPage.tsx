@@ -89,7 +89,7 @@ export default function PublicTicketsPage() {
                         Community
                     </p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-primary">
-                        Tickets &amp; feedback
+                        Tickets &amp; Feedback
                     </h1>
                     <p className="mt-1 max-w-2xl text-muted-foreground">
                         Report an issue along the Mutiara LRT corridor, tell us how we are doing, or

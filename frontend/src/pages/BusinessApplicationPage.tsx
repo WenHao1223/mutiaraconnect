@@ -156,7 +156,7 @@ export default function BusinessApplicationPage() {
 
     const header = (
         <header className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-primary">Business account</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-primary">Business Account</h1>
             <p className="text-sm text-muted-foreground">
                 {isBusiness
                     ? "Your registered premises. Nearby notices are on your business dashboard."
