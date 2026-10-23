@@ -28,5 +28,5 @@
             "@/*": ["./src/*"]
         }
     },
-    "include": ["src", "src/lib", "PublicTicketsPage.tsx"]
+    "include": ["src", "src/lib"]
 }
