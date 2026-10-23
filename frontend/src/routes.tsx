@@ -10,6 +10,8 @@ import RegisterPage from "@/pages/RegisterPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
+import ConstructionInfoPage from "@/pages/ConstructionInfoPage";
+import ConstructionUpdatesPage from "@/pages/ConstructionUpdatesPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
 import TicketsPage from "@/pages/ProfileTicketsPage";
 
@@ -51,8 +53,8 @@ interface PageRoute {
 const pages: PageRoute[] = [
     { path: PATHS.home, label: "Map", element: <MapPage /> },
 
-    { path: PATHS.constructionInfo, label: "Info", element: <Placeholder title="Construction Info" />, nav: "construction" },
-    { path: PATHS.constructionUpdates, label: "Updates", element: <Placeholder title="Construction Updates" />, nav: "construction" },
+    { path: PATHS.constructionInfo, label: "Stations & Alignment", element: <ConstructionInfoPage />, nav: "construction" },
+    { path: PATHS.constructionUpdates, label: "Construction Updates", element: <ConstructionUpdatesPage />, nav: "construction" },
 
     { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
     { path: PATHS.ticket, label: "Ticket", element: <PublicTicketsPage />, nav: "main" },
