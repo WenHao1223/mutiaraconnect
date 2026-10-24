@@ -8,6 +8,7 @@ import Placeholder from "@/pages/Placeholder";
 import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import AboutPage from "@/pages/AboutPage";
 import AnnouncementsPage from "@/pages/AnnouncementsPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
@@ -63,7 +64,7 @@ const pages: PageRoute[] = [
     { path: PATHS.ticket, label: "Support", element: <PublicTicketsPage />, nav: "main" },
     { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
-    { path: PATHS.about, label: "About Us", element: <Placeholder title="About Us" />, nav: "main" },
+    { path: PATHS.about, label: "About Us", element: <AboutPage />, nav: "main" },
 
     { path: PATHS.login, label: "Sign in", element: <LoginPage /> },
     { path: PATHS.register, label: "Register", element: <RegisterPage /> },
