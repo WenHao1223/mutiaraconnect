@@ -14,6 +14,7 @@ import { readAllPremises } from "@/lib/admin/users";
 import { useAuth } from "@/lib/auth/auth";
 import { AFFECTED_RADIUS_KM, isWithinRadius } from "@/lib/maps/geo";
 import type { ClosureStatus } from "@/types/road-closure";
+import { tone } from "@/lib/tones";
 
 const statusLabels: Record<ClosureStatus, string> = {
     planned: "Planned",
@@ -22,8 +23,8 @@ const statusLabels: Record<ClosureStatus, string> = {
 };
 
 const statusTone: Record<ClosureStatus, string> = {
-    planned: "border-info/30 bg-info/10 text-sky-800",
-    active: "border-destructive/30 bg-destructive/10 text-destructive",
+    planned: tone.info,
+    active: tone.danger,
     ended: "border-transparent bg-muted text-muted-foreground",
 };
 

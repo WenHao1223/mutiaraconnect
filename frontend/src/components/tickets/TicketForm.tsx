@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import FieldError from "@/components/custom/FieldError";
 import LocationPicker, { type PickedLocation } from "@/components/custom/LocationPicker";
+import PhotoPicker from "@/components/custom/PhotoPicker";
+import NearestStation from "@/components/tickets/NearestStation";
 import SubmitAnonymously from "@/components/tickets/SubmitAnonymously";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +19,8 @@ export interface TicketFormValues {
     description: string;
     location: PickedLocation;
     premise?: string;
+    /** Photos were added. The files themselves aren't kept yet (no backend). */
+    hasPhoto: boolean;
     /** File without linking the account; hides the owner's verified badge. */
     anonymous: boolean;
 }
@@ -28,33 +32,48 @@ interface TicketFormProps {
     showAnonymous?: boolean;
     onSubmit: (values: TicketFormValues) => void;
     onCancel?: () => void;
+    /**
+     * Editing an existing ticket: fills the form in, locks the category (it decides which team
+     * handles it), hides the anonymous toggle and saves instead of submitting.
+     */
+    initialValues?: Pick<TicketFormValues, "category" | "description" | "hasPhoto"> & {
+        /** Null when the ticket was never pinned; the reporter is asked to pin it. */
+        location: PickedLocation | null;
+    };
 }
 
 const categories = Object.entries(categoryLabels) as [TicketCategory, string][];
 /** Sentinel select value for "a premise that isn't in the list". */
 const OTHER = "__other__";
 
-/** Collects a report: category, description and a pinned location. */
+/** Collects a report: category, description and a pinned location. Also edits an existing one. */
 export default function TicketForm({
     premises = [],
     showAnonymous = true,
     onSubmit,
     onCancel,
+    initialValues,
 }: TicketFormProps) {
-    const [category, setCategory] = useState<TicketCategory>();
+    const editing = !!initialValues;
+    const [category, setCategory] = useState<TicketCategory | undefined>(initialValues?.category);
     const [categoryError, setCategoryError] = useState<string>();
-    const [location, setLocation] = useState<PickedLocation | null>(null);
+    const [location, setLocation] = useState<PickedLocation | null>(
+        initialValues?.location ?? null,
+    );
     const [locationError, setLocationError] = useState<string>();
     const [premiseId, setPremiseId] = useState<string>();
     const [otherPremise, setOtherPremise] = useState("");
     const [premiseError, setPremiseError] = useState<string>();
     const [anonymous, setAnonymous] = useState(false);
+    const [photos, setPhotos] = useState<File[]>([]);
     const {
         register,
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<{ description: string }>();
+    } = useForm<{ description: string }>({
+        defaultValues: { description: initialValues?.description ?? "" },
+    });
 
     // Picking a listed premise fills the location from it; "Other" leaves it to the map.
     function choosePremise(value: string) {
@@ -99,19 +118,29 @@ export default function TicketForm({
                         ? otherPremise.trim()
                         : premises.find((p) => p.id === premiseId)?.name;
 
-                onSubmit({ category, description: description.trim(), location, premise, anonymous });
+                onSubmit({
+                    category,
+                    description: description.trim(),
+                    location,
+                    premise,
+                    hasPhoto: photos.length > 0,
+                    anonymous,
+                });
+                if (editing) return;
                 reset();
                 setCategory(undefined);
                 setLocation(null);
                 setPremiseId(undefined);
                 setOtherPremise("");
                 setAnonymous(false);
+                setPhotos([]);
             })}
         >
             <div>
                 <Label>Category</Label>
                 <Select
                     value={category}
+                    disabled={editing}
                     onValueChange={(value) => {
                         setCategory(value as TicketCategory);
                         setCategoryError(undefined);
@@ -182,6 +211,16 @@ export default function TicketForm({
             </div>
 
             <div>
+                <Label>Photos (optional)</Label>
+                {initialValues?.hasPhoto && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                        This ticket already has photos attached. You can add more.
+                    </p>
+                )}
+                <PhotoPicker photos={photos} onChange={setPhotos} />
+            </div>
+
+            <div>
                 <Label>Location</Label>
                 <LocationPicker
                     value={location}
@@ -190,10 +229,12 @@ export default function TicketForm({
                         if (next) setLocationError(undefined);
                     }}
                 />
+                {/* Extra context for the reporter: the LRT station nearest their pin. */}
+                {location && <NearestStation point={location} className="mt-1.5" />}
                 <FieldError message={locationError} />
             </div>
 
-            {showAnonymous && (
+            {showAnonymous && !editing && (
                 <SubmitAnonymously
                     checked={anonymous}
                     onCheckedChange={setAnonymous}
@@ -211,7 +252,7 @@ export default function TicketForm({
                         Cancel
                     </Button>
                 )}
-                <Button type="submit">Submit ticket</Button>
+                <Button type="submit">{editing ? "Save changes" : "Submit ticket"}</Button>
             </div>
         </form>
     );

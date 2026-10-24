@@ -9,7 +9,12 @@ import TicketLookup from "@/components/tickets/TicketLookup";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth";
 import { readPremises, readRemovedPremiseIds } from "@/lib/business/business";
-import { getTicketsForUser, matchesTicketQuery, submitTicket } from "@/lib/tickets/tickets";
+import {
+    applyTicketChange,
+    getTicketsForUser,
+    matchesTicketQuery,
+    submitTicket,
+} from "@/lib/tickets/tickets";
 import { PATHS } from "@/routes";
 import type { Ticket } from "@/types/ticket";
 import type { AppUser } from "@/types/user";
@@ -68,6 +73,7 @@ function TicketsView({ user }: { user: AppUser }) {
             latitude: values.location.latitude,
             longitude: values.location.longitude,
             premise: values.premise,
+            hasPhoto: values.hasPhoto,
         });
         setMyTickets((current) => [ticket, ...current]);
         setSelectedId(ticket.id);
@@ -102,7 +108,12 @@ function TicketsView({ user }: { user: AppUser }) {
                                 onClick={() => setShowForm((open) => !open)}
                             >
                                 {!showForm && <Plus className="size-4" />}
-                                {showForm ? "Close" : "New ticket"}
+                                {/* Phones get just the + icon; the words stay for screen readers. */}
+                                {showForm ? (
+                                    "Close"
+                                ) : (
+                                    <span className="sr-only sm:not-sr-only">New ticket</span>
+                                )}
                             </Button>
                         )}
                     </div>
@@ -170,7 +181,12 @@ function TicketsView({ user }: { user: AppUser }) {
                     className="scroll-mt-20 rounded-xl border bg-card p-5 shadow-sm sm:p-6 lg:sticky lg:top-24"
                 >
                     {selected ? (
-                        <TicketDetail ticket={selected} />
+                        <TicketDetail
+                            ticket={selected}
+                            onChange={(ticket) =>
+                                setMyTickets((current) => applyTicketChange(current, selected.id, ticket))
+                            }
+                        />
                     ) : (
                         <div className="py-10 text-center">
                             <SearchX className="mx-auto size-8 text-muted-foreground" aria-hidden />

@@ -4,6 +4,7 @@ import type { ApplicationStatus, BusinessApplication, BusinessType } from "@/typ
 import type { ClosureKind, RoadClosure } from "@/types/road-closure";
 import type { ConstructionSchedule } from "@/types/schedule";
 import type { BusinessProfile } from "@/types/user";
+import { tone } from "@/lib/tones";
 
 /**
  * MOCK BUSINESS APPLICATIONS (frontend only, no backend).
@@ -23,9 +24,9 @@ export const businessTypeLabels: Record<BusinessType, string> = {
 };
 
 export const applicationStatusMeta: Record<ApplicationStatus, { label: string; badge: string }> = {
-    pending: { label: "Pending review", badge: "border-hazard/40 bg-hazard/15 text-amber-800" },
-    approved: { label: "Approved", badge: "border-success/30 bg-success/10 text-green-800" },
-    rejected: { label: "Rejected", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+    pending: { label: "Pending review", badge: tone.warning },
+    approved: { label: "Approved", badge: tone.success },
+    rejected: { label: "Rejected", badge: tone.danger },
 };
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -184,7 +185,7 @@ export function worksNear(premise: BusinessProfile): ConstructionSchedule[] {
 
 /** Colours per notice type, matching the announcement bell's closure / construction / general tags. */
 export const noticeTypeStyles: Record<ClosureKind | "construction", { label: string; tag: string; edge: string }> = {
-    closure: { label: "Road closure", tag: "bg-destructive/10 text-destructive", edge: "border-l-destructive" },
-    construction: { label: "Construction", tag: "bg-hazard/20 text-amber-900", edge: "border-l-hazard" },
-    access: { label: "Access info", tag: "bg-info/10 text-info", edge: "border-l-info" },
+    closure: { label: "Road closure", tag: tone.danger, edge: "border-l-destructive" },
+    construction: { label: "Construction", tag: tone.warning, edge: "border-l-hazard" },
+    access: { label: "Access info", tag: tone.info, edge: "border-l-info" },
 };

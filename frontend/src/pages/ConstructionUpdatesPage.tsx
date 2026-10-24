@@ -25,6 +25,7 @@ import { readLrtStations } from "@/lib/lrt/stations";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { ConstructionSchedule, ScheduleStatus } from "@/types/schedule";
+import { tone } from "@/lib/tones";
 
 const statusLabels: Record<ScheduleStatus, string> = {
     ongoing: "Ongoing Works",
@@ -33,9 +34,9 @@ const statusLabels: Record<ScheduleStatus, string> = {
 };
 
 const statusTone: Record<ScheduleStatus, string> = {
-    upcoming: "border-info/30 bg-info/10 text-sky-800 dark:text-sky-300",
-    ongoing: "border-hazard/40 bg-hazard/15 text-amber-800 dark:text-amber-300",
-    completed: "border-success/30 bg-success/10 text-green-800 dark:text-green-300",
+    upcoming: tone.info,
+    ongoing: tone.warning,
+    completed: tone.success,
 };
 
 function computeTimelineProgress(item: ConstructionSchedule): number {
@@ -151,7 +152,7 @@ export default function ConstructionUpdatesPage() {
                     {/* Summary Metrics */}
                     <div className="mt-6 grid gap-3 sm:grid-cols-3">
                         <div className="flex items-center gap-3.5 rounded-xl border bg-card p-4 shadow-sm">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-hazard/15 text-amber-700">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-hazard/15 text-hazard-text">
                                 <HardHat className="size-5" />
                             </span>
                             <div>
@@ -161,7 +162,7 @@ export default function ConstructionUpdatesPage() {
                         </div>
 
                         <div className="flex items-center gap-3.5 rounded-xl border bg-card p-4 shadow-sm">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-info/10 text-sky-700">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-info/10 text-info-text">
                                 <CalendarClock className="size-5" />
                             </span>
                             <div>
@@ -171,7 +172,7 @@ export default function ConstructionUpdatesPage() {
                         </div>
 
                         <div className="flex items-center gap-3.5 rounded-xl border bg-card p-4 shadow-sm">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-success/15 text-green-700">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success-text">
                                 <CheckCircle2 className="size-5" />
                             </span>
                             <div>

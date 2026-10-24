@@ -1,6 +1,7 @@
 import { recordAudit } from "@/lib/admin/audit";
 import { readJson, writeJson } from "@/lib/admin/store";
 import type { SupportRequest, SupportRequestStatus, SupportRequestType } from "@/types/business";
+import { tone } from "@/lib/tones";
 
 /**
  * MOCK SUPPORT REQUESTS (frontend only, no backend). Business owners ask the support desk for
@@ -17,9 +18,9 @@ export const supportTypeLabels: Record<SupportRequestType, string> = {
 };
 
 export const supportStatusMeta: Record<SupportRequestStatus, { label: string; badge: string }> = {
-    pending: { label: "Pending", badge: "border-hazard/40 bg-hazard/15 text-amber-800" },
-    arranged: { label: "Arranged", badge: "border-success/30 bg-success/10 text-green-800" },
-    declined: { label: "Declined", badge: "border-destructive/30 bg-destructive/10 text-destructive" },
+    pending: { label: "Pending", badge: tone.warning },
+    arranged: { label: "Arranged", badge: tone.success },
+    declined: { label: "Declined", badge: tone.danger },
 };
 
 /** Newest first. */

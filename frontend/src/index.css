@@ -4,86 +4,126 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ------------------------------------------------------------------
-    MutiaraConnect theme: Harbour Blue + Pearl, with Hazard Amber
-    reserved for construction notices, closures and unread badges.
+    MutiaraConnect theme, from the logo: Royal Blue #274F8E carries the
+    structure (titles, buttons, links), Golden Yellow #D5AD3B is the accent
+    for things that need attention (construction notices, unread badges,
+    work in progress), on Crisp White #F5F7F8. Gold is only ever a fill or a
+    thin line: as text on white it fails contrast, so gold-coloured words
+    use the darker gold text colours at the point of use.
 ------------------------------------------------------------------- */
 :root {
-    --background: #f7f9fa; /* Pearl */
-    --foreground: #0f1f2a; /* Ink */
+    --background: #f5f7f8; /* Crisp White */
+    --foreground: #0f1b33; /* Ink, tinted toward the royal blue */
 
     --card: #ffffff;
-    --card-foreground: #0f1f2a;
+    --card-foreground: #0f1b33;
     --popover: #ffffff;
-    --popover-foreground: #0f1f2a;
+    --popover-foreground: #0f1b33;
 
-    --primary: #0b4f6c; /* Harbour Blue */
-    --primary-hover: #093f57; /* Deep Harbour */
-    --primary-foreground: #ffffff;
+    --primary: #274f8e; /* Royal Blue */
+    --primary-hover: #1d3f75; /* Deep Royal */
+    --primary-foreground: #f5f7f8;
 
-    --secondary: #14a3a3; /* LRT Teal */
-    --secondary-foreground: #0f1f2a;
+    --secondary: #0e223d; /* Logo Navy */
+    --secondary-foreground: #f5f7f8;
 
-    --muted: #eef2f4;
-    --muted-foreground: #5b6b76; /* Slate */
+    --muted: #edf1f6;
+    --muted-foreground: #5a6880; /* Slate */
 
     /* shadcn "accent" is the hover/selected surface, so it stays a soft
-     harbour tint. The amber accent lives in --hazard below. */
-    --accent: #e4eef3;
-    --accent-foreground: #0b4f6c;
+     royal-blue tint. The gold accent lives in --hazard below. */
+    --accent: #e7edf6;
+    --accent-foreground: #274f8e;
 
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
 
-    --border: #e2e8ec; /* Mist */
-    --input: #e2e8ec;
-    --ring: #0b4f6c;
+    --border: #dfe5ee; /* Mist */
+    --input: #dfe5ee;
+    --ring: #274f8e;
 
     /* Status + construction colors */
-    --hazard: #f59e0b; /* Hazard Amber: construction, closures, unread */
-    --hazard-foreground: #0f1f2a;
-    --success: #16a34a;
-    --info: #0284c7;
+    --hazard: #d5ad3b; /* Golden Yellow: construction, closures, unread */
+    --hazard-foreground: #0f1b33;
+    --hazard-text: #7a5c0c; /* Dark gold, for gold-coloured words and icons on light surfaces */
+    /* Neutral (slate): the "nothing has happened yet" colour, e.g. a Received ticket. */
+    --neutral: #64748b;
+    --neutral-foreground: #ffffff;
+    --neutral-text: #475569;
+    /* Success and info fills carry small text in status badges, so they're dark enough for white
+       text (5:1 and up); dark mode keeps the softer fills and switches their text to ink. */
+    --success: #15803d;
+    --success-foreground: #ffffff;
+    --success-text: #157a3a;
+    --info: #2e6bc4; /* A lighter royal blue, distinct from the primary */
+    --info-foreground: #ffffff;
+    --info-text: #1d4f9c;
+
+    /* Solid brand fills for the main call-to-action cards (Send a ticket / Send feedback). */
+    --brand-blue: #274f8e;
+    --brand-blue-foreground: #f5f7f8;
+    --brand-gold: #d5ad3b;
+    --brand-gold-foreground: #0f1b33;
+
+    /* The average navy around the animated logo GIF, so a band behind it blends in. Same in both themes. */
+    --logo-backdrop: #0f223d;
 
     --radius: 0.5rem;
 }
 
 /* Dark mode: toggled by the "dark" class on <html> (see lib/settings.tsx).
-   Primary becomes a lighter harbour blue so headings and links stay readable. */
+   The logo's navy, softened: low saturation, off-white text and muted accents so
+   nothing glows. Primary becomes a lighter steel blue so headings and links stay readable. */
 .dark {
     color-scheme: dark;
 
-    --background: #0b141a;
-    --foreground: #e6eef2;
+    --background: #101c2f;
+    --foreground: #e8ecf2;
 
-    --card: #111e26;
-    --card-foreground: #e6eef2;
-    --popover: #111e26;
-    --popover-foreground: #e6eef2;
+    --card: #172640;
+    --card-foreground: #e8ecf2;
+    --popover: #172640;
+    --popover-foreground: #e8ecf2;
 
-    --primary: #5cb8d9;
-    --primary-hover: #7cc8e3;
-    --primary-foreground: #0b1a22;
+    --primary: #8ca7d6;
+    --primary-hover: #a3b9de;
+    --primary-foreground: #101c2f;
 
-    --secondary: #2dbdbd;
-    --secondary-foreground: #0b1a22;
+    --secondary: #243a5c;
+    --secondary-foreground: #e8ecf2;
 
-    --muted: #17252e;
-    --muted-foreground: #9fb1bc;
+    --muted: #1b2c46;
+    --muted-foreground: #9cabc2;
 
-    --accent: #17303d;
-    --accent-foreground: #8fd0e8;
+    --accent: #223558;
+    --accent-foreground: #b6c7e3;
 
     --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
+    /* Ink, not white: white on this red is only 3.8:1, too faint for badge and button text. */
+    --destructive-foreground: #0f1b33;
 
-    --border: #223641;
-    --input: #2d4452;
-    --ring: #5cb8d9;
+    --border: #28405f;
+    --input: #34507a;
+    --ring: #8ca7d6;
 
-    --hazard: #f59e0b;
-    --hazard-foreground: #0f1f2a;
-    --success: #22c55e;
-    --info: #38bdf8;
+    --hazard: #c9a43a;
+    --hazard-foreground: #0f1b33;
+    --hazard-text: #d8bb5c;
+    --neutral: #64748b;
+    --neutral-foreground: #ffffff;
+    --neutral-text: #cbd5e1;
+    --success: #44a06c;
+    --success-foreground: #0f1b33;
+    --success-text: #74c394;
+    --info: #7094ca;
+    --info-foreground: #0f1b33;
+    --info-text: #a6bce0;
+
+    /* Brand fills stay solid but deeper, so they don't glow on the navy page. */
+    --brand-blue: #274f8e;
+    --brand-blue-foreground: #f5f7f8;
+    --brand-gold: #b8952f;
+    --brand-gold-foreground: #0f1b33;
 }
 
 @theme inline {
@@ -109,8 +149,21 @@
     --color-ring: var(--ring);
     --color-hazard: var(--hazard);
     --color-hazard-foreground: var(--hazard-foreground);
+    --color-hazard-text: var(--hazard-text);
+    --color-neutral: var(--neutral);
+    --color-neutral-foreground: var(--neutral-foreground);
+    --color-neutral-text: var(--neutral-text);
     --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-success-text: var(--success-text);
     --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+    --color-info-text: var(--info-text);
+    --color-logo-backdrop: var(--logo-backdrop);
+    --color-brand-blue: var(--brand-blue);
+    --color-brand-blue-foreground: var(--brand-blue-foreground);
+    --color-brand-gold: var(--brand-gold);
+    --color-brand-gold-foreground: var(--brand-gold-foreground);
 
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -145,4 +198,66 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+}
+
+/* Endless horizontal scroll: the track holds two identical copies, so sliding
+   it by half its width lands exactly where it started. */
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+/* Resolved-ticket card shaped like a transit ticket: two half-circle notches cut into the
+   edges where the dashed tear line sits, 2.75rem (the stub's height) up from the bottom. */
+.ticket-stub {
+    --notch: 0.625rem;
+    --tear: calc(100% - 2.75rem);
+    -webkit-mask:
+        radial-gradient(circle var(--notch) at 0 var(--tear), transparent 98%, #000),
+        radial-gradient(circle var(--notch) at 100% var(--tear), transparent 98%, #000);
+    -webkit-mask-composite: source-in;
+    mask:
+        radial-gradient(circle var(--notch) at 0 var(--tear), transparent 98%, #000),
+        radial-gradient(circle var(--notch) at 100% var(--tear), transparent 98%, #000);
+    mask-composite: intersect;
+}
+
+/* The train on the resolved-tickets line: enters from off the left edge and leaves off the right. */
+@keyframes train {
+    from {
+        left: -2rem;
+    }
+    to {
+        left: 100%;
+    }
+}
+
+/* Ticket popup turning in like a card being flipped over (resolved strip), and turning back the
+   way it came on close. The close needs its own name: Radix only waits for a closing animation
+   whose name differs from the opening one. Transform only, so it doesn't fight the popup's
+   centring (Tailwind's translate property). */
+@keyframes card-flip-in {
+    from {
+        opacity: 0;
+        transform: perspective(1200px) rotateY(-75deg);
+    }
+    to {
+        opacity: 1;
+        transform: perspective(1200px) rotateY(0);
+    }
+}
+
+@keyframes card-flip-out {
+    from {
+        opacity: 1;
+        transform: perspective(1200px) rotateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: perspective(1200px) rotateY(-75deg);
+    }
 }

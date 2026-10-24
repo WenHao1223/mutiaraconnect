@@ -1,11 +1,12 @@
 import { MapPin, Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Announcement } from "@/types/announcement";
+import { tone } from "@/lib/tones";
 
 const typeStyles: Record<Announcement["type"], { label: string; className: string }> = {
-    closure: { label: "Road closure", className: "bg-destructive/10 text-destructive" },
-    construction: { label: "Construction", className: "bg-hazard/20 text-amber-900" },
-    general: { label: "General", className: "bg-info/10 text-info" },
+    closure: { label: "Road closure", className: tone.danger },
+    construction: { label: "Construction", className: tone.warning },
+    general: { label: "General", className: tone.info },
 };
 
 interface AnnouncementItemProps {
@@ -25,7 +26,7 @@ export default function AnnouncementItem({ announcement, isUnread, onRead }: Ann
         >
             <span className="flex flex-wrap items-center gap-1.5">
                 {announcement.pinned && (
-                    <span className="inline-flex items-center gap-0.5 rounded bg-hazard/25 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                    <span className="inline-flex items-center gap-0.5 rounded bg-hazard/25 px-1.5 py-0.5 text-[10px] font-semibold text-hazard-text">
                         <Pin className="size-2.5" aria-hidden /> Pinned
                     </span>
                 )}

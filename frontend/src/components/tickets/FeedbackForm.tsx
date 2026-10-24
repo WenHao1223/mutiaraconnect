@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import FieldError from "@/components/custom/FieldError";
+import PhotoPicker from "@/components/custom/PhotoPicker";
 import SubmitAnonymously from "@/components/tickets/SubmitAnonymously";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,8 @@ export default function FeedbackForm({ showAnonymous = true, onSubmit, onCancel 
     const [category, setCategory] = useState<FeedbackCategory>();
     const [categoryError, setCategoryError] = useState<string>();
     const [anonymous, setAnonymous] = useState(false);
+    // Shown in the form only; feedback doesn't keep photos yet (no backend).
+    const [photos, setPhotos] = useState<File[]>([]);
     const {
         register,
         handleSubmit,
@@ -50,6 +53,7 @@ export default function FeedbackForm({ showAnonymous = true, onSubmit, onCancel 
                 reset();
                 setCategory(undefined);
                 setAnonymous(false);
+                setPhotos([]);
             })}
         >
             <div>
@@ -90,6 +94,11 @@ export default function FeedbackForm({ showAnonymous = true, onSubmit, onCancel 
                     })}
                 />
                 <FieldError message={errors.message?.message} />
+            </div>
+
+            <div>
+                <Label>Photos (optional)</Label>
+                <PhotoPicker photos={photos} onChange={setPhotos} />
             </div>
 
             {showAnonymous && (

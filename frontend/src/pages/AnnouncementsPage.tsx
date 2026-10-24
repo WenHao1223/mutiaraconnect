@@ -33,6 +33,7 @@ import { useSettings } from "@/lib/settings/settings";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
+import { tone } from "@/lib/tones";
 
 const typeBadgeStyle: Record<
     Announcement["type"],
@@ -40,15 +41,15 @@ const typeBadgeStyle: Record<
 > = {
     closure: {
         label: "Road Closure",
-        className: "border-destructive/30 bg-destructive/10 text-destructive",
+        className: tone.danger,
     },
     construction: {
         label: "Construction",
-        className: "border-hazard/40 bg-hazard/15 text-amber-800 dark:text-amber-300",
+        className: tone.warning,
     },
     general: {
         label: "General Notice",
-        className: "border-info/30 bg-info/10 text-sky-800 dark:text-sky-300",
+        className: tone.info,
     },
 };
 
@@ -336,7 +337,7 @@ export default function AnnouncementsPage() {
                                                     </span>
                                                 )}
                                                 {item.pinned && (
-                                                    <span className="inline-flex items-center gap-1 rounded-md bg-hazard/20 px-2 py-0.5 text-xs font-semibold text-amber-900 dark:text-amber-300">
+                                                    <span className="inline-flex items-center gap-1 rounded-md bg-hazard/20 px-2 py-0.5 text-xs font-semibold text-hazard-text">
                                                         <Pin className="size-3" />
                                                         Pinned Advisory
                                                     </span>

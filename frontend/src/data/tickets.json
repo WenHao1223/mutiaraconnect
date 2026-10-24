@@ -237,5 +237,240 @@
                 "at": "2026-10-05T12:10:00+08:00"
             }
         ]
+    },
+    {
+        "id": "FB-2005",
+        "category": "dust",
+        "location": "Gelugor",
+        "latitude": 5.3738,
+        "longitude": 100.3121,
+        "description": "Thick dust from the excavation site is blowing onto the shophouses.",
+        "status": "resolved",
+        "submittedAt": "2026-09-02T09:10:00+08:00",
+        "updatedAt": "2026-09-05T16:45:00+08:00",
+        "updates": [
+            {
+                "status": "received",
+                "message": "We have received your ticket.",
+                "by": "System",
+                "at": "2026-09-02T09:10:00+08:00"
+            },
+            {
+                "status": "under_review",
+                "message": "Site team will check the dust control on the excavation.",
+                "by": "Community Liaison",
+                "at": "2026-09-02T15:30:00+08:00"
+            },
+            {
+                "status": "in_progress",
+                "message": "Water spraying increased to every two hours.",
+                "by": "Environmental Team",
+                "at": "2026-09-03T10:00:00+08:00"
+            },
+            {
+                "status": "resolved",
+                "message": "Dust screens raised along the site edge and spraying continues daily.",
+                "by": "Environmental Team",
+                "at": "2026-09-05T16:45:00+08:00"
+            }
+        ]
+    },
+    {
+        "id": "FB-2008",
+        "category": "traffic",
+        "location": "Sungai Nibong",
+        "latitude": 5.3438,
+        "longitude": 100.3009,
+        "description": "Lane closure near the bus terminal is causing long queues every morning.",
+        "status": "resolved",
+        "submittedAt": "2026-09-08T07:55:00+08:00",
+        "updatedAt": "2026-09-10T11:20:00+08:00",
+        "updates": [
+            {
+                "status": "received",
+                "message": "We have received your ticket.",
+                "by": "System",
+                "at": "2026-09-08T07:55:00+08:00"
+            },
+            {
+                "status": "under_review",
+                "message": "Traffic management plan sent for review.",
+                "by": "Traffic Management",
+                "at": "2026-09-08T14:00:00+08:00"
+            },
+            {
+                "status": "resolved",
+                "message": "Lane closure moved to off-peak hours (10am to 4pm).",
+                "by": "Traffic Management",
+                "at": "2026-09-10T11:20:00+08:00"
+            }
+        ]
+    },
+    {
+        "id": "FB-2011",
+        "category": "noise",
+        "location": "Bukit Jambul",
+        "latitude": 5.3355,
+        "longitude": 100.2915,
+        "description": "Generator running through the night next to the apartments.",
+        "status": "resolved",
+        "submittedAt": "2026-09-12T23:40:00+08:00",
+        "updatedAt": "2026-09-14T17:00:00+08:00",
+        "updates": [
+            {
+                "status": "received",
+                "message": "We have received your ticket.",
+                "by": "System",
+                "at": "2026-09-12T23:40:00+08:00"
+            },
+            {
+                "status": "in_progress",
+                "message": "Contractor told to switch off the generator after 10pm.",
+                "by": "Site Safety Team",
+                "at": "2026-09-13T09:30:00+08:00"
+            },
+            {
+                "status": "resolved",
+                "message": "Generator relocated away from homes and fitted with a silencer.",
+                "by": "Site Safety Team",
+                "at": "2026-09-14T17:00:00+08:00"
+            }
+        ]
+    },
+    {
+        "id": "FB-2014",
+        "category": "pedestrian_access",
+        "location": "Penang International Airport",
+        "latitude": 5.2975,
+        "longitude": 100.2772,
+        "description": "No safe path to the bus stop since the hoarding went up.",
+        "status": "resolved",
+        "submittedAt": "2026-09-15T08:20:00+08:00",
+        "updatedAt": "2026-09-18T15:40:00+08:00",
+        "updates": [
+            {
+                "status": "received",
+                "message": "We have received your ticket.",
+                "by": "System",
+                "at": "2026-09-15T08:20:00+08:00"
+            },
+            {
+                "status": "under_review",
+                "message": "Site team will mark out a temporary walkway.",
+                "by": "Community Liaison",
+                "at": "2026-09-15T13:10:00+08:00"
+            },
+            {
+                "status": "in_progress",
+                "message": "Temporary walkway with barriers being installed.",
+                "by": "Site Safety Team",
+                "at": "2026-09-16T09:00:00+08:00"
+            },
+            {
+                "status": "resolved",
+                "message": "Covered temporary walkway to the bus stop is now open.",
+                "by": "Site Safety Team",
+                "at": "2026-09-18T15:40:00+08:00"
+            }
+        ]
+    },
+    {
+        "id": "FB-2017",
+        "category": "safety",
+        "location": "The Light",
+        "latitude": 5.3795,
+        "longitude": 100.3188,
+        "description": "Loose hoarding panel is swinging in the wind near the junction.",
+        "status": "resolved",
+        "submittedAt": "2026-09-20T17:05:00+08:00",
+        "updatedAt": "2026-09-21T10:15:00+08:00",
+        "updates": [
+            {
+                "status": "received",
+                "message": "We have received your ticket.",
+                "by": "System",
+                "at": "2026-09-20T17:05:00+08:00"
+            },
+            {
+                "status": "in_progress",
+                "message": "Crew sent to secure the panel today.",
+                "by": "Site Safety Team",
+                "at": "2026-09-20T18:30:00+08:00"
+            },
+            {
+                "status": "resolved",
+                "message": "Panel re-fixed and all hoarding along the stretch checked.",
+                "by": "Site Safety Team",
+                "at": "2026-09-21T10:15:00+08:00"
+            }
+        ]
+    },
+    {
+        "id": "FB-2019",
+        "category": "business_access",
+        "location": "Sungai Pinang",
+        "latitude": 5.3988,
+        "longitude": 100.3251,
+        "description": "Customers cannot reach our shop entrance because of the site fencing.",
+        "status": "resolved",
+        "submittedAt": "2026-09-23T10:00:00+08:00",
+        "updatedAt": "2026-09-26T14:30:00+08:00",
+        "updates": [
+            {
+                "status": "received",
+                "message": "We have received your ticket.",
+                "by": "System",
+                "at": "2026-09-23T10:00:00+08:00"
+            },
+            {
+                "status": "under_review",
+                "message": "Business liaison will visit the premise.",
+                "by": "Business Liaison",
+                "at": "2026-09-23T16:20:00+08:00"
+            },
+            {
+                "status": "in_progress",
+                "message": "Fence line being adjusted to leave a 2 m access lane.",
+                "by": "Site Safety Team",
+                "at": "2026-09-25T09:00:00+08:00"
+            },
+            {
+                "status": "resolved",
+                "message": "Access lane and signage to the shop entrance are in place.",
+                "by": "Business Liaison",
+                "at": "2026-09-26T14:30:00+08:00"
+            }
+        ]
+    },
+    {
+        "id": "FB-2025",
+        "category": "other",
+        "location": "Batu Uban",
+        "latitude": 5.3615,
+        "longitude": 100.3098,
+        "description": "Construction lights are shining straight into our bedroom windows.",
+        "status": "resolved",
+        "submittedAt": "2026-09-27T21:15:00+08:00",
+        "updatedAt": "2026-09-29T20:00:00+08:00",
+        "updates": [
+            {
+                "status": "received",
+                "message": "We have received your ticket.",
+                "by": "System",
+                "at": "2026-09-27T21:15:00+08:00"
+            },
+            {
+                "status": "under_review",
+                "message": "Site team will check the lighting angle tonight.",
+                "by": "Community Liaison",
+                "at": "2026-09-28T09:40:00+08:00"
+            },
+            {
+                "status": "resolved",
+                "message": "Floodlights re-angled and fitted with shields.",
+                "by": "Site Safety Team",
+                "at": "2026-09-29T20:00:00+08:00"
+            }
+        ]
     }
 ]

@@ -1,3 +1,17 @@
+import {
+    Car,
+    Check,
+    CircleHelp,
+    Footprints,
+    HardHat,
+    Inbox,
+    Search,
+    ShieldAlert,
+    Store,
+    Volume2,
+    Wind,
+    type LucideIcon,
+} from "lucide-react";
 import ticketData from "@/data/tickets.json";
 import usersData from "@/data/users.json";
 import type { Ticket, TicketCategory, TicketStatus, TicketUpdate } from "@/types/ticket";
@@ -32,14 +46,22 @@ function writeSubmittedTickets(list: Ticket[]) {
 }
 
 /**
- * Admin status changes are layered on top of the seed/submitted tickets rather than editing
- * them, so the original report stays intact. Replace with Supabase later.
+ * Admin status changes, and the reporter's own edits or withdrawal, are layered on top of the
+ * seed/submitted tickets rather than editing them, so the original report stays intact.
+ * Replace with Supabase later.
  */
 const ADMIN_UPDATES_KEY = "mutiaraconnect.ticket-updates";
+
+/** The parts of a report its owner can change while it is still "received". */
+export type TicketEdit = Pick<Ticket, "description" | "location" | "latitude" | "longitude" | "hasPhoto">;
 
 interface TicketPatch {
     status: TicketStatus;
     updates: TicketUpdate[];
+    /** The reporter's latest edits, laid over the original report. */
+    edits?: TicketEdit;
+    /** Withdrawn by the reporter: hidden everywhere, as if never sent. */
+    withdrawn?: boolean;
 }
 
 function readPatches(): Record<string, TicketPatch> {
@@ -59,13 +81,14 @@ function writePatches(patches: Record<string, TicketPatch>) {
     }
 }
 
-/** The ticket with any admin updates appended and its status brought up to date. */
+/** The ticket with any edits and admin updates applied and its status brought up to date. */
 function withPatch(ticket: Ticket): Ticket {
     const patch = readPatches()[ticket.id];
     if (!patch) return ticket;
     const updates = [...ticket.updates, ...patch.updates];
     return {
         ...ticket,
+        ...patch.edits,
         status: patch.status,
         updates,
         updatedAt: updates[updates.length - 1]?.at ?? ticket.updatedAt,
@@ -76,9 +99,11 @@ function allBaseTickets(): Ticket[] {
     return [...tickets, ...readSubmittedTickets()];
 }
 
-/** Every ticket, seed and submitted, with admin updates applied. Newest first. */
+/** Every ticket, seed and submitted, with admin updates applied. Newest first. Withdrawn ones are left out. */
 export function getAllTickets(): Ticket[] {
+    const patches = readPatches();
     return allBaseTickets()
+        .filter((ticket) => !patches[ticket.id]?.withdrawn)
         .map(withPatch)
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
@@ -94,9 +119,53 @@ export function updateTicketStatus(
     if (!base) return undefined;
     const patches = readPatches();
     const update: TicketUpdate = { status, message, by, at: new Date().toISOString() };
-    patches[id] = { status, updates: [...(patches[id]?.updates ?? []), update] };
+    // Keep any reporter edits already layered on this ticket.
+    patches[id] = { ...patches[id], status, updates: [...(patches[id]?.updates ?? []), update] };
     writePatches(patches);
     return withPatch(base);
+}
+
+/** Reporters can edit or withdraw their ticket until the team starts reviewing it. */
+export const isEditable = (ticket: Ticket) => ticket.status === "received";
+
+/** Saves the reporter's changes and notes the edit in the ticket's history. */
+export function editTicket(id: string, edit: TicketEdit): Ticket | undefined {
+    const current = findTicket(id);
+    if (!current || !isEditable(current)) return undefined;
+    const patches = readPatches();
+    const update: TicketUpdate = {
+        status: current.status,
+        message: "Updated the ticket details.",
+        by: "Reporter",
+        at: new Date().toISOString(),
+    };
+    patches[id] = {
+        ...patches[id],
+        status: current.status,
+        updates: [...(patches[id]?.updates ?? []), update],
+        edits: edit,
+    };
+    writePatches(patches);
+    return findTicket(id);
+}
+
+/** A list with one ticket swapped for its edited version, or dropped once withdrawn. */
+export function applyTicketChange(list: Ticket[], id: string, ticket: Ticket | undefined): Ticket[] {
+    return ticket ? list.map((t) => (t.id === id ? ticket : t)) : list.filter((t) => t.id !== id);
+}
+
+/** Withdraws a ticket the team hasn't started on; it disappears from every list. */
+export function withdrawTicket(id: string): void {
+    const current = findTicket(id);
+    if (!current || !isEditable(current)) return;
+    const patches = readPatches();
+    patches[id] = {
+        ...patches[id],
+        status: current.status,
+        updates: patches[id]?.updates ?? [],
+        withdrawn: true,
+    };
+    writePatches(patches);
 }
 
 /** The business premises each account owns, keyed by lower-cased email. */
@@ -190,11 +259,43 @@ export function findTicket(id: string): Ticket | undefined {
 /** Left-to-right order of the progress bar. */
 export const STATUS_ORDER: TicketStatus[] = ["received", "under_review", "in_progress", "resolved"];
 
-export const statusMeta: Record<TicketStatus, { label: string; badge: string }> = {
-    received: { label: "Received", badge: "border-transparent bg-muted text-muted-foreground" },
-    under_review: { label: "Under Review", badge: "border-info/30 bg-info/10 text-sky-800" },
-    in_progress: { label: "In Progress", badge: "border-hazard/40 bg-hazard/15 text-amber-800" },
-    resolved: { label: "Resolved", badge: "border-success/30 bg-success/10 text-green-800" },
+/**
+ * How each status looks, everywhere: `icon` and `fill` (solid colour with matching text) are shared
+ * by StatusBadge, StatusIcon and progress lines; `ring` and `text` (readable label colour) are for
+ * StatusIcon and progress lines.
+ */
+export const statusMeta: Record<
+    TicketStatus,
+    { label: string; icon: LucideIcon; fill: string; ring: string; text: string }
+> = {
+    received: {
+        label: "Received",
+        icon: Inbox,
+        fill: "bg-neutral text-neutral-foreground",
+        ring: "ring-neutral/20",
+        text: "text-neutral-text",
+    },
+    under_review: {
+        label: "Under Review",
+        icon: Search,
+        fill: "bg-info text-info-foreground",
+        ring: "ring-info/20",
+        text: "text-info-text",
+    },
+    in_progress: {
+        label: "In Progress",
+        icon: HardHat,
+        fill: "bg-hazard text-hazard-foreground",
+        ring: "ring-hazard/25",
+        text: "text-hazard-text",
+    },
+    resolved: {
+        label: "Resolved",
+        icon: Check,
+        fill: "bg-success text-success-foreground",
+        ring: "ring-success/20",
+        text: "text-success-text",
+    },
 };
 
 export const categoryLabels: Record<TicketCategory, string> = {
@@ -205,6 +306,17 @@ export const categoryLabels: Record<TicketCategory, string> = {
     business_access: "Business access",
     safety: "Safety",
     other: "Other",
+};
+
+/** One icon per category, so tickets can be told apart at a glance wherever they appear. */
+export const categoryIcons: Record<TicketCategory, LucideIcon> = {
+    noise: Volume2,
+    dust: Wind,
+    traffic: Car,
+    pedestrian_access: Footprints,
+    business_access: Store,
+    safety: ShieldAlert,
+    other: CircleHelp,
 };
 
 export const isOpen = (ticket: Ticket) => ticket.status !== "resolved";
