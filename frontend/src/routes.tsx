@@ -15,6 +15,7 @@ import BusinessNoticesPage from "@/pages/BusinessNoticesPage";
 import ConstructionInfoPage from "@/pages/ConstructionInfoPage";
 import ConstructionUpdatesPage from "@/pages/ConstructionUpdatesPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
+import RoadAccessPage from "@/pages/RoadAccessPage";
 import TicketsPage from "@/pages/ProfileTicketsPage";
 
 /** Every URL in the app. Use these instead of typing path strings anywhere else. */
@@ -59,7 +60,7 @@ const pages: PageRoute[] = [
     { path: PATHS.constructionUpdates, label: "Construction Updates", element: <ConstructionUpdatesPage />, nav: "construction" },
     { path: PATHS.announcements, label: "Announcements", element: <AnnouncementsPage />, nav: "construction" },
 
-    { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
+    { path: PATHS.roadAccess, label: "Road & Access", element: <RoadAccessPage />, nav: "main" },
     { path: PATHS.ticket, label: "Ticket", element: <PublicTicketsPage />, nav: "main" },
     { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
