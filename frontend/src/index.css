@@ -146,3 +146,65 @@ body {
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
 }
+
+/* Endless horizontal scroll: the track holds two identical copies, so sliding
+   it by half its width lands exactly where it started. */
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+/* Resolved-ticket card shaped like a transit ticket: two half-circle notches cut into the
+   edges where the dashed tear line sits, 2.75rem (the stub's height) up from the bottom. */
+.ticket-stub {
+    --notch: 0.625rem;
+    --tear: calc(100% - 2.75rem);
+    -webkit-mask:
+        radial-gradient(circle var(--notch) at 0 var(--tear), transparent 98%, #000),
+        radial-gradient(circle var(--notch) at 100% var(--tear), transparent 98%, #000);
+    -webkit-mask-composite: source-in;
+    mask:
+        radial-gradient(circle var(--notch) at 0 var(--tear), transparent 98%, #000),
+        radial-gradient(circle var(--notch) at 100% var(--tear), transparent 98%, #000);
+    mask-composite: intersect;
+}
+
+/* The train on the resolved-tickets line: enters from off the left edge and leaves off the right. */
+@keyframes train {
+    from {
+        left: -2rem;
+    }
+    to {
+        left: 100%;
+    }
+}
+
+/* Ticket popup turning in like a card being flipped over (resolved strip), and turning back the
+   way it came on close. The close needs its own name: Radix only waits for a closing animation
+   whose name differs from the opening one. Transform only, so it doesn't fight the popup's
+   centring (Tailwind's translate property). */
+@keyframes card-flip-in {
+    from {
+        opacity: 0;
+        transform: perspective(1200px) rotateY(-75deg);
+    }
+    to {
+        opacity: 1;
+        transform: perspective(1200px) rotateY(0);
+    }
+}
+
+@keyframes card-flip-out {
+    from {
+        opacity: 1;
+        transform: perspective(1200px) rotateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: perspective(1200px) rotateY(-75deg);
+    }
+}
