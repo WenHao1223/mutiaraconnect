@@ -13,19 +13,8 @@ import { createClosure, readClosures, setClosureStatus } from "@/lib/admin/closu
 import { readAllPremises } from "@/lib/admin/users";
 import { useAuth } from "@/lib/auth/auth";
 import { AFFECTED_RADIUS_KM, isWithinRadius } from "@/lib/maps/geo";
+import { CLOSURE_STATUS_LABEL, CLOSURE_STATUS_TONE, CLOSURE_STATUSES } from "@/lib/maps/mapConfig";
 import type { ClosureStatus } from "@/types/road-closure";
-
-const statusLabels: Record<ClosureStatus, string> = {
-    planned: "Planned",
-    active: "Active",
-    ended: "Ended",
-};
-
-const statusTone: Record<ClosureStatus, string> = {
-    planned: "border-info/30 bg-info/10 text-sky-800",
-    active: "border-destructive/30 bg-destructive/10 text-destructive",
-    ended: "border-transparent bg-muted text-muted-foreground",
-};
 
 const toIso = (local: string) => (local ? new Date(local).toISOString() : "");
 
@@ -176,9 +165,9 @@ export default function ClosureManager() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {(["planned", "active", "ended"] as ClosureStatus[]).map((status) => (
+                                    {CLOSURE_STATUSES.map((status) => (
                                         <SelectItem key={status} value={status}>
-                                            {statusLabels[status]}
+                                            {CLOSURE_STATUS_LABEL[status]}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -218,8 +207,8 @@ export default function ClosureManager() {
                                         {closure.area && ` · ${closure.area}`}
                                     </p>
                                 </div>
-                                <Badge variant="outline" className={statusTone[closure.status]}>
-                                    {statusLabels[closure.status]}
+                                <Badge variant="outline" className={CLOSURE_STATUS_TONE[closure.status]}>
+                                    {CLOSURE_STATUS_LABEL[closure.status]}
                                 </Badge>
                             </div>
                             {closure.reason && <p className="mt-2 text-sm">{closure.reason}</p>}
@@ -246,9 +235,9 @@ export default function ClosureManager() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {(["planned", "active", "ended"] as ClosureStatus[]).map((status) => (
+                                        {CLOSURE_STATUSES.map((status) => (
                                             <SelectItem key={status} value={status}>
-                                                {statusLabels[status]}
+                                                {CLOSURE_STATUS_LABEL[status]}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
