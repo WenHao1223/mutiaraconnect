@@ -166,14 +166,14 @@ function RouteLine({ path, dashed = false }: { path: Coordinates[]; dashed?: boo
         const casing = dashed
             ? undefined
             : new google.maps.Polyline({
-                  map,
-                  path: points,
-                  strokeColor: "#ffffff",
-                  strokeWeight: 9,
-                  strokeOpacity: 0.9,
-                  zIndex: 5,
-                  clickable: false,
-              });
+                map,
+                path: points,
+                strokeColor: "#ffffff",
+                strokeWeight: 9,
+                strokeOpacity: 0.9,
+                zIndex: 5,
+                clickable: false,
+            });
         const line = new google.maps.Polyline({
             map,
             path: points,
@@ -183,19 +183,19 @@ function RouteLine({ path, dashed = false }: { path: Coordinates[]; dashed?: boo
             // Walking is drawn as round dots every 12px.
             icons: dashed
                 ? [
-                      {
-                          icon: {
-                              path: google.maps.SymbolPath.CIRCLE,
-                              fillColor: LINE_COLOR.route,
-                              fillOpacity: 1,
-                              strokeColor: "#ffffff",
-                              strokeWeight: 1.5,
-                              scale: 3.5,
-                          },
-                          offset: "0",
-                          repeat: "12px",
-                      },
-                  ]
+                    {
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            fillColor: LINE_COLOR.route,
+                            fillOpacity: 1,
+                            strokeColor: "#ffffff",
+                            strokeWeight: 1.5,
+                            scale: 3.5,
+                        },
+                        offset: "0",
+                        repeat: "12px",
+                    },
+                ]
                 : undefined,
             zIndex: 12,
             clickable: false,

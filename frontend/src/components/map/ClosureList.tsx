@@ -62,8 +62,8 @@ export default function ClosureList({ closures, tab, onTabChange, selectedId, on
                         {tab === "now"
                             ? "No roads are closed right now."
                             : tab === "later"
-                              ? "No roads are closing later today."
-                              : "No closures are scheduled yet."}
+                                ? "No roads are closing later today."
+                                : "No closures are scheduled yet."}
                     </p>
                 ) : (
                     <ul className="divide-y">
