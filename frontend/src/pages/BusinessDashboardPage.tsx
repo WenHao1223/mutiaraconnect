@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { AlertTriangle, BadgeCheck, Clock, ExternalLink, LifeBuoy, MapPin, MessageSquarePlus, Navigation, Store, Ticket as TicketIcon } from "lucide-react";
@@ -25,6 +25,8 @@ import { PATHS } from "@/routes";
 export default function BusinessDashboardPage() {
     const { user } = useAuth();
     const [selectedId, setSelectedId] = useState<string>();
+    // Tickets are read fresh each render; bump this after the owner edits one so it re-reads.
+    const [, refreshTickets] = useReducer((n: number) => n + 1, 0);
     const owner = user ? user.email ?? user.ic ?? user.name : "";
     const [requests, setRequests] = useState(() => supportRequestsFor(owner));
     const [requesting, setRequesting] = useState(false);
@@ -149,7 +151,10 @@ export default function BusinessDashboardPage() {
                                                 >
                                                     ✕ Close details
                                                 </button>
-                                                <TicketDetail ticket={selected} />
+                                                <TicketDetail
+                                                    ticket={selected}
+                                                    onChange={(ticket) => (ticket ? refreshTickets() : setSelectedId(undefined))}
+                                                />
                                             </div>
                                         )}
                                     </TabsContent>

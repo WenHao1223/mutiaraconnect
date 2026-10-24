@@ -3,6 +3,7 @@ import { APIProvider, Map, Marker, useMap, useMapsLibrary } from "@vis.gl/react-
 import { Loader2, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 /** Default view: George Town, Penang — the centre of the Mutiara LRT corridor. */
 const PENANG_CENTER = { lat: 5.4141, lng: 100.3288 };
@@ -31,6 +32,8 @@ interface LocationPickerProps {
     recenterKey?: string;
     /** Hide the address/hint line under the map (for callers that already show the place). */
     hideCaption?: boolean;
+    /** Drop the map's own margin, border and rounding (for callers that frame it in a card). */
+    embedded?: boolean;
 }
 
 /** Loads the Maps JS API and renders the picker, or explains how to enable it. */
@@ -52,7 +55,7 @@ export default function LocationPicker(props: LocationPickerProps) {
     );
 }
 
-function MapPicker({ value, onChange, readOnly, recenterKey, hideCaption }: LocationPickerProps) {
+function MapPicker({ value, onChange, readOnly, recenterKey, hideCaption, embedded }: LocationPickerProps) {
     const geocoding = useMapsLibrary("geocoding");
     const [resolving, setResolving] = useState(false);
 
@@ -73,10 +76,10 @@ function MapPicker({ value, onChange, readOnly, recenterKey, hideCaption }: Loca
     }
 
     return (
-        <div className="mt-1.5 space-y-2">
+        <div className={cn("space-y-2", !embedded && "mt-1.5")}>
             {!readOnly && <AddressSearch onFound={(latitude, longitude) => void moveTo(latitude, longitude)} />}
             <Map
-                className="h-64 w-full overflow-hidden rounded-md border"
+                className={cn("h-64 w-full overflow-hidden", !embedded && "rounded-md border")}
                 defaultCenter={value ? { lat: value.latitude, lng: value.longitude } : PENANG_CENTER}
                 defaultZoom={15}
                 gestureHandling="cooperative"
