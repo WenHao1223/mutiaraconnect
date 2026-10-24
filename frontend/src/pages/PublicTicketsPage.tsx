@@ -31,7 +31,7 @@ import type { Ticket } from "@/types/ticket";
 /** Which panel sits below the action cards: a form, or (by default) the recent tickets. */
 type Panel = "tickets" | "ticket-form" | "feedback-form";
 
-/** The two things people come here to do. Each card keeps its own colour: blue for tickets, amber for feedback. */
+/** The two things people come here to do, as solid brand-colour cards: blue for tickets, gold for feedback. */
 const actions: {
     panel: Exclude<Panel, "tickets">;
     title: string;
@@ -40,6 +40,7 @@ const actions: {
     card: string;
     active: string;
     tile: string;
+    hintTone: string;
     arrow: string;
 }[] = [
     {
@@ -47,20 +48,22 @@ const actions: {
         title: "Send a ticket",
         hint: "Report a construction issue — noise, dust, access and more.",
         icon: LifeBuoy,
-        card: "border-primary/20 bg-primary/5 hover:border-primary/50",
-        active: "border-primary ring-1 ring-primary",
-        tile: "bg-primary text-primary-foreground",
-        arrow: "text-primary",
+        card: "border-brand-blue bg-brand-blue text-brand-blue-foreground",
+        active: "ring-2 ring-brand-blue ring-offset-2 ring-offset-background",
+        tile: "bg-brand-blue-foreground/15 text-brand-blue-foreground",
+        hintTone: "text-brand-blue-foreground/80",
+        arrow: "text-brand-blue-foreground",
     },
     {
         panel: "feedback-form",
         title: "Send feedback",
         hint: "Tell us what is working and what is not.",
         icon: MessageSquarePlus,
-        card: "border-hazard/30 bg-hazard/10 hover:border-hazard/70",
-        active: "border-hazard ring-1 ring-hazard",
-        tile: "bg-hazard text-hazard-foreground",
-        arrow: "text-amber-700 dark:text-hazard",
+        card: "border-brand-gold bg-brand-gold text-brand-gold-foreground",
+        active: "ring-2 ring-brand-gold ring-offset-2 ring-offset-background",
+        tile: "bg-brand-gold-foreground/10 text-brand-gold-foreground",
+        hintTone: "text-brand-gold-foreground/80",
+        arrow: "text-brand-gold-foreground",
     },
 ];
 
@@ -128,6 +131,10 @@ export default function PublicTicketsPage() {
                     <h1 className="mt-2 text-3xl font-bold tracking-tight text-primary">
                         Tickets &amp; Feedback
                     </h1>
+                    <p className="mt-1 max-w-l text-muted-foreground">
+                        Questions, issue reports or feedback: we're here to listen and help keep Penang's
+                        LRT works running smoothly.
+                    </p>
 
                     <div className="mt-8">
                         <PublicResolvedTickets tickets={resolved} />
@@ -154,7 +161,7 @@ export default function PublicTicketsPage() {
                             </span>
                             <span className="flex-1">
                                 <span className="block font-semibold">{action.title}</span>
-                                <span className="mt-0.5 block text-sm text-muted-foreground">
+                                <span className={cn("mt-0.5 block text-sm", action.hintTone)}>
                                     {action.hint}
                                 </span>
                             </span>
@@ -218,12 +225,7 @@ export default function PublicTicketsPage() {
                         <div className="mx-auto max-w-3xl rounded-xl border bg-card p-5 shadow-sm">
                             {panel === "ticket-form" ? (
                                 <>
-                                    <div className="flex items-center justify-between gap-2">
-                                        <h2 className="text-lg font-semibold">Send a ticket</h2>
-                                        <Button variant="outline" size="sm" onClick={() => setPanel("tickets")}>
-                                            Close
-                                        </Button>
-                                    </div>
+                                    <h2 className="text-lg font-semibold">Send a ticket</h2>
                                     <div className="mt-4">
                                         <TicketForm
                                             premises={premises}
@@ -235,12 +237,7 @@ export default function PublicTicketsPage() {
                                 </>
                             ) : panel === "feedback-form" ? (
                                 <>
-                                    <div className="flex items-center justify-between gap-2">
-                                        <h2 className="text-lg font-semibold">Send feedback</h2>
-                                        <Button variant="outline" size="sm" onClick={() => setPanel("tickets")}>
-                                            Close
-                                        </Button>
-                                    </div>
+                                    <h2 className="text-lg font-semibold">Send feedback</h2>
                                     <div className="mt-4">
                                         <FeedbackForm
                                             showAnonymous={!!user}
