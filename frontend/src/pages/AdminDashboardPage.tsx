@@ -1,4 +1,14 @@
-import { BellRing, CalendarClock, LayoutDashboard, ScrollText, Store, Ticket, Users, type LucideIcon } from "lucide-react";
+import {
+    BellRing,
+    CalendarClock,
+    LayoutDashboard,
+    ScrollText,
+    Store,
+    Ticket,
+    TrafficCone,
+    Users,
+    type LucideIcon,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminOverview from "@/components/admin/AdminOverview";
 import AuditLog from "@/components/admin/AuditLog";
@@ -24,7 +34,8 @@ interface AdminTabItem {
 const ADMIN_TABS = [
     { value: "overview", label: "Overview", icon: LayoutDashboard, superAdminOnly: false },
     { value: "tickets", label: "Tickets", icon: Ticket, superAdminOnly: false },
-    { value: "operations", label: "Closures & schedule", icon: CalendarClock, superAdminOnly: false },
+    { value: "closures", label: "Road closures", icon: TrafficCone, superAdminOnly: false },
+    { value: "schedule", label: "Construction schedule", icon: CalendarClock, superAdminOnly: false },
     { value: "notifications", label: "Notifications", icon: BellRing, superAdminOnly: false },
     { value: "businesses", label: "Business", icon: Store, superAdminOnly: false },
     { value: "users", label: "Users", icon: Users, superAdminOnly: true },
@@ -96,9 +107,13 @@ export default function AdminDashboardPage() {
                             <TicketAdmin />
                         </TabsContent>
                     )}
-                    {tab === "operations" && (
-                        <TabsContent value="operations" className="space-y-8">
+                    {tab === "closures" && (
+                        <TabsContent value="closures">
                             <ClosureManager />
+                        </TabsContent>
+                    )}
+                    {tab === "schedule" && (
+                        <TabsContent value="schedule">
                             <ScheduleManager />
                         </TabsContent>
                     )}
