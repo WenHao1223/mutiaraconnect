@@ -60,7 +60,7 @@ const pages: PageRoute[] = [
     { path: PATHS.announcements, label: "Announcements", element: <AnnouncementsPage />, nav: "construction" },
 
     { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
-    { path: PATHS.ticket, label: "Ticket", element: <PublicTicketsPage />, nav: "main" },
+    { path: PATHS.ticket, label: "Support", element: <PublicTicketsPage />, nav: "main" },
     { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
     { path: PATHS.about, label: "About Us", element: <Placeholder title="About Us" />, nav: "main" },
