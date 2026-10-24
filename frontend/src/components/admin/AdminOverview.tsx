@@ -28,14 +28,14 @@ export default function AdminOverview() {
                     label="Open tickets"
                     value={open}
                     icon={AlertTriangle}
-                    tone="bg-hazard/15 text-amber-700"
+                    tone="bg-hazard/15 text-hazard-text"
                     hint="Awaiting resolution"
                 />
                 <SummaryCard
                     label="Resolved"
                     value={resolved}
                     icon={CheckCircle2}
-                    tone="bg-success/15 text-green-700"
+                    tone="bg-success/15 text-success-text"
                     hint="Closed out"
                 />
                 <SummaryCard

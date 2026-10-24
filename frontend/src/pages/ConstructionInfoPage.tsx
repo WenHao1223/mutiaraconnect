@@ -30,11 +30,12 @@ import { TIME_LABEL, timeStatus } from "@/lib/road/closureDisplay";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { LrtLineSegment, LrtStation, StationConstructionStatus } from "@/types/lrt";
+import { tone } from "@/lib/tones";
 
 const statusBadgeTone: Record<StationConstructionStatus, string> = {
-    completed: "border-success/30 bg-success/10 text-green-800 dark:text-green-300",
-    ongoing: "border-hazard/40 bg-hazard/15 text-amber-800 dark:text-amber-300",
-    upcoming: "border-info/30 bg-info/10 text-sky-800 dark:text-sky-300",
+    completed: tone.success,
+    ongoing: tone.warning,
+    upcoming: tone.info,
 };
 
 const statusText: Record<StationConstructionStatus, string> = {
@@ -230,7 +231,7 @@ export default function ConstructionInfoPage() {
                         <div className="rounded-xl border bg-card p-4 shadow-sm">
                             <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
                                 <span>Active Station Sites</span>
-                                <HardHat className="size-4 text-amber-600" />
+                                <HardHat className="size-4 text-hazard-text" />
                             </div>
                             <p className="mt-1.5 text-2xl font-bold text-foreground">
                                 {ongoingStationsCount} Active Sites
@@ -243,7 +244,7 @@ export default function ConstructionInfoPage() {
                         <div className="rounded-xl border bg-card p-4 shadow-sm">
                             <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
                                 <span>Average Corridor Progress</span>
-                                <Activity className="size-4 text-emerald-600" />
+                                <Activity className="size-4 text-success-text" />
                             </div>
                             <div className="mt-1.5 flex items-baseline gap-2">
                                 <p className="text-2xl font-bold text-foreground">{overallProgress}%</p>

@@ -12,6 +12,7 @@ import { createScheduleItem, readSchedule, updateScheduleItem } from "@/lib/admi
 import { useAuth } from "@/lib/auth/auth";
 import { formatDate } from "@/lib/tickets/tickets";
 import type { ScheduleStatus } from "@/types/schedule";
+import { tone } from "@/lib/tones";
 
 const statusLabels: Record<ScheduleStatus, string> = {
     upcoming: "Upcoming",
@@ -20,9 +21,9 @@ const statusLabels: Record<ScheduleStatus, string> = {
 };
 
 const statusTone: Record<ScheduleStatus, string> = {
-    upcoming: "border-info/30 bg-info/10 text-sky-800",
-    ongoing: "border-hazard/40 bg-hazard/15 text-amber-800",
-    completed: "border-success/30 bg-success/10 text-green-800",
+    upcoming: tone.info,
+    ongoing: tone.warning,
+    completed: tone.success,
 };
 
 const toIso = (local: string) => (local ? new Date(local).toISOString() : "");

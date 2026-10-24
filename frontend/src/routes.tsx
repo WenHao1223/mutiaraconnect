@@ -8,9 +8,12 @@ import Placeholder from "@/pages/Placeholder";
 import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import AboutPage from "@/pages/AboutPage";
+import FaqPage from "@/pages/FaqPage";
 import AnnouncementsPage from "@/pages/AnnouncementsPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
+import BusinessNoticesPage from "@/pages/BusinessNoticesPage";
 import ConstructionInfoPage from "@/pages/ConstructionInfoPage";
 import ConstructionUpdatesPage from "@/pages/ConstructionUpdatesPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
@@ -59,9 +62,11 @@ const pages: PageRoute[] = [
     { path: PATHS.constructionUpdates, label: "Construction Updates", element: <ConstructionUpdatesPage />, nav: "construction" },
     { path: PATHS.announcements, label: "Announcements", element: <AnnouncementsPage />, nav: "construction" },
 
-    { path: PATHS.ticket, label: "Ticket", element: <PublicTicketsPage />, nav: "main" },
-    { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
-    { path: PATHS.about, label: "About Us", element: <Placeholder title="About Us" />, nav: "main" },
+    { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
+    { path: PATHS.ticket, label: "Support", element: <PublicTicketsPage />, nav: "main" },
+    { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
+    { path: PATHS.faqs, label: "FAQs", element: <FaqPage />, nav: "main" },
+    { path: PATHS.about, label: "About Us", element: <AboutPage />, nav: "main" },
 
     { path: PATHS.login, label: "Sign in", element: <LoginPage /> },
     { path: PATHS.register, label: "Register", element: <RegisterPage /> },

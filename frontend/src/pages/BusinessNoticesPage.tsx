@@ -12,6 +12,7 @@ import { currentNotices, noticeTypeStyles, worksNear } from "@/lib/business/busi
 import { AFFECTED_RADIUS_KM, isWithinRadius } from "@/lib/maps/geo";
 import { formatDate } from "@/lib/tickets/tickets";
 import { cn } from "@/lib/utils";
+import { tone } from "@/lib/tones";
 
 const ALL_AREAS = "__all__";
 const ignoreLocationChange = () => undefined;
@@ -167,7 +168,8 @@ export default function BusinessNoticesPage() {
                                         <span
                                             className={cn(
                                                 badgeVariants({ variant: "outline" }),
-                                                "whitespace-nowrap rounded-full border-success/30 bg-success/10 text-green-800",
+                                                "whitespace-nowrap rounded-full",
+                                                tone.success,
                                             )}
                                         >
                                             Still open for business

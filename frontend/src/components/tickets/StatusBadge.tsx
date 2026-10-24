@@ -3,7 +3,10 @@ import { cn } from "@/lib/utils";
 import { statusMeta } from "@/lib/tickets/tickets";
 import type { TicketStatus } from "@/types/ticket";
 
-/** A span (not Badge's div) so it can sit inside buttons and other inline content. */
+/**
+ * A status chip in the same solid colour as the status icon. A span (not Badge's div) so it can
+ * sit inside buttons and other inline content.
+ */
 export default function StatusBadge({
     status,
     className,
@@ -11,13 +14,13 @@ export default function StatusBadge({
     status: TicketStatus;
     className?: string;
 }) {
-    const { label, badge } = statusMeta[status];
+    const { label, fill } = statusMeta[status];
     return (
         <span
             className={cn(
                 badgeVariants({ variant: "outline" }),
-                "whitespace-nowrap rounded-full",
-                badge,
+                "whitespace-nowrap rounded-full border-transparent",
+                fill,
                 className,
             )}
         >

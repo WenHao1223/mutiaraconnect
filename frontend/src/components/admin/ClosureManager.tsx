@@ -26,7 +26,21 @@ import {
     timeStatus,
 } from "@/lib/road/closureDisplay";
 import { formatDate } from "@/lib/tickets/tickets";
+// import { tone } from "@/lib/tones";
 import type { ClosureExtent, ClosureStatus, RoadPoint } from "@/types/road-closure";
+
+// @TjeEwe
+// const statusLabels: Record<ClosureStatus, string> = {
+//     planned: "Planned",
+//     active: "Active",
+//     ended: "Ended",
+// };
+
+// const statusTone: Record<ClosureStatus, string> = {
+//     planned: tone.info,
+//     active: tone.danger,
+//     ended: "border-transparent bg-muted text-muted-foreground",
+// };
 
 const toIso = (local: string) => (local ? new Date(local).toISOString() : "");
 
