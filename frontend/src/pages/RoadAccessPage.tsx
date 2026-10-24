@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { readClosures } from "@/lib/admin/closures";
+import { readSchedule } from "@/lib/admin/schedule";
 import { CLOSURE_STATUS_LABEL, CLOSURE_STATUSES } from "@/lib/maps/mapConfig";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
@@ -24,6 +25,7 @@ export default function RoadAccessPage() {
             .filter((closure) => closure.kind === "closure")
             .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]),
     );
+    const [schedule] = useState(readSchedule);
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
     const [query, setQuery] = useState("");
 
@@ -171,7 +173,13 @@ export default function RoadAccessPage() {
                     ) : (
                         <div className="space-y-4">
                             {shown.map((closure) => (
-                                <ClosureCard key={closure.id} closure={closure} />
+                                <ClosureCard
+                                    key={closure.id}
+                                    closure={closure}
+                                    relatedWorks={schedule.filter(
+                                        (work) => work.area.toLowerCase() === closure.area.toLowerCase(),
+                                    )}
+                                />
                             ))}
                         </div>
                     )}

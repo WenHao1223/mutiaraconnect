@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Car, ExternalLink, Footprints, MapPin, Navigation, Siren } from "lucide-react";
+import { CalendarDays, Car, ExternalLink, Footprints, HardHat, MapPin, Navigation, Siren } from "lucide-react";
 import MapsLink from "@/components/custom/MapsLink";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -9,13 +9,16 @@ import { formatDate } from "@/lib/tickets/tickets";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { RoadClosure } from "@/types/road-closure";
+import type { ConstructionSchedule } from "@/types/schedule";
 
 interface ClosureCardProps {
     closure: RoadClosure;
+    /** Construction work packages in the same area, from the admin construction schedule. */
+    relatedWorks?: ConstructionSchedule[];
 }
 
 /** One road closure on the Road & Access page: what's closed, then how drivers, pedestrians and emergency vehicles get past. */
-export default function ClosureCard({ closure }: ClosureCardProps) {
+export default function ClosureCard({ closure, relatedWorks = [] }: ClosureCardProps) {
     const ended = closure.status === "ended";
 
     return (
@@ -45,6 +48,28 @@ export default function ClosureCard({ closure }: ClosureCardProps) {
                     <AccessNote icon={<Footprints aria-hidden />} label="Pedestrians" text={closure.pedestrian} />
                     <AccessNote icon={<Siren aria-hidden />} label="Emergency" text={closure.emergency} />
                 </dl>
+
+                {relatedWorks.length > 0 && (
+                    <div className="rounded-lg bg-hazard/10 px-3 py-2">
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            <HardHat className="size-3.5" aria-hidden />
+                            Related construction works
+                        </p>
+                        <ul className="mt-1 space-y-0.5 text-sm">
+                            {relatedWorks.map((work) => (
+                                <li key={work.id} className="flex flex-wrap items-baseline justify-between gap-x-2">
+                                    <Link
+                                        to={PATHS.constructionUpdates}
+                                        className="font-medium text-primary hover:underline"
+                                    >
+                                        {work.title}
+                                    </Link>
+                                    <span className="text-xs capitalize text-muted-foreground">{work.status}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 border-t pt-3 text-xs">
                     {!ended && (
