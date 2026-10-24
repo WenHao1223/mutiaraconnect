@@ -11,11 +11,9 @@ import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AnnouncementsPage from "@/pages/AnnouncementsPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
-import BusinessNoticesPage from "@/pages/BusinessNoticesPage";
 import ConstructionInfoPage from "@/pages/ConstructionInfoPage";
 import ConstructionUpdatesPage from "@/pages/ConstructionUpdatesPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
-import RoadAccessPage from "@/pages/RoadAccessPage";
 import TicketsPage from "@/pages/ProfileTicketsPage";
 
 /** Every URL in the app. Use these instead of typing path strings anywhere else. */
@@ -54,15 +52,14 @@ interface PageRoute {
  * Order below is the order shown in the navbar.
  */
 const pages: PageRoute[] = [
-    { path: PATHS.home, label: "Map", element: <MapPage /> },
+    // Road closures and local businesses share this one map page.
+    { path: PATHS.home, label: "Map", element: <MapPage />, nav: "main" },
 
     { path: PATHS.constructionInfo, label: "Stations & Alignment", element: <ConstructionInfoPage />, nav: "construction" },
     { path: PATHS.constructionUpdates, label: "Construction Updates", element: <ConstructionUpdatesPage />, nav: "construction" },
     { path: PATHS.announcements, label: "Announcements", element: <AnnouncementsPage />, nav: "construction" },
 
-    { path: PATHS.roadAccess, label: "Road & Access", element: <RoadAccessPage />, nav: "main" },
     { path: PATHS.ticket, label: "Ticket", element: <PublicTicketsPage />, nav: "main" },
-    { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
     { path: PATHS.about, label: "About Us", element: <Placeholder title="About Us" />, nav: "main" },
 
@@ -93,6 +90,9 @@ const pages: PageRoute[] = [
 export const appRoutes: RouteObject[] = [
     ...pages.map(({ path, element }) => ({ path, element })),
     { path: PATHS.construction, element: <Navigate to={PATHS.constructionInfo} replace /> },
+    // Road & Access and Local Businesses were merged into the map; keep old links working.
+    { path: PATHS.roadAccess, element: <Navigate to={PATHS.home} replace /> },
+    { path: PATHS.business, element: <Navigate to={PATHS.home} replace /> },
     { path: "*", element: <NotFoundPage /> },
 ];
 

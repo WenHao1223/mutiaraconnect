@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { navStyles } from "@/components/navbar/navStyles";
-import { navRoutes, PATHS } from "@/routes";
+import { navRoutes } from "@/routes";
 
 export default function MobileMenu() {
     const [open, setOpen] = useState(false);
@@ -22,18 +22,7 @@ export default function MobileMenu() {
             <SheetContent side="left" className="w-72 overflow-y-auto bg-background p-4">
                 <SheetTitle className="mb-4 text-lg font-semibold text-primary">MutiaraConnect</SheetTitle>
                 <nav aria-label="Mobile" className="flex flex-col gap-1">
-                    <NavLink
-                        to={PATHS.home}
-                        end
-                        onClick={close}
-                        className={({ isActive }) =>
-                            cn(navStyles.mobileLink, isActive && navStyles.mobileActive)
-                        }
-                    >
-                        Map
-                    </NavLink>
-
-                    <p className="mt-3 px-3 text-xs font-medium text-muted-foreground">Construction</p>
+                    <p className="px-3 text-xs font-medium text-muted-foreground">Construction</p>
                     {navRoutes.construction.map((item) => (
                         <NavLink
                             key={item.path}

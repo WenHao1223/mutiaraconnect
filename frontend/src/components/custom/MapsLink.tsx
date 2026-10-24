@@ -9,11 +9,8 @@ import {
 interface MapsLinkProps {
     /** Pin coordinates, or a place name used when no pin is available. */
     location: Coordinates | string;
-    /**
-     * "directions" opens turn-by-turn navigation, "walking" opens it in walking mode,
-     * "search" centres on the place.
-     */
-    mode?: "search" | "directions" | "walking";
+    /** "directions" opens turn-by-turn navigation, "search" centres on the place. */
+    mode?: "search" | "directions";
     className?: string;
     children: ReactNode;
 }
@@ -23,9 +20,7 @@ export default function MapsLink({ location, mode = "search", className, childre
     const href =
         mode === "directions"
             ? googleMapsDirectionsUrl(location)
-            : mode === "walking"
-              ? googleMapsDirectionsUrl(location, "walking")
-              : googleMapsSearchUrl(location);
+            : googleMapsSearchUrl(location);
 
     return (
         <a

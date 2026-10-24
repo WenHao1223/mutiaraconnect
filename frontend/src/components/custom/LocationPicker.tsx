@@ -160,7 +160,7 @@ function RecenterOnChange({
 }
 
 /** Type an address to find its coordinates; the pin then moves there like a map click. */
-function AddressSearch({ onFound }: { onFound: (latitude: number, longitude: number) => void }) {
+export function AddressSearch({ onFound }: { onFound: (latitude: number, longitude: number) => void }) {
     const geocoding = useMapsLibrary("geocoding");
     const [query, setQuery] = useState("");
     const [searching, setSearching] = useState(false);

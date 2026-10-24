@@ -1,0 +1,74 @@
+[
+    {
+        "id": "BP-HAIBENG",
+        "name": "Kedai Kopi Hai Beng",
+        "registrationNumber": "201901112233 (0045671-A)",
+        "address": "Lebuh Macallum, 10300 George Town, Pulau Pinang",
+        "latitude": 5.4095,
+        "longitude": 100.3282
+    },
+    {
+        "id": "BP-SERIMUTIARA",
+        "name": "Nasi Kandar Seri Mutiara",
+        "registrationNumber": "201703345566 (0023890-K)",
+        "address": "Jalan Penang, 10000 George Town (Komtar), Pulau Pinang",
+        "latitude": 5.414,
+        "longitude": 100.331
+    },
+    {
+        "id": "BP-LIMHARDWARE",
+        "name": "Lim's Hardware",
+        "registrationNumber": "200805567788 (0081234-P)",
+        "address": "Jalan Jelutong, 11600 Jelutong, Pulau Pinang",
+        "latitude": 5.3885,
+        "longitude": 100.3165
+    },
+    {
+        "id": "BP-GURDWARAOPTICAL",
+        "name": "Gurdwara Optical",
+        "registrationNumber": "201206678899 (0067345-T)",
+        "address": "Jalan Gurdwara, 10300 George Town (Komtar), Pulau Pinang",
+        "latitude": 5.412734,
+        "longitude": 100.328339
+    },
+    {
+        "id": "BP-KERAMATBAKERY",
+        "name": "Keramat Bakery",
+        "registrationNumber": "201508890011 (0099876-H)",
+        "address": "Jalan Dato Keramat, 10150 George Town (Komtar), Pulau Pinang",
+        "latitude": 5.413664,
+        "longitude": 100.32773
+    },
+    {
+        "id": "BP-MAGAZINEPRINT",
+        "name": "Magazine Road Printing",
+        "registrationNumber": "201004412345 (0054321-W)",
+        "address": "Jalan Magazine, 10300 George Town (Macallum), Pulau Pinang",
+        "latitude": 5.412469,
+        "longitude": 100.331883
+    },
+    {
+        "id": "BP-PERAKCLINIC",
+        "name": "Perak Road Family Clinic",
+        "registrationNumber": "201811123456 (0076543-D)",
+        "address": "Jalan Perak, 11600 Jelutong, Pulau Pinang",
+        "latitude": 5.391456,
+        "longitude": 100.313335
+    },
+    {
+        "id": "BP-BAYANMART",
+        "name": "Bayan Baru Mini Mart",
+        "registrationNumber": "201609987654 (0034567-M)",
+        "address": "Jalan Sultan Azlan Shah, 11900 Bayan Lepas, Pulau Pinang",
+        "latitude": 5.320268,
+        "longitude": 100.289423
+    },
+    {
+        "id": "BP-AYERITAMFLORIST",
+        "name": "Ayer Itam Florist",
+        "registrationNumber": "202002223344 (0011223-V)",
+        "address": "Jalan Ayer Itam, 11500 Ayer Itam, Pulau Pinang",
+        "latitude": 5.405115,
+        "longitude": 100.293583
+    }
+]

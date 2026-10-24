@@ -85,6 +85,7 @@ Create `frontend/.env` (copied from `.env.example`). Vite only exposes variables
 | Variable | Required | Description |
 | --- | --- | --- |
 | `VITE_GOOGLE_MAPS_API_KEY` | No | Google Maps JavaScript API key. Powers the map views and the shop location picker. Enable **Maps JavaScript API** and **Geocoding API** for the key at <https://console.cloud.google.com/google/maps-apis>. |
+| `VITE_ORS_API_KEY` | No | OpenRouteService key (free, <https://openrouteservice.org/dev/#/signup>). Plans driving routes to shops on the map that avoid fully closed roads. Without it the map still works but shows no routes. |
 
 `.env` is git-ignored — never commit real keys.
 
