@@ -1,5 +1,8 @@
-/** Lifecycle of a temporary road closure set by an admin. */
-export type ClosureStatus = "planned" | "active" | "ended";
+/**
+ * Set by an admin. "active" means the dates decide what the public sees (upcoming, closed now,
+ * reopened); "ended" means finished early or cancelled, whatever the dates say.
+ */
+export type ClosureStatus = "active" | "ended";
 
 /** "closure" is a temporary road closure; "access" is info shared with nearby businesses. */
 export type ClosureKind = "closure" | "access";

@@ -18,6 +18,14 @@ export const TIME_LABEL: Record<TimeState, string> = {
     ended: "Reopened",
 };
 
+/** Badge colours for each time state, used by the admin closure list. */
+export const TIME_TONE: Record<TimeState, string> = {
+    now: "border-destructive/30 bg-destructive/10 text-destructive",
+    later: "border-info/30 bg-info/10 text-sky-800 dark:text-sky-300",
+    upcoming: "border-info/30 bg-info/10 text-sky-800 dark:text-sky-300",
+    ended: "border-transparent bg-muted text-muted-foreground",
+};
+
 export const EXTENT_LABEL = { full: "Fully closed", partial: "Partially closed" } as const;
 
 /** Map line colours: red/orange while blocked, faded blue while not blocked yet, harbour blue for a planned route. */
@@ -71,8 +79,9 @@ export function closureTitle(road: string, detail: string, hours?: ClosureHours)
     return qualifiers.length > 0 ? `${road.trim()} (${qualifiers.join(", ")})` : road.trim();
 }
 
+/** Not started yet: its start date is still ahead. */
 export const isUpcoming = (closure: RoadClosure, now = new Date()) =>
-    closure.status === "planned" || (closure.status === "active" && new Date(closure.startAt) > now);
+    closure.status !== "ended" && new Date(closure.startAt) > now;
 
 /** Past its end date, even if an admin hasn't marked it ended yet. */
 export const isPastEnd = (closure: RoadClosure, now = new Date()) => new Date(closure.endAt) < now;

@@ -26,6 +26,7 @@ import { readAnnouncements, subscribeAnnouncements } from "@/lib/admin/announcem
 import { readClosures } from "@/lib/admin/closures";
 import { readSchedule } from "@/lib/admin/schedule";
 import { LRT_LINES, readLrtStations } from "@/lib/lrt/stations";
+import { TIME_LABEL, timeStatus } from "@/lib/road/closureDisplay";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { LrtLineSegment, LrtStation, StationConstructionStatus } from "@/types/lrt";
@@ -143,7 +144,7 @@ export default function ConstructionInfoPage() {
         const area = selectedStation.area.toLowerCase();
         return closures.filter(
             (item) =>
-                item.status !== "ended" &&
+                timeStatus(item).state !== "ended" &&
                 (item.area.toLowerCase().includes(area) || area.includes(item.area.toLowerCase())),
         );
     }, [closures, selectedStation]);
@@ -448,7 +449,11 @@ export default function ConstructionInfoPage() {
                                                 >
                                                     <div className="flex items-center justify-between gap-2 font-medium text-destructive">
                                                         <span>{closure.title}</span>
-                                                        <span className="uppercase">{closure.status}</span>
+                                                        <span className="uppercase">
+                                                            {closure.kind === "closure"
+                                                                ? TIME_LABEL[timeStatus(closure).state]
+                                                                : "Access info"}
+                                                        </span>
                                                     </div>
                                                     {closure.alternative && (
                                                         <p className="mt-0.5 text-muted-foreground">

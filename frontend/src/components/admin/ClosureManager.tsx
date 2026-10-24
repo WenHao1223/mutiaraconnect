@@ -14,14 +14,16 @@ import { createClosure, readClosures, setClosureStatus } from "@/lib/admin/closu
 import { readAllPremises } from "@/lib/admin/users";
 import { useAuth } from "@/lib/auth/auth";
 import { AFFECTED_RADIUS_KM } from "@/lib/maps/geo";
-import { CLOSURE_STATUS_LABEL, CLOSURE_STATUS_TONE, CLOSURE_STATUSES } from "@/lib/maps/mapConfig";
+import { CLOSURE_STATUS_LABEL, CLOSURE_STATUSES } from "@/lib/maps/mapConfig";
 import {
     closureTitle,
     distanceToClosure,
     EXTENT_LABEL,
     extentOf,
     hoursLabel,
-    isPastEnd,
+    TIME_LABEL,
+    TIME_TONE,
+    timeStatus,
 } from "@/lib/road/closureDisplay";
 import { formatDate } from "@/lib/tickets/tickets";
 import type { ClosureExtent, ClosureStatus, RoadPoint } from "@/types/road-closure";
@@ -37,7 +39,6 @@ const emptyForm = {
     pedestrian: "",
     startAt: "",
     endAt: "",
-    status: "active" as ClosureStatus,
     extent: "full" as ClosureExtent,
     /** Off = closed all day; on = only between `from` and `to` each day. */
     timed: false,
@@ -85,7 +86,8 @@ export default function ClosureManager() {
                 longitude: location.longitude,
                 startAt: toIso(form.startAt),
                 endAt: toIso(form.endAt),
-                status: form.status,
+                // New closures follow their dates: upcoming until they start, then closed, then reopened.
+                status: "active",
             },
             actor,
         );
@@ -101,7 +103,7 @@ export default function ClosureManager() {
     }
 
     return (
-        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="grid gap-6 lg:grid-cols-2">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
@@ -191,34 +193,20 @@ export default function ClosureManager() {
                                 />
                             </div>
                         </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <Label>Status</Label>
-                                <Select value={form.status} onValueChange={(value) => set({ status: value as ClosureStatus })}>
-                                    <SelectTrigger className="mt-1.5 w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {CLOSURE_STATUSES.map((status) => (
-                                            <SelectItem key={status} value={status}>
-                                                {CLOSURE_STATUS_LABEL[status]}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label>How much is closed</Label>
-                                <Select value={form.extent} onValueChange={(value) => set({ extent: value as ClosureExtent })}>
-                                    <SelectTrigger className="mt-1.5 w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="full">{EXTENT_LABEL.full}</SelectItem>
-                                        <SelectItem value="partial">{EXTENT_LABEL.partial}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <p className="-mt-2 text-xs text-muted-foreground">
+                            Shown as Upcoming until it starts, then Closed now, and hidden once it ends.
+                        </p>
+                        <div>
+                            <Label>How much is closed</Label>
+                            <Select value={form.extent} onValueChange={(value) => set({ extent: value as ClosureExtent })}>
+                                <SelectTrigger className="mt-1.5 w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="full">{EXTENT_LABEL.full}</SelectItem>
+                                    <SelectItem value="partial">{EXTENT_LABEL.partial}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between gap-3">
@@ -267,75 +255,77 @@ export default function ClosureManager() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="flex flex-col">
                 <CardHeader>
                     <CardTitle className="text-lg">Closures</CardTitle>
                     <CardDescription>{closures.length} on record</CardDescription>
                 </CardHeader>
-                {/* Scrolls on wide screens so the list lines up with the form beside it. */}
-                <CardContent className="space-y-3 lg:max-h-[52rem] lg:overflow-y-auto">
-                    {closures.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No closures yet.</p>
-                    )}
-                    {closures.map((closure) => {
-                        // Same rule as the public map: within range of any part of the closed road.
-                        const affected = premises.filter(
-                            (premise) => distanceToClosure(premise, closure) <= AFFECTED_RADIUS_KM,
-                        );
-                        return (
-                        <div key={closure.id} className="rounded-lg border bg-card p-4">
-                            <div className="flex items-start justify-between gap-3">
-                                <div>
-                                    <p className="font-medium">{closure.title}</p>
-                                    {closure.area && <p className="text-sm text-muted-foreground">{closure.area}</p>}
+                {/*
+                 * On wide screens the list is taken out of the layout (absolute) so the form alone sets
+                 * the row height; the card stretches to match it and the list scrolls inside.
+                 */}
+                <div className="relative min-h-0 flex-1">
+                    <CardContent className="space-y-3 lg:absolute lg:inset-0 lg:overflow-y-auto">
+                        {closures.length === 0 && (
+                            <p className="text-sm text-muted-foreground">No closures yet.</p>
+                        )}
+                        {closures.map((closure) => {
+                            // Same rule as the public map: within range of any part of the closed road.
+                            const { state } = timeStatus(closure);
+                            const affected = premises.filter(
+                                (premise) => distanceToClosure(premise, closure) <= AFFECTED_RADIUS_KM,
+                            );
+                            return (
+                            <div key={closure.id} className="rounded-lg border bg-card p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p className="font-medium">{closure.title}</p>
+                                        {closure.area && <p className="text-sm text-muted-foreground">{closure.area}</p>}
+                                    </div>
+                                    {/* Same date-based state the public map shows, so both sides always agree. */}
+                                    <Badge variant="outline" className={TIME_TONE[state]}>
+                                        {state === "ended" && closure.status === "ended" ? "Ended" : TIME_LABEL[state]}
+                                    </Badge>
                                 </div>
-                                <Badge variant="outline" className={CLOSURE_STATUS_TONE[closure.status]}>
-                                    {CLOSURE_STATUS_LABEL[closure.status]}
-                                </Badge>
-                            </div>
-                            <p className="mt-1 text-xs font-medium">
-                                {EXTENT_LABEL[extentOf(closure)]} · {hoursLabel(closure.hours)}
-                            </p>
-                            {closure.reason && <p className="mt-2 text-sm">{closure.reason}</p>}
-                            {closure.pedestrian && (
-                                <p className="mt-1 text-sm">
-                                    <span className="font-semibold">Pedestrians:</span> {closure.pedestrian}
+                                <p className="mt-1 text-xs font-medium">
+                                    {EXTENT_LABEL[extentOf(closure)]} · {hoursLabel(closure.hours)}
                                 </p>
-                            )}
-                            <p className="mt-1 text-xs text-muted-foreground">
-                                {formatDate(closure.startAt)} – {formatDate(closure.endAt)}
-                            </p>
-                            {closure.status !== "ended" && isPastEnd(closure) && (
-                                <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-                                    Past its end date, so it's hidden from the public map. Mark it Ended or extend it.
+                                {closure.reason && <p className="mt-2 text-sm">{closure.reason}</p>}
+                                {closure.pedestrian && (
+                                    <p className="mt-1 text-sm">
+                                        <span className="font-semibold">Pedestrians:</span> {closure.pedestrian}
+                                    </p>
+                                )}
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    {formatDate(closure.startAt)} – {formatDate(closure.endAt)}
                                 </p>
-                            )}
-                            <p className="mt-2 text-xs text-muted-foreground">
-                                {affected.length === 0
-                                    ? `No business premises within ${Math.round(AFFECTED_RADIUS_KM * 1000)} m.`
-                                    : `Affects: ${affected.map((premise) => premise.name).join(", ")}`}
-                            </p>
-                            <div className="mt-3">
-                                <Select
-                                    value={closure.status}
-                                    onValueChange={(value) => changeStatus(closure.id, value as ClosureStatus)}
-                                >
-                                    <SelectTrigger className="h-8 w-40" aria-label={`Change status for ${closure.id}`}>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {CLOSURE_STATUSES.map((status) => (
-                                            <SelectItem key={status} value={status}>
-                                                {CLOSURE_STATUS_LABEL[status]}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    {affected.length === 0
+                                        ? `No business premises within ${Math.round(AFFECTED_RADIUS_KM * 1000)} m.`
+                                        : `Affects: ${affected.map((premise) => premise.name).join(", ")}`}
+                                </p>
+                                <div className="mt-3">
+                                    <Select
+                                        value={closure.status}
+                                        onValueChange={(value) => changeStatus(closure.id, value as ClosureStatus)}
+                                    >
+                                        <SelectTrigger className="h-8 w-56" aria-label={`Change status for ${closure.id}`}>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {CLOSURE_STATUSES.map((status) => (
+                                                <SelectItem key={status} value={status}>
+                                                    {CLOSURE_STATUS_LABEL[status]}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                        </div>
-                        );
-                    })}
-                </CardContent>
+                            );
+                        })}
+                    </CardContent>
+                </div>
             </Card>
         </div>
     );
