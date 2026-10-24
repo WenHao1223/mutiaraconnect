@@ -17,6 +17,9 @@ const toQuery = (location: Coordinates | string) =>
 export const googleMapsSearchUrl = (location: Coordinates | string) =>
     `${SEARCH_BASE}&query=${toQuery(location)}`;
 
+/** How the visitor is travelling. Left out, Google Maps picks the mode itself. */
+export type TravelMode = "driving" | "walking";
+
 /** Opens Google Maps navigation to the pin (or a place name). */
-export const googleMapsDirectionsUrl = (location: Coordinates | string) =>
-    `${DIRECTIONS_BASE}&destination=${toQuery(location)}`;
+export const googleMapsDirectionsUrl = (location: Coordinates | string, travelMode?: TravelMode) =>
+    `${DIRECTIONS_BASE}&destination=${toQuery(location)}${travelMode ? `&travelmode=${travelMode}` : ""}`;
