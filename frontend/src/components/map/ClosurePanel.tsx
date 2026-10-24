@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import {
     ChevronRight,
     ExternalLink,
+    Footprints,
     Loader2,
     LocateFixed,
     Navigation,
@@ -210,6 +211,18 @@ export default function ClosurePanel({
                                                             {closure.alternative}
                                                         </p>
                                                     )}
+                                                    {closure.pedestrian && (
+                                                        <p>
+                                                            <span className="font-semibold">Pedestrians:</span>{" "}
+                                                            {closure.pedestrian}
+                                                        </p>
+                                                    )}
+                                                    {closure.emergency && (
+                                                        <p>
+                                                            <span className="font-semibold">Emergency:</span>{" "}
+                                                            {closure.emergency}
+                                                        </p>
+                                                    )}
                                                     <p className="text-xs text-muted-foreground">
                                                         {formatDate(closure.startAt)} – {formatDate(closure.endAt)}
                                                     </p>
@@ -222,6 +235,12 @@ export default function ClosurePanel({
                                                             Directions{" "}
                                                             <Navigation className="size-3" aria-hidden />
                                                         </MapsLink>
+                                                        {closure.kind === "closure" && (
+                                                            <MapsLink location={closure} mode="walking">
+                                                                Walking{" "}
+                                                                <Footprints className="size-3" aria-hidden />
+                                                            </MapsLink>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ClosureMap from "@/components/map/ClosureMap";
 import ClosurePanel from "@/components/map/ClosurePanel";
 import MapLegend from "@/components/map/MapLegend";
@@ -10,7 +11,9 @@ import type { ClosureKind } from "@/types/road-closure";
 export default function MapPage() {
     // Read once on mount; ended closures are not shown on the public map.
     const [closures] = useState(() => activeClosures());
-    const [selectedId, setSelectedId] = useState<string | undefined>();
+    // "/?closure=RC-1042" (from the Road & Access page) opens the map with that pin selected.
+    const [searchParams] = useSearchParams();
+    const [selectedId, setSelectedId] = useState(() => searchParams.get("closure") ?? undefined);
     const [panelOpen, setPanelOpen] = useState(true);
     const [visible, setVisible] = useState<Record<ClosureKind, boolean>>({ closure: true, access: true });
     const { location, status: locationStatus, error: locationError, requestLocation } = useGeolocation();
