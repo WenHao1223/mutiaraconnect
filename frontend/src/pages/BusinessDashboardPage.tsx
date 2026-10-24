@@ -65,7 +65,7 @@ export default function BusinessDashboardPage() {
                         label="Notices nearby"
                         value={nearby.length}
                         icon={AlertTriangle}
-                        tone="bg-hazard/15 text-amber-700"
+                        tone="bg-hazard/15 text-hazard-text"
                         hint={`Within ${Math.round(AFFECTED_RADIUS_KM * 1000)} m`}
                     />
                     <SummaryCard
@@ -258,7 +258,7 @@ export default function BusinessDashboardPage() {
                                 <button
                                     type="button"
                                     onClick={() => setRequesting(true)}
-                                    className="inline-flex items-center gap-1 rounded-md bg-white px-4 py-2 text-sm font-semibold text-foreground hover:opacity-90"
+                                    className="inline-flex items-center gap-1 rounded-md bg-card px-4 py-2 text-sm font-semibold text-card-foreground hover:opacity-90"
                                 >
                                     <MessageSquarePlus className="size-4" aria-hidden /> Request support
                                 </button>

@@ -24,6 +24,7 @@ import { useAuth } from "@/lib/auth/auth";
 import { getStationAreas } from "@/lib/lrt/stations";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
+import { tone } from "@/lib/tones";
 
 const typeLabels: Record<Announcement["type"], string> = {
     closure: "Road closure",
@@ -32,9 +33,9 @@ const typeLabels: Record<Announcement["type"], string> = {
 };
 
 const typeBadgeStyles: Record<Announcement["type"], string> = {
-    closure: "border-destructive/30 bg-destructive/10 text-destructive",
-    construction: "border-hazard/40 bg-hazard/20 text-amber-900",
-    general: "border-info/30 bg-info/10 text-info",
+    closure: tone.danger,
+    construction: tone.warning,
+    general: tone.info,
 };
 
 const announcementForm = {
@@ -288,7 +289,7 @@ export default function NotificationsManager() {
                                             {item.pinned && (
                                                 <Badge
                                                     variant="outline"
-                                                    className="border-hazard/50 bg-hazard/20 text-[10px] text-amber-900"
+                                                    className={`text-[10px] ${tone.warning}`}
                                                 >
                                                     <Pin className="mr-1 size-2.5" aria-hidden /> Pinned
                                                 </Badge>
@@ -318,7 +319,7 @@ export default function NotificationsManager() {
                                                 onClick={() => handleTogglePin(item)}
                                             >
                                                 <Pin
-                                                    className={`size-3.5 ${item.pinned ? "fill-amber-600 text-amber-700" : "text-muted-foreground"}`}
+                                                    className={`size-3.5 ${item.pinned ? "fill-hazard-text text-hazard-text" : "text-muted-foreground"}`}
                                                 />
                                             </Button>
                                             <Button

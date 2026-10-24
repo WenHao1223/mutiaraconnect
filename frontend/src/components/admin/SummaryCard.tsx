@@ -7,7 +7,7 @@ interface SummaryCardProps {
     value: number | string;
     hint?: string;
     icon: LucideIcon;
-    /** Tailwind classes for the icon bubble, e.g. "bg-hazard/15 text-amber-700". */
+    /** Tailwind classes for the icon bubble, e.g. "bg-hazard/15 text-hazard-text". */
     tone?: string;
 }
 

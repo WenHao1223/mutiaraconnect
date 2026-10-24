@@ -58,9 +58,11 @@ function Stop({
                 onClick={() => onOpen(ticket)}
                 tabIndex={focusable ? undefined : -1}
                 aria-label={`${categoryLabels[ticket.category]} at ${ticket.location}: see details`}
-                className="ticket-stub mt-3 block w-full cursor-pointer rounded-2xl border bg-card text-left transition duration-200 ease-out group-hover/stop:-translate-y-1 group-hover/stop:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                className="ticket-stub mt-3 block w-full cursor-pointer rounded-2xl border bg-card text-left transition duration-200 ease-out group-hover/stop:-translate-y-1 group-hover/stop:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-primary/25 dark:bg-accent dark:group-hover/stop:border-primary/60 motion-reduce:transition-none"
             >
-                {/* The category is the card's title, with the team's message on how it was fixed below. */}
+                {/* The category is the card's title, with the team's message on how it was fixed below.
+                    In dark mode the card takes the lighter accent navy and a soft blue edge, so it
+                    stands out from the header band behind it. */}
                 <span className="block px-4 pt-3.5 pb-3">
                     <span className="flex items-center gap-1.5 text-sm font-semibold">
                         <CategoryIcon

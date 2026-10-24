@@ -260,44 +260,41 @@ export function findTicket(id: string): Ticket | undefined {
 export const STATUS_ORDER: TicketStatus[] = ["received", "under_review", "in_progress", "resolved"];
 
 /**
- * How each status looks. `badge` is the StatusBadge chip; `icon`, `fill` (solid circle and
- * progress line), `ring` and `text` (readable label colour) are for StatusIcon and progress lines.
+ * How each status looks, everywhere: `icon` and `fill` (solid colour with matching text) are shared
+ * by StatusBadge, StatusIcon and progress lines; `ring` and `text` (readable label colour) are for
+ * StatusIcon and progress lines.
  */
 export const statusMeta: Record<
     TicketStatus,
-    { label: string; badge: string; icon: LucideIcon; fill: string; ring: string; text: string }
+    { label: string; icon: LucideIcon; fill: string; ring: string; text: string }
 > = {
     received: {
         label: "Received",
-        badge: "border-transparent bg-muted text-muted-foreground",
         icon: Inbox,
-        fill: "bg-slate-500 text-white",
-        ring: "ring-slate-500/20",
-        text: "text-slate-600 dark:text-slate-300",
+        fill: "bg-neutral text-neutral-foreground",
+        ring: "ring-neutral/20",
+        text: "text-neutral-text",
     },
     under_review: {
         label: "Under Review",
-        badge: "border-info/30 bg-info/10 text-sky-800",
         icon: Search,
-        fill: "bg-info text-white",
+        fill: "bg-info text-info-foreground",
         ring: "ring-info/20",
-        text: "text-sky-700 dark:text-sky-300",
+        text: "text-info-text",
     },
     in_progress: {
         label: "In Progress",
-        badge: "border-hazard/40 bg-hazard/15 text-amber-800",
         icon: HardHat,
         fill: "bg-hazard text-hazard-foreground",
         ring: "ring-hazard/25",
-        text: "text-amber-700 dark:text-amber-300",
+        text: "text-hazard-text",
     },
     resolved: {
         label: "Resolved",
-        badge: "border-success/30 bg-success/10 text-green-800",
         icon: Check,
-        fill: "bg-success text-white",
+        fill: "bg-success text-success-foreground",
         ring: "ring-success/20",
-        text: "text-green-700 dark:text-green-400",
+        text: "text-success-text",
     },
 };
 
