@@ -9,6 +9,7 @@ import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AboutPage from "@/pages/AboutPage";
+import FaqPage from "@/pages/FaqPage";
 import AnnouncementsPage from "@/pages/AnnouncementsPage";
 import BusinessApplicationPage from "@/pages/BusinessApplicationPage";
 import BusinessDashboardPage from "@/pages/BusinessDashboardPage";
@@ -63,7 +64,7 @@ const pages: PageRoute[] = [
     { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
     { path: PATHS.ticket, label: "Support", element: <PublicTicketsPage />, nav: "main" },
     { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
-    { path: PATHS.faqs, label: "FAQs", element: <Placeholder title="FAQs" />, nav: "main" },
+    { path: PATHS.faqs, label: "FAQs", element: <FaqPage />, nav: "main" },
     { path: PATHS.about, label: "About Us", element: <AboutPage />, nav: "main" },
 
     { path: PATHS.login, label: "Sign in", element: <LoginPage /> },
