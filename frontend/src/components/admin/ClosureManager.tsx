@@ -24,6 +24,8 @@ const emptyForm = {
     area: "",
     reason: "",
     alternative: "",
+    pedestrian: "",
+    emergency: "",
     startAt: "",
     endAt: "",
     status: "active" as ClosureStatus,
@@ -56,6 +58,8 @@ export default function ClosureManager() {
                 area: form.area.trim(),
                 reason: form.reason.trim(),
                 alternative: form.alternative.trim(),
+                pedestrian: form.pedestrian.trim() || undefined,
+                emergency: form.emergency.trim() || undefined,
                 latitude: location.latitude,
                 longitude: location.longitude,
                 startAt: toIso(form.startAt),
@@ -127,7 +131,7 @@ export default function ClosureManager() {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="closure-alternative">Alternative route</Label>
+                            <Label htmlFor="closure-alternative">Detour for vehicles</Label>
                             <Input
                                 id="closure-alternative"
                                 className="mt-1.5"
@@ -135,6 +139,28 @@ export default function ClosureManager() {
                                 onChange={(event) => set({ alternative: event.target.value })}
                                 placeholder="e.g. Follow the signposted diversion via Jalan Perak"
                             />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="closure-pedestrian">Pedestrian access</Label>
+                                <Input
+                                    id="closure-pedestrian"
+                                    className="mt-1.5"
+                                    value={form.pedestrian}
+                                    onChange={(event) => set({ pedestrian: event.target.value })}
+                                    placeholder="e.g. Covered walkway on the north side"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="closure-emergency">Emergency access</Label>
+                                <Input
+                                    id="closure-emergency"
+                                    className="mt-1.5"
+                                    value={form.emergency}
+                                    onChange={(event) => set({ emergency: event.target.value })}
+                                    placeholder="e.g. One lane kept open"
+                                />
+                            </div>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
@@ -214,7 +240,17 @@ export default function ClosureManager() {
                             {closure.reason && <p className="mt-2 text-sm">{closure.reason}</p>}
                             {closure.alternative && (
                                 <p className="mt-1 text-sm">
-                                    <span className="font-semibold">Alternative:</span> {closure.alternative}
+                                    <span className="font-semibold">Detour:</span> {closure.alternative}
+                                </p>
+                            )}
+                            {closure.pedestrian && (
+                                <p className="mt-1 text-sm">
+                                    <span className="font-semibold">Pedestrians:</span> {closure.pedestrian}
+                                </p>
+                            )}
+                            {closure.emergency && (
+                                <p className="mt-1 text-sm">
+                                    <span className="font-semibold">Emergency:</span> {closure.emergency}
                                 </p>
                             )}
                             <p className="mt-1 text-xs text-muted-foreground">

@@ -38,9 +38,11 @@ interface BaseInput {
 
 export interface NewClosureInput extends BaseInput {
     road: string;
+    pedestrian?: string;
+    emergency?: string;
 }
 
-function create(kind: ClosureKind, input: BaseInput & { road: string }, actor: string): RoadClosure {
+function create(kind: ClosureKind, input: NewClosureInput, actor: string): RoadClosure {
     const closure: RoadClosure = {
         id: newId(kind === "access" ? "AN" : "RC"),
         kind,
