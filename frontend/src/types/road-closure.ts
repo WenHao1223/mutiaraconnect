@@ -19,6 +19,10 @@ export interface RoadClosure {
     reason: string;
     /** Suggested way around the closure or restriction. */
     alternative: string;
+    /** How people on foot get past, e.g. "Covered walkway on the north side". Closures only. */
+    pedestrian?: string;
+    /** What emergency vehicles can still use, e.g. "One lane kept open". Closures only. */
+    emergency?: string;
     latitude: number;
     longitude: number;
     /** ISO 8601 timestamp the restriction starts. */
