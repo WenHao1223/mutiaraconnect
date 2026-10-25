@@ -3,10 +3,15 @@ export type BusinessType = "food_beverage" | "retail" | "services" | "health" | 
 
 export type ApplicationStatus = "pending" | "approved" | "rejected";
 
-/** A resident's request to upgrade their account to a business premise. */
+/**
+ * A request an admin approves: a resident upgrading to a business account ("account"), or a
+ * business account registering another shop ("premise").
+ */
 export interface BusinessApplication {
     /** Public reference, e.g. "BA-lq2x9k". */
     id: string;
+    /** Missing on older applications, which were all "account". */
+    kind?: "account" | "premise";
     /** Identifies the applicant (email, falling back to IC or name). */
     applicant: string;
     /** Needed to upgrade the account's role on approval. */

@@ -237,8 +237,8 @@ export default function BusinessDashboardPage() {
                             </Link>
                         </div>
 
-                        {/* Same shape as the box above, in LRT Teal. */}
-                        <div className="rounded-lg bg-secondary p-6 text-white">
+                        {/* Same shape as the box above, in the theme's secondary colour. */}
+                        <div className="rounded-lg bg-secondary p-6 text-secondary-foreground">
                             <h3 className="flex items-center gap-2 text-xl font-semibold">
                                 <LifeBuoy className="size-5" aria-hidden /> Need help during the works?
                             </h3>
@@ -265,7 +265,7 @@ export default function BusinessDashboardPage() {
                                 <MapsLink
                                     location="Komtar, George Town, Penang"
                                     mode="directions"
-                                    className="rounded-md border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:no-underline hover:bg-white/10"
+                                    className="rounded-md border border-secondary-foreground/60 px-4 py-2 text-sm font-semibold text-secondary-foreground hover:no-underline hover:bg-secondary-foreground/10"
                                 >
                                     <Navigation className="size-4" aria-hidden /> Visit the desk
                                 </MapsLink>
