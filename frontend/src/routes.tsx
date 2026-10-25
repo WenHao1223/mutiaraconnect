@@ -55,7 +55,8 @@ interface PageRoute {
  * Order below is the order shown in the navbar.
  */
 const pages: PageRoute[] = [
-    { path: PATHS.home, label: "Map", element: <MapPage /> },
+    // Road closures and local businesses share this one map page.
+    { path: PATHS.home, label: "Map", element: <MapPage />, nav: "main" },
 
     { path: PATHS.constructionInfo, label: "Stations & Alignment", element: <ConstructionInfoPage />, nav: "construction" },
     { path: PATHS.constructionUpdates, label: "Construction Updates", element: <ConstructionUpdatesPage />, nav: "construction" },
@@ -94,6 +95,9 @@ const pages: PageRoute[] = [
 export const appRoutes: RouteObject[] = [
     ...pages.map(({ path, element }) => ({ path, element })),
     { path: PATHS.construction, element: <Navigate to={PATHS.constructionInfo} replace /> },
+    // Road & Access and Local Businesses were merged into the map; keep old links working.
+    { path: PATHS.roadAccess, element: <Navigate to={PATHS.home} replace /> },
+    { path: PATHS.business, element: <Navigate to={PATHS.home} replace /> },
     { path: "*", element: <NotFoundPage /> },
 ];
 

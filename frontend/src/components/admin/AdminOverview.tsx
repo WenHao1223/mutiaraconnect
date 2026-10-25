@@ -4,6 +4,7 @@ import SummaryCard from "@/components/admin/SummaryCard";
 import { readAnnouncements } from "@/lib/admin/announcements";
 import { readClosures } from "@/lib/admin/closures";
 import { readUsers } from "@/lib/admin/users";
+import { timeStatus } from "@/lib/road/closureDisplay";
 import { getAllTickets, isOpen } from "@/lib/tickets/tickets";
 
 /** Admin home: the at-a-glance numbers and the management charts. */
@@ -11,7 +12,11 @@ export default function AdminOverview() {
     const tickets = getAllTickets();
     const open = tickets.filter(isOpen).length;
     const resolved = tickets.length - open;
-    const activeClosures = readClosures().filter((closure) => closure.status === "active").length;
+    // Closures in progress (closed now, or closing later today), by the same date rule as the public map.
+    const activeClosures = readClosures().filter((closure) => {
+        const { state } = timeStatus(closure);
+        return closure.kind === "closure" && (state === "now" || state === "later");
+    }).length;
     const announcements = readAnnouncements().length;
     const users = readUsers().length;
 

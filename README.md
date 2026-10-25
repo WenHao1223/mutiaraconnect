@@ -47,8 +47,10 @@ npm -v
    cp .env.example .env
    ```
 
-   Then open `.env` and set `VITE_GOOGLE_MAPS_API_KEY` (see [Environment variables](#environment-variables)).
-   The map still renders without a key, but you'll see a "no API key" hint instead of the map.
+   Then open `.env` and fill in the keys you need (see [Environment variables](#environment-variables)).
+   All keys are optional: without `VITE_GOOGLE_MAPS_API_KEY` the map shows a "no API key" hint, and
+   without `VITE_ORS_API_KEY` shop routes are unavailable. The `VITE_ANNOUNCEMENTS_*` variables
+   already have working defaults, so you can leave them blank.
 
 4. Start the dev server:
 
@@ -82,9 +84,16 @@ npx vitest
 Create `frontend/.env` (copied from `.env.example`). Vite only exposes variables prefixed with
 `VITE_`.
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `VITE_GOOGLE_MAPS_API_KEY` | No | Google Maps JavaScript API key. Powers the map views and the shop location picker. Enable **Maps JavaScript API** and **Geocoding API** for the key at <https://console.cloud.google.com/google/maps-apis>. |
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `VITE_GOOGLE_MAPS_API_KEY` | No | — | Google Maps JavaScript API key. Powers the map views and the shop location picker. Enable **Maps JavaScript API** and **Geocoding API** for the key at <https://console.cloud.google.com/google/maps-apis>. |
+| `VITE_ANNOUNCEMENTS_STORAGE_KEY` | No | `mutiaraconnect.announcements.v2` | `localStorage` key holding the announcement list. |
+| `VITE_ANNOUNCEMENTS_READ_STORAGE_KEY` | No | `mutiaraconnect.announcements.read` | `localStorage` key tracking which announcements the current user has read. |
+| `VITE_ANNOUNCEMENTS_EVENT` | No | `mutiaraconnect:announcements-changed` | Name of the custom browser event fired when announcements change, so the navbar bell and announcements page refresh in real time. |
+| `VITE_ORS_API_KEY` | No | — | OpenRouteService key (free, <https://openrouteservice.org/dev/#/signup>). Plans driving routes to shops on the map that avoid fully closed roads. Without it the map still works but shows no routes. |
+
+The `VITE_ANNOUNCEMENTS_*` variables are optional overrides: leave them blank to use the defaults in
+the table. Only change them if the existing keys in `localStorage` would otherwise clash.
 
 `.env` is git-ignored — never commit real keys.
 

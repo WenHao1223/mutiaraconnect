@@ -1,14 +1,94 @@
 [
     {
+        "id": "RC-1061",
+        "kind": "closure",
+        "title": "Jalan Gurdwara",
+        "road": "Jalan Gurdwara",
+        "area": "Komtar",
+        "reason": "Utility trench for the Komtar station entrance",
+        "alternative": "",
+        "pedestrian": "Footpath closed; cross at Jalan Dato Keramat",
+        "extent": "full",
+        "path": [
+            {
+                "latitude": 5.413373,
+                "longitude": 100.328424
+            },
+            {
+                "latitude": 5.41307,
+                "longitude": 100.328411
+            },
+            {
+                "latitude": 5.412734,
+                "longitude": 100.328339
+            },
+            {
+                "latitude": 5.412273,
+                "longitude": 100.328272
+            },
+            {
+                "latitude": 5.411732,
+                "longitude": 100.328193
+            },
+            {
+                "latitude": 5.41124,
+                "longitude": 100.328121
+            },
+            {
+                "latitude": 5.410909,
+                "longitude": 100.328072
+            },
+            {
+                "latitude": 5.410691,
+                "longitude": 100.32804
+            }
+        ],
+        "latitude": 5.411732,
+        "longitude": 100.328193,
+        "startAt": "2026-10-18T00:00:00+08:00",
+        "endAt": "2026-11-22T23:59:00+08:00",
+        "status": "active",
+        "createdBy": "DEMO ADMIN",
+        "createdAt": "2026-10-14T10:00:00+08:00"
+    },
+    {
         "id": "RC-1042",
         "kind": "closure",
-        "title": "Jalan Macallum lane closure",
-        "road": "Jalan Macallum",
+        "title": "Lebuh Macallum",
+        "road": "Lebuh Macallum",
         "area": "Macallum",
         "reason": "Station box excavation and piling",
-        "alternative": "Use Lorong Macallum 3 and Jalan Magazine",
-        "latitude": 5.4098,
-        "longitude": 100.3305,
+        "alternative": "",
+        "pedestrian": "Covered walkway on the north side of the road",
+        "extent": "partial",
+        "path": [
+            {
+                "latitude": 5.410338,
+                "longitude": 100.328069
+            },
+            {
+                "latitude": 5.409628,
+                "longitude": 100.329451
+            },
+            {
+                "latitude": 5.409517,
+                "longitude": 100.329679
+            },
+            {
+                "latitude": 5.409147,
+                "longitude": 100.330453
+            },
+            {
+                "latitude": 5.408959,
+                "longitude": 100.330874
+            },
+            {
+                "latitude": 5.408928,
+                "longitude": 100.330935
+            }
+        ],
+        "latitude": 5.409147,
+        "longitude": 100.330453,
         "startAt": "2026-10-10T22:00:00+08:00",
         "endAt": "2026-11-05T05:00:00+08:00",
         "status": "active",
@@ -18,18 +98,230 @@
     {
         "id": "RC-1047",
         "kind": "closure",
-        "title": "Jelutong night diversion",
+        "title": "Jalan Jelutong (night only)",
         "road": "Jalan Jelutong",
         "area": "Jelutong",
         "reason": "Utility diversion across the carriageway",
-        "alternative": "Follow the signposted diversion via Jalan Perak",
-        "latitude": 5.3888,
-        "longitude": 100.316,
+        "alternative": "",
+        "pedestrian": "Footpath stays open; use the signalised crossing at Jalan Perak",
+        "extent": "full",
+        "hours": {
+            "from": "23:00",
+            "to": "05:00"
+        },
+        "path": [
+            {
+                "latitude": 5.391211,
+                "longitude": 100.313382
+            },
+            {
+                "latitude": 5.390991,
+                "longitude": 100.313295
+            },
+            {
+                "latitude": 5.39066,
+                "longitude": 100.313155
+            },
+            {
+                "latitude": 5.390205,
+                "longitude": 100.313095
+            },
+            {
+                "latitude": 5.389844,
+                "longitude": 100.31303
+            },
+            {
+                "latitude": 5.389599,
+                "longitude": 100.312986
+            },
+            {
+                "latitude": 5.389332,
+                "longitude": 100.312948
+            },
+            {
+                "latitude": 5.388976,
+                "longitude": 100.312896
+            },
+            {
+                "latitude": 5.388354,
+                "longitude": 100.312807
+            },
+            {
+                "latitude": 5.388107,
+                "longitude": 100.312771
+            },
+            {
+                "latitude": 5.387659,
+                "longitude": 100.312704
+            },
+            {
+                "latitude": 5.38724,
+                "longitude": 100.312642
+            },
+            {
+                "latitude": 5.386919,
+                "longitude": 100.312614
+            }
+        ],
+        "latitude": 5.389332,
+        "longitude": 100.312948,
         "startAt": "2026-11-01T23:00:00+08:00",
         "endAt": "2026-11-20T05:00:00+08:00",
-        "status": "planned",
+        "status": "active",
         "createdBy": "DEMO ADMIN",
         "createdAt": "2026-10-12T14:30:00+08:00"
+    },
+    {
+        "id": "RC-1053",
+        "kind": "closure",
+        "title": "Jalan Penang (near Komtar, night only)",
+        "road": "Jalan Penang",
+        "area": "Komtar",
+        "reason": "Viaduct pier works over the outer lane",
+        "alternative": "",
+        "pedestrian": "Temporary walkway through the Komtar podium",
+        "extent": "full",
+        "hours": {
+            "from": "22:00",
+            "to": "06:00"
+        },
+        "path": [
+            {
+                "latitude": 5.414501,
+                "longitude": 100.328868
+            },
+            {
+                "latitude": 5.414965,
+                "longitude": 100.329039
+            },
+            {
+                "latitude": 5.41518,
+                "longitude": 100.329107
+            },
+            {
+                "latitude": 5.415409,
+                "longitude": 100.329184
+            },
+            {
+                "latitude": 5.41615,
+                "longitude": 100.329445
+            },
+            {
+                "latitude": 5.416423,
+                "longitude": 100.329604
+            },
+            {
+                "latitude": 5.416706,
+                "longitude": 100.32988
+            },
+            {
+                "latitude": 5.416912,
+                "longitude": 100.329856
+            }
+        ],
+        "latitude": 5.41615,
+        "longitude": 100.329445,
+        "startAt": "2026-10-20T00:00:00+08:00",
+        "endAt": "2026-12-15T23:59:00+08:00",
+        "status": "active",
+        "createdBy": "DEMO ADMIN",
+        "createdAt": "2026-10-15T10:00:00+08:00"
+    },
+    {
+        "id": "RC-1058",
+        "kind": "closure",
+        "title": "Jalan Sultan Azlan Shah (slip road, night only)",
+        "road": "Jalan Sultan Azlan Shah",
+        "area": "Bayan Lepas",
+        "reason": "Launching gantry crossing for the elevated guideway",
+        "alternative": "",
+        "pedestrian": "No change",
+        "extent": "partial",
+        "hours": {
+            "from": "23:00",
+            "to": "05:00"
+        },
+        "path": [
+            {
+                "latitude": 5.320037,
+                "longitude": 100.289292
+            },
+            {
+                "latitude": 5.319555,
+                "longitude": 100.289023
+            },
+            {
+                "latitude": 5.319067,
+                "longitude": 100.288748
+            },
+            {
+                "latitude": 5.318847,
+                "longitude": 100.288616
+            },
+            {
+                "latitude": 5.31839,
+                "longitude": 100.288347
+            }
+        ],
+        "latitude": 5.319067,
+        "longitude": 100.288748,
+        "startAt": "2026-11-10T23:00:00+08:00",
+        "endAt": "2026-12-05T05:00:00+08:00",
+        "status": "active",
+        "createdBy": "DEMO ADMIN",
+        "createdAt": "2026-10-18T16:00:00+08:00"
+    },
+    {
+        "id": "RC-1031",
+        "kind": "closure",
+        "title": "Jalan Masjid Negeri",
+        "road": "Jalan Masjid Negeri",
+        "area": "Gelugor",
+        "reason": "Water main relocation",
+        "alternative": "",
+        "pedestrian": "Footpath on the mosque side closed; cross at the traffic lights",
+        "extent": "full",
+        "path": [
+            {
+                "latitude": 5.401571,
+                "longitude": 100.304108
+            },
+            {
+                "latitude": 5.400846,
+                "longitude": 100.30409
+            },
+            {
+                "latitude": 5.400568,
+                "longitude": 100.304075
+            },
+            {
+                "latitude": 5.400086,
+                "longitude": 100.304033
+            },
+            {
+                "latitude": 5.399656,
+                "longitude": 100.303988
+            },
+            {
+                "latitude": 5.399238,
+                "longitude": 100.303926
+            },
+            {
+                "latitude": 5.398985,
+                "longitude": 100.30388
+            },
+            {
+                "latitude": 5.398512,
+                "longitude": 100.303825
+            }
+        ],
+        "latitude": 5.399656,
+        "longitude": 100.303988,
+        "startAt": "2026-09-01T22:00:00+08:00",
+        "endAt": "2026-10-10T05:00:00+08:00",
+        "status": "ended",
+        "createdBy": "DEMO ADMIN",
+        "createdAt": "2026-08-25T09:00:00+08:00"
     },
     {
         "id": "AN-1042",

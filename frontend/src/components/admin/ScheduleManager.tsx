@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { createScheduleItem, readSchedule, updateScheduleItem } from "@/lib/admin/schedule";
 import { useAuth } from "@/lib/auth/auth";
+import { formatDate } from "@/lib/tickets/tickets";
 import type { ScheduleStatus } from "@/types/schedule";
 import { tone } from "@/lib/tones";
 
@@ -165,7 +166,8 @@ export default function ScheduleManager() {
                     <CardTitle className="text-lg">Schedule</CardTitle>
                     <CardDescription>{items.length} work packages</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                {/* Scrolls on wide screens so the list lines up with the form beside it. */}
+                <CardContent className="space-y-3 lg:max-h-[34rem] lg:overflow-y-auto">
                     {items.length === 0 && <p className="text-sm text-muted-foreground">Nothing scheduled yet.</p>}
                     {items.map((item) => (
                         <div key={item.id} className="rounded-lg border bg-card p-4">
@@ -180,8 +182,7 @@ export default function ScheduleManager() {
                             </div>
                             {item.description && <p className="mt-2 text-sm">{item.description}</p>}
                             <p className="mt-1 text-xs text-muted-foreground">
-                                {new Date(item.startsAt).toLocaleDateString("en-MY")} →{" "}
-                                {new Date(item.endsAt).toLocaleDateString("en-MY")}
+                                {formatDate(item.startsAt)} – {formatDate(item.endsAt)}
                             </p>
                             <div className="mt-3">
                                 <Select

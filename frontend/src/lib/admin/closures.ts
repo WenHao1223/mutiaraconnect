@@ -1,7 +1,14 @@
 import closureData from "@/data/closures.json";
 import { recordAudit } from "@/lib/admin/audit";
 import { newId, readJson, writeJson } from "@/lib/admin/store";
-import type { ClosureKind, ClosureStatus, RoadClosure } from "@/types/road-closure";
+import type {
+    ClosureExtent,
+    ClosureHours,
+    ClosureKind,
+    ClosureStatus,
+    RoadClosure,
+    RoadPoint,
+} from "@/types/road-closure";
 
 /**
  * MOCK CLOSURES & ACCESS NOTICES (frontend only, no backend). Seeded from data/closures.json,
@@ -38,9 +45,13 @@ interface BaseInput {
 
 export interface NewClosureInput extends BaseInput {
     road: string;
+    pedestrian?: string;
+    extent?: ClosureExtent;
+    hours?: ClosureHours;
+    path?: RoadPoint[];
 }
 
-function create(kind: ClosureKind, input: BaseInput & { road: string }, actor: string): RoadClosure {
+function create(kind: ClosureKind, input: NewClosureInput, actor: string): RoadClosure {
     const closure: RoadClosure = {
         id: newId(kind === "access" ? "AN" : "RC"),
         kind,

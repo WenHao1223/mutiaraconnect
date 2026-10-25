@@ -1,3 +1,4 @@
+import shopsData from "@/data/shops.json";
 import usersData from "@/data/users.json";
 import { recordAudit } from "@/lib/admin/audit";
 import { readJson, writeJson } from "@/lib/admin/store";
@@ -57,16 +58,20 @@ export function readUsers(): ManagedUser[] {
     return allAccounts().map(({ account }) => account);
 }
 
-/** Business premises across every account, used to target a shared notice. */
+/**
+ * Business premises across every account, used to target a shared notice and to show shops on the
+ * map. data/shops.json stands in for premises registered by owners who have no demo login.
+ */
 export function readAllPremises(): BusinessProfile[] {
     const accounts = [
         ...Object.values(usersData as Record<string, MockAccount>),
         ...readJson<RegisteredAccount[]>(REGISTERED_KEY, []),
     ];
     // Includes premises added in this browser, e.g. from an approved business application.
-    return accounts.flatMap((account) =>
-        premisesFor(account.email ?? account.ic ?? account.name, account.businesses),
-    );
+    return [
+        ...accounts.flatMap((account) => premisesFor(account.email ?? account.ic ?? account.name, account.businesses)),
+        ...(shopsData as BusinessProfile[]),
+    ];
 }
 
 function saveOverride(email: string, patch: UserOverride): void {
