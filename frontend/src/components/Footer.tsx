@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { dashboardLabels, dashboardPathFor } from "@/lib/auth/access";
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";
 
@@ -12,7 +13,10 @@ const linkStyle =
 export default function Footer({ user = null }: { user?: AppUser | null }) {
     const account = user
         ? [
-              { path: PATHS.profile, label: "My Dashboard" },
+              {
+                  path: user.role === "resident" ? PATHS.profileSettings : dashboardPathFor(user.role),
+                  label: user.role === "resident" ? "Account Settings" : dashboardLabels[user.role],
+              },
               { path: PATHS.profileTickets, label: "My Tickets" },
           ]
         : [

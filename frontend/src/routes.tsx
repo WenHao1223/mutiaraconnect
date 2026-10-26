@@ -5,7 +5,6 @@ import HomePage from "@/pages/HomePage";
 import MapPage from "@/pages/MapPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFoundPage from "@/pages/NotFoundPage";
-import Placeholder from "@/pages/Placeholder";
 import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
@@ -73,9 +72,9 @@ const pages: PageRoute[] = [
     { path: PATHS.login, label: "Sign in", element: <LoginPage /> },
     { path: PATHS.register, label: "Register", element: <RegisterPage /> },
 
-    { path: PATHS.profile, label: "My Dashboard", element: (
+    { path: PATHS.profile, label: "Profile", element: (
         <RequireRole allow={["resident"]}>
-            <Placeholder title="My Dashboard" />
+            <Navigate to={PATHS.profileTickets} replace />
         </RequireRole>
     ) },
     { path: PATHS.profileSettings, label: "Account Settings", element: <ProfileSettingsPage /> },

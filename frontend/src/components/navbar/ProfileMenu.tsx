@@ -73,11 +73,11 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
                             </Tooltip>
                         </div>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
+                        {user.role !== "resident" && <DropdownMenuItem asChild>
                             <Link to={dashboardPathFor(user.role)}>
                                 <DashboardIcon className="size-4" /> {dashboardLabels[user.role]}
                             </Link>
-                        </DropdownMenuItem>
+                        </DropdownMenuItem>}
                         <DropdownMenuItem asChild>
                             <Link to={PATHS.profileTickets}>
                                 <Ticket className="size-4" /> My Tickets

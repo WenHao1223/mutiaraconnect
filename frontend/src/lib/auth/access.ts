@@ -1,7 +1,7 @@
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";
 
-/** The dashboard each role owns. Used to route users away from dashboards that aren't theirs. */
+/** Role landing pages. Residents use My Tickets because they have no dedicated dashboard. */
 export function dashboardPathFor(role: AppUser["role"]): string {
     switch (role) {
         case "business_premise":
@@ -10,13 +10,12 @@ export function dashboardPathFor(role: AppUser["role"]): string {
         case "super_admin":
             return PATHS.admin;
         default:
-            return PATHS.profile;
+            return PATHS.profileTickets;
     }
 }
 
 /** Label for the current role's dashboard, shown in the profile menu. */
-export const dashboardLabels: Record<AppUser["role"], string> = {
-    resident: "My Dashboard",
+export const dashboardLabels: Record<Exclude<AppUser["role"], "resident">, string> = {
     business_premise: "Business Dashboard",
     admin: "Admin Dashboard",
     super_admin: "Admin Dashboard",
