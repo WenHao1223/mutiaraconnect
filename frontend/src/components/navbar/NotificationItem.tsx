@@ -20,9 +20,13 @@ function destinationFor(notification: AccountNotification, user: AppUser) {
             ? { path: `${PATHS.profileTickets}?ticket=${encodeURIComponent(notification.referenceId)}`, label: "View ticket" }
             : { path: PATHS.profileTickets, label: "View my tickets" };
         case "application": return { path: PATHS.profileBusiness, label: "View applications" };
-        case "business": return user.role === "business_premise"
-            ? { path: PATHS.businessDashboard, label: "View business dashboard" }
-            : { path: PATHS.profileBusiness, label: "View my premises" };
+        case "business": {
+            if (user.role !== "business_premise") return { path: PATHS.profileBusiness, label: "View my premises" };
+            if (notification.type.startsWith("support_") && notification.referenceId) {
+                return { path: `${PATHS.businessDashboard}?request=${encodeURIComponent(notification.referenceId)}`, label: "View support request" };
+            }
+            return { path: PATHS.businessDashboard, label: "View business dashboard" };
+        }
         case "settings": return { path: PATHS.profileSettings, label: "View account settings" };
     }
 }

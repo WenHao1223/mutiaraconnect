@@ -1,5 +1,7 @@
 import { activeClosures } from "@/lib/admin/closures";
 import { readSchedule } from "@/lib/admin/schedule";
+import { newId } from "@/lib/admin/store";
+import { createNotification } from "@/lib/notifications";
 import type { ApplicationStatus, BusinessApplication, BusinessType } from "@/types/business";
 import type { ClosureKind, RoadClosure } from "@/types/road-closure";
 import type { ConstructionSchedule } from "@/types/schedule";
@@ -55,7 +57,7 @@ export type NewApplicationInput = Omit<
 export function submitApplication(input: NewApplicationInput): BusinessApplication {
     const application: BusinessApplication = {
         ...input,
-        id: `BA-${Date.now().toString(36)}`,
+        id: newId("BA"),
         status: "pending",
         submittedAt: new Date().toISOString(),
     };
@@ -67,6 +69,14 @@ export function submitApplication(input: NewApplicationInput): BusinessApplicati
     } catch {
         /* storage unavailable: the application just won't survive a refresh */
     }
+    createNotification({
+        recipient: application.email ?? application.applicant,
+        type: "application_submitted",
+        title: "Business account application received",
+        body: `Your application for ${application.businessName} is pending review.`,
+        destination: "application",
+        referenceId: application.id,
+    });
     return application;
 }
 
@@ -103,7 +113,7 @@ export function readPremises(owner?: string): BusinessProfile[] {
 }
 
 export function addPremise(owner: string, input: Omit<BusinessProfile, "id">): BusinessProfile {
-    const premise: BusinessProfile = { ...input, id: `BP-${Date.now().toString(36)}` };
+    const premise: BusinessProfile = { ...input, id: newId("BP") };
     const store = readPremiseStore();
     const key = normalizeKey(owner);
     store[key] = [...(store[key] ?? []), premise];
@@ -112,6 +122,15 @@ export function addPremise(owner: string, input: Omit<BusinessProfile, "id">): B
     } catch {
         /* storage unavailable: the premise just won't survive a refresh */
     }
+    createNotification({
+        recipient: owner,
+        type: "premise_added",
+        title: "Business premise registered",
+        body: `${premise.name} has been added to your account.`,
+        destination: "business",
+        referenceId: premise.id,
+        premiseId: premise.id,
+    });
     return premise;
 }
 

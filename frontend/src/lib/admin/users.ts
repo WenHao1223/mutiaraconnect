@@ -74,6 +74,19 @@ export function readAllPremises(): BusinessProfile[] {
     ];
 }
 
+/** Account recipients for one exact premise; public directory shops may have no login owner. */
+export function readPremiseOwners(premiseId: string): string[] {
+    const accounts = [
+        ...Object.values(usersData as Record<string, MockAccount>),
+        ...readJson<RegisteredAccount[]>(REGISTERED_KEY, []),
+    ];
+    return [...new Set(accounts
+        .filter((account) => premisesFor(account.email ?? account.ic ?? account.name, account.businesses)
+            .some((premise) => premise.id === premiseId))
+        .map((account) => account.email?.trim().toLowerCase())
+        .filter((email): email is string => Boolean(email)))];
+}
+
 function saveOverride(email: string, patch: UserOverride): void {
     const key = normalize(email);
     const all = readOverrides();

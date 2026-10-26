@@ -1,6 +1,7 @@
 import { recordAudit } from "@/lib/admin/audit";
 import { updateUserRole } from "@/lib/admin/users";
-import { addPremise, saveDecision } from "@/lib/business/business";
+import { addPremise, readApplications, saveDecision } from "@/lib/business/business";
+import { createNotification } from "@/lib/notifications";
 import type { BusinessApplication } from "@/types/business";
 
 /**
@@ -10,7 +11,16 @@ import type { BusinessApplication } from "@/types/business";
  */
 export class ReviewError extends Error {}
 
+/** A stale review must not upgrade an account twice or send duplicate decision notices. */
+function pendingApplication(id: string): BusinessApplication {
+    const application = readApplications().find((item) => item.id === id);
+    if (!application) throw new ReviewError("This application is no longer available. Refresh the review list.");
+    if (application.status !== "pending") throw new ReviewError("This application has already been reviewed.");
+    return application;
+}
+
 export function approveApplication(application: BusinessApplication, actor: string): BusinessApplication {
+    application = pendingApplication(application.id);
     if (!application.email) {
         throw new ReviewError("This applicant has no email on their account, so their role can't be upgraded.");
     }
@@ -28,6 +38,14 @@ export function approveApplication(application: BusinessApplication, actor: stri
         action: "business_application",
         detail: `Approved ${application.id} (“${application.businessName}”) for ${application.email}.`,
     });
+    if (updated) createNotification({
+        recipient: updated.email ?? updated.applicant,
+        type: "application_approved",
+        title: "Business account application approved",
+        body: `Your application for ${updated.businessName} was approved. Sign in again to access your Business Dashboard.`,
+        destination: "application",
+        referenceId: updated.id,
+    });
     return updated ?? application;
 }
 
@@ -38,6 +56,7 @@ export function rejectApplication(
 ): BusinessApplication {
     const clean = reason.trim();
     if (clean.length < 5) throw new ReviewError("Tell the applicant why, in a sentence or two.");
+    application = pendingApplication(application.id);
     const updated = saveDecision(application.id, {
         status: "rejected",
         rejectionReason: clean,
@@ -47,6 +66,14 @@ export function rejectApplication(
         actor,
         action: "business_application",
         detail: `Rejected ${application.id} (“${application.businessName}”): ${clean}`,
+    });
+    if (updated) createNotification({
+        recipient: updated.email ?? updated.applicant,
+        type: "application_rejected",
+        title: "Business account application rejected",
+        body: `Your application for ${updated.businessName} was rejected. ${clean}`,
+        destination: "application",
+        referenceId: updated.id,
     });
     return updated ?? application;
 }
