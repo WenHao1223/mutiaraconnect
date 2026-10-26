@@ -10,6 +10,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Megaphone,
+    MoreHorizontal,
     Pause,
     Play,
     Bell,
@@ -28,7 +29,8 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -91,6 +93,7 @@ export default function AnnouncementsPage() {
     if (pagination.filterKey !== filterKey) {
         setPagination({ filterKey, page: 0 });
     }
+    const [expandedAnnouncementKey, setExpandedAnnouncementKey] = useState<string | null>(null);
     const filtersRef = useRef<HTMLDetailsElement>(null);
     const searchRef = useRef<HTMLInputElement>(null);
     const datePrefix = yearFilter === "all" ? "" : monthFilter === "all" ? yearFilter
@@ -110,6 +113,7 @@ export default function AnnouncementsPage() {
     }
 
     function resetFilters() {
+        setExpandedAnnouncementKey(null);
         setTypeFilter("all");
         setAreaFilter("all");
         setQuery("");
@@ -195,7 +199,10 @@ export default function AnnouncementsPage() {
     const visibleItems = filteredItems.slice(pageStart, pageStart + ANNOUNCEMENTS_PER_PAGE);
 
     function changePage(page: number) {
-        flushSync(() => setPagination({ filterKey, page }));
+        flushSync(() => {
+            setPagination({ filterKey, page });
+            setExpandedAnnouncementKey(null);
+        });
         listHeadingRef.current?.focus({ preventScroll: true });
         listHeadingRef.current?.scrollIntoView({
             block: "start",
@@ -210,6 +217,7 @@ export default function AnnouncementsPage() {
         flushSync(() => {
             resetFilters();
             const index = sortedItems.findIndex((item) => item.id === id);
+            setExpandedAnnouncementKey(`${id}-${Math.max(0, index)}`);
             setPagination({
                 filterKey: JSON.stringify(["all", "all", "", "all", "all", "all"]),
                 page: Math.floor(Math.max(0, index) / ANNOUNCEMENTS_PER_PAGE),
@@ -228,11 +236,17 @@ export default function AnnouncementsPage() {
     const isAdmin = user?.role === "admin" || user?.role === "super_admin";
 
     function toggleReadStatus(id: string) {
-        if (readIds.includes(id)) {
-            setReadIds(markAnnouncementUnread(id));
-        } else {
-            setReadIds(markAnnouncementRead(id));
-        }
+        const wasRead = readIds.includes(id);
+        flushSync(() => setReadIds(wasRead ? markAnnouncementUnread(id) : markAnnouncementRead(id)));
+        // The unread filter removes the row immediately, so return focus to the results.
+        if (typeFilter === "unread" && !wasRead) listHeadingRef.current?.focus({ preventScroll: true });
+        toast.success(wasRead ? "Marked as unread." : "Marked as read.", {
+            duration: 8_000,
+            action: {
+                label: "Undo",
+                onClick: () => setReadIds(wasRead ? markAnnouncementRead(id) : markAnnouncementUnread(id)),
+            },
+        });
     }
 
     function handleMarkAllRead() {
@@ -257,8 +271,9 @@ export default function AnnouncementsPage() {
             }
             await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
             toast.success("Announcement copied to clipboard for sharing.");
-        } catch {
-            toast.info("Announcement ready to share.");
+        } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") return;
+            toast.error("Unable to share this announcement. Please try again.");
         }
     }
 
@@ -506,125 +521,20 @@ export default function AnnouncementsPage() {
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                         {visibleItems.map((item, index) => {
-                            const isUnread = !readIds.includes(item.id);
-                            const badge = typeBadgeStyle[item.type];
-
+                            const rowKey = `${item.id}-${pageStart + index}`;
                             return (
-                                <Card
-                                    key={`${item.id}-${pageStart + index}`}
-                                    id={`announcement-${item.id}`}
-                                    tabIndex={-1}
-                                    className={cn(
-                                        "scroll-mt-24 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                        isUnread && "border-primary/40 bg-primary/[0.02]",
-                                        item.pinned && "ring-1 ring-hazard/40",
-                                    )}
-                                >
-                                    <CardHeader className="pb-3">
-                                        <div className="flex flex-wrap items-center justify-between gap-2">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Badge variant="outline" className={badge.className}>
-                                                    {badge.label}
-                                                </Badge>
-                                                {item.area && (
-                                                    <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
-                                                        <MapPin className="size-3 text-primary" />
-                                                        {item.area}
-                                                    </span>
-                                                )}
-                                                {item.pinned && (
-                                                    <span className="inline-flex items-center gap-1 rounded-md bg-hazard/20 px-2 py-0.5 text-xs font-semibold text-hazard-text">
-                                                        <Pin className="size-3" />
-                                                        Pinned Advisory
-                                                    </span>
-                                                )}
-                                                {isUnread && (
-                                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                                                        <span className="size-2 rounded-full bg-hazard" />
-                                                        Unread
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                                <Clock className="size-3.5" />
-                                                {item.time}
-                                            </span>
-                                        </div>
-
-                                        <CardTitle className="mt-2 text-lg font-semibold text-foreground">
-                                            {item.title}
-                                        </CardTitle>
-                                        {item.createdBy && (
-                                            <CardDescription className="text-xs">
-                                                Published by {item.createdBy}
-                                                {item.publishedAt
-                                                    ? ` · ${new Date(item.publishedAt).toLocaleString("en-MY", {
-                                                          dateStyle: "medium",
-                                                          timeStyle: "short",
-                                                          timeZone: "Asia/Kuala_Lumpur",
-                                                      })}`
-                                                    : ""}
-                                            </CardDescription>
-                                        )}
-                                    </CardHeader>
-
-                                    <CardContent className="space-y-4">
-                                        <p className="text-sm leading-relaxed text-foreground">{item.body}</p>
-
-                                        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => toggleReadStatus(item.id)}
-                                                    className="h-8 text-xs"
-                                                >
-                                                    {isUnread ? (
-                                                        <>
-                                                            <CheckCircle2 className="size-3.5 text-primary" />
-                                                            Mark as read
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <CircleDot className="size-3.5 text-muted-foreground" />
-                                                            Mark as unread
-                                                        </>
-                                                    )}
-                                                </Button>
-
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => shareAnnouncement(item)}
-                                                    className="h-8 text-xs"
-                                                >
-                                                    <Share2 className="size-3.5" />
-                                                    Share bulletin
-                                                </Button>
-                                            </div>
-
-                                            <Link
-                                                to={
-                                                    item.type === "closure"
-                                                        ? PATHS.roadAccess
-                                                        : item.area
-                                                          ? `${PATHS.constructionInfo}?area=${encodeURIComponent(item.area)}`
-                                                          : PATHS.constructionInfo
-                                                }
-                                                className="text-xs font-medium text-primary hover:underline"
-                                            >
-                                                {item.type === "closure"
-                                                    ? "View road closures →"
-                                                    : "View station route map →"}
-                                            </Link>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <AnnouncementCard
+                                    key={rowKey}
+                                    item={item}
+                                    rowKey={rowKey}
+                                    isUnread={!readIds.includes(item.id)}
+                                    expanded={expandedAnnouncementKey === rowKey}
+                                    onToggleExpanded={() => setExpandedAnnouncementKey(expandedAnnouncementKey === rowKey ? null : rowKey)}
+                                    onToggleRead={() => toggleReadStatus(item.id)}
+                                    onShare={() => { void shareAnnouncement(item); }}
+                                />
                             );
                         })}
                     </div>
@@ -646,6 +556,106 @@ export default function AnnouncementsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+/** Consistent previews at every screen size; full messages open on demand. */
+function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, onToggleRead, onShare }: {
+    item: Announcement;
+    rowKey: string;
+    isUnread: boolean;
+    expanded: boolean;
+    onToggleExpanded: () => void;
+    onToggleRead: () => void;
+    onShare: () => void;
+}) {
+    const bodyRef = useRef<HTMLParagraphElement>(null);
+    const [hasOverflow, setHasOverflow] = useState(false);
+
+    useEffect(() => {
+        const body = bodyRef.current;
+        if (!body) return;
+        // Measure rendered lines rather than guessing from character count.
+        // This also updates when the card width or expanded height changes.
+        const observer = new ResizeObserver(() => {
+            const lineHeight = Number.parseFloat(window.getComputedStyle(body).lineHeight);
+            setHasOverflow(body.scrollHeight > lineHeight * 4 + 1);
+        });
+        observer.observe(body);
+        return () => observer.disconnect();
+    }, [item.body]);
+
+    const badge = typeBadgeStyle[item.type];
+    const publishedDate = item.publishedAt ? new Date(item.publishedAt) : null;
+    const dateLabel = publishedDate && !Number.isNaN(publishedDate.getTime())
+        ? publishedDate.toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kuala_Lumpur" })
+        : item.time;
+
+    return (
+        <article
+            id={`announcement-${item.id}`}
+            aria-labelledby={`announcement-title-${rowKey}`}
+            tabIndex={-1}
+            className={cn(
+                "scroll-mt-24 rounded-xl border bg-card p-4 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:p-6",
+                isUnread && "border-primary/30",
+            )}
+        >
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <Badge variant="outline" className={cn("text-[10px] md:text-xs", badge.className)}>{badge.label}</Badge>
+                    {item.pinned && <span className="inline-flex items-center text-hazard-text" title="Pinned advisory"><Pin className="size-3.5" aria-hidden /><span className="sr-only">Pinned advisory</span></span>}
+                    {isUnread && <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary"><span className="size-1.5 rounded-full bg-hazard" aria-hidden />Unread</span>}
+                </div>
+                <div className="-mr-2 flex shrink-0 items-center">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-11 text-muted-foreground"
+                        aria-label={`Share announcement: ${item.title}`}
+                        title="Share announcement"
+                        onClick={onShare}
+                    ><Share2 className="size-4" aria-hidden /></Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" className="size-11 text-muted-foreground" aria-label={`Actions for ${item.title}`} title="Announcement actions"><MoreHorizontal className="size-5" aria-hidden /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuItem onSelect={onToggleRead} className="min-h-11 cursor-pointer gap-3 px-3">
+                                {isUnread ? <CheckCircle2 className="text-primary" aria-hidden /> : <CircleDot aria-hidden />}
+                                {isUnread ? "Mark as read" : "Mark as unread"}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+            <h3 id={`announcement-title-${rowKey}`} className={cn("text-[15px] leading-snug text-foreground md:mt-1 md:text-lg", isUnread ? "font-semibold" : "font-medium")}>{item.title}</h3>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                {item.area && <span className="inline-flex items-center gap-1"><MapPin className="size-3 shrink-0" aria-hidden />{item.area}</span>}
+                <span>{dateLabel}</span>
+            </div>
+            <p ref={bodyRef} id={`announcement-body-${rowKey}`} className={cn("mt-3 min-w-0 whitespace-pre-line break-words text-sm leading-6 text-muted-foreground", !expanded && "line-clamp-4")}>{item.body}</p>
+            <div className={cn("mt-4 space-y-3 border-t pt-3", !expanded && hasOverflow && "hidden md:block")}>
+                {item.createdBy && <p className="text-xs leading-relaxed text-muted-foreground">Published by <span className="font-medium text-foreground">{item.createdBy}</span></p>}
+                <Link
+                    to={item.type === "closure" ? PATHS.roadAccess : item.area ? `${PATHS.constructionInfo}?area=${encodeURIComponent(item.area)}` : PATHS.constructionInfo}
+                    className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary hover:underline md:min-h-0 md:text-xs"
+                >{item.type === "closure" ? "View road & access map" : "View station progress"}<ArrowRight className="size-3.5" aria-hidden /></Link>
+            </div>
+            {(hasOverflow || expanded) && (
+                <button
+                    type="button"
+                    aria-expanded={expanded}
+                    aria-controls={`announcement-body-${rowKey}`}
+                    onClick={onToggleExpanded}
+                    className="-mb-2 mt-1 flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-md text-xs font-semibold text-primary hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    {expanded ? "Show less" : "Read announcement"}
+                    <ChevronDown className={cn("size-4 transition-transform motion-reduce:transition-none", expanded && "rotate-180")} aria-hidden />
+                </button>
+            )}
+        </article>
     );
 }
 
@@ -716,27 +726,25 @@ function AnnouncementHighlights({ items, onOpen }: { items: Announcement[]; onOp
                 }
             }}
         >
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-primary/5 px-5 py-4 sm:px-7">
-                <div>
-                    <h2 id="announcement-highlights-heading" className="flex items-center gap-2 text-sm font-semibold text-primary">
-                        <Megaphone className="size-4" aria-hidden />Announcement highlights
-                    </h2>
-                    <p className="mt-1 text-xs text-muted-foreground">Pinned notices first, followed by the latest updates across all areas.</p>
-                </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b bg-primary/5 px-5 py-4 sm:px-7">
+                <h2 id="announcement-highlights-heading" className="flex min-w-0 items-center gap-2 text-sm font-semibold text-primary">
+                    <Megaphone className="size-4 shrink-0" aria-hidden />Announcement highlights
+                </h2>
                 {multiple && (
                     <Button
                         type="button"
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         disabled={reducedMotion}
                         data-carousel-rotation
                         aria-label={reducedMotion ? "Auto-play disabled for reduced motion" : playing ? "Pause announcement auto-play" : "Start announcement auto-play"}
+                        title={reducedMotion ? "Auto-play disabled for reduced motion" : playing ? "Pause auto-play" : "Start auto-play"}
                         onClick={() => setPlaying((value) => !value)}
                     >
                         {playing && !reducedMotion ? <Pause className="size-3.5" aria-hidden /> : <Play className="size-3.5" aria-hidden />}
-                        {reducedMotion ? "Auto-play off" : playing ? "Pause" : "Play"}
                     </Button>
                 )}
+                <p className="col-span-2 text-xs text-muted-foreground">Pinned notices first, followed by the latest updates across all areas.</p>
             </div>
             <div ref={viewportRef} className="overflow-hidden" onPointerDown={() => setPlaying(false)}>
                 <div className="flex touch-pan-y">
