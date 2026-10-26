@@ -1,23 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-    BellRing,
-    Calendar,
-    CalendarClock,
-    CheckCircle2,
-    Clock,
-    HardHat,
-    MapPin,
-    Megaphone,
-    Pin,
-    Search,
-    TrainFront,
-} from "lucide-react";
+import { ArrowUpRight, Calendar, ChevronDown, ChevronLeft, ChevronRight, MapPin, Pin, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { readAnnouncements, subscribeAnnouncements } from "@/lib/admin/announcements";
 import {
@@ -25,434 +11,231 @@ import {
     scheduleStatusLabels as statusLabels,
     scheduleStatusTone as statusTone,
 } from "@/lib/admin/schedule";
-import { readLrtStations } from "@/lib/lrt/stations";
-import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { ConstructionSchedule, ScheduleStatus } from "@/types/schedule";
 
-function computeTimelineProgress(item: ConstructionSchedule): number {
-    if (item.status === "completed") return 100;
-    if (item.status === "upcoming") return 0;
-    const start = new Date(item.startsAt).getTime();
-    const end = new Date(item.endsAt).getTime();
-    const now = Date.now();
-    if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return 50;
-    if (now <= start) return 10;
-    if (now >= end) return 95;
-    return Math.min(95, Math.max(10, Math.round(((now - start) / (end - start)) * 100)));
-}
+const PAGE_SIZE = 4;
+const statusOrder: Record<ScheduleStatus, number> = { ongoing: 0, upcoming: 1, completed: 2 };
 
 function formatDate(iso: string): string {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString("en-MY", {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleDateString("en-MY", {
         day: "numeric",
         month: "short",
         year: "numeric",
+        timeZone: "Asia/Kuala_Lumpur",
     });
 }
 
 export default function ConstructionUpdatesPage() {
-    const [scheduleItems, setScheduleItems] = useState<ConstructionSchedule[]>(() => readSchedule());
+    const [scheduleItems, setScheduleItems] = useState(() => readSchedule());
     const [announcements, setAnnouncements] = useState(() => readAnnouncements());
-    const stations = useMemo(() => readLrtStations(), []);
-
     const [statusFilter, setStatusFilter] = useState<ScheduleStatus | "all">("all");
-    const [areaFilter, setAreaFilter] = useState<string>("all");
-    const [query, setQuery] = useState<string>("");
+    const [areaFilter, setAreaFilter] = useState("all");
+    const [query, setQuery] = useState("");
+    const [page, setPage] = useState(0);
 
-    useEffect(() => {
-        return subscribeAnnouncements(() => {
-            setAnnouncements(readAnnouncements());
-            setScheduleItems(readSchedule());
-        });
-    }, []);
+    useEffect(() => subscribeAnnouncements(() => {
+        setAnnouncements(readAnnouncements());
+        setScheduleItems(readSchedule());
+    }), []);
 
-    const allAreas = useMemo(() => {
-        const fromSchedule = scheduleItems.map((item) => item.area).filter(Boolean);
-        const fromStations = stations.map((station) => station.area).filter(Boolean);
-        return Array.from(new Set([...fromSchedule, ...fromStations])).sort();
-    }, [scheduleItems, stations]);
+    const allAreas = useMemo(() =>
+        Array.from(new Set(scheduleItems.map((item) => item.area).filter(Boolean))).sort(),
+    [scheduleItems]);
 
     const filteredSchedule = useMemo(() => {
+        const search = query.trim().toLowerCase();
         return scheduleItems.filter((item) => {
             if (statusFilter !== "all" && item.status !== statusFilter) return false;
-            if (areaFilter !== "all" && item.area.toLowerCase() !== areaFilter.toLowerCase()) return false;
-            if (query.trim()) {
-                const q = query.trim().toLowerCase();
-                return (
-                    item.title.toLowerCase().includes(q) ||
-                    item.description.toLowerCase().includes(q) ||
-                    item.area.toLowerCase().includes(q) ||
-                    item.id.toLowerCase().includes(q)
-                );
-            }
-            return true;
-        });
+            if (areaFilter !== "all" && item.area !== areaFilter) return false;
+            return !search || [item.title, item.description, item.area, item.id]
+                .some((value) => value.toLowerCase().includes(search));
+        }).sort((a, b) => statusOrder[a.status] - statusOrder[b.status] ||
+            (a.status === "upcoming"
+                ? a.startsAt.localeCompare(b.startsAt)
+                : b.updatedAt.localeCompare(a.updatedAt)));
     }, [scheduleItems, statusFilter, areaFilter, query]);
 
-    const constructionAnnouncements = useMemo(() => {
-        return announcements.filter((item) => {
-            if (areaFilter !== "all" && item.area?.toLowerCase() !== areaFilter.toLowerCase()) {
-                return false;
-            }
-            return item.type === "construction" || item.pinned;
-        });
-    }, [announcements, areaFilter]);
+    // Notices belong to the selected area; work status and search apply to the work list only.
+    const advisories = announcements.filter((item) =>
+        (item.type === "construction" || item.pinned) &&
+        (areaFilter === "all" || item.area?.toLowerCase() === areaFilter.toLowerCase()),
+    );
+    const pageCount = Math.ceil(filteredSchedule.length / PAGE_SIZE);
+    const currentPage = Math.min(page, Math.max(0, pageCount - 1));
+    const shownItems = filteredSchedule.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+    const hasFilters = Boolean(query || statusFilter !== "all" || areaFilter !== "all");
 
-    const ongoingCount = scheduleItems.filter((item) => item.status === "ongoing").length;
-    const upcomingCount = scheduleItems.filter((item) => item.status === "upcoming").length;
-    const completedCount = scheduleItems.filter((item) => item.status === "completed").length;
+    function resetFilters() {
+        setQuery("");
+        setStatusFilter("all");
+        setAreaFilter("all");
+        setPage(0);
+    }
 
     return (
         <div className="flex-1 bg-background">
-            {/* Header Banner */}
-            <section className="border-b bg-muted/50">
-                <div className="mx-auto max-w-7xl px-4 py-8">
-                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <span className="size-2 rounded-full bg-hazard" aria-hidden />
-                        Live Work Packages &amp; Site Advisories
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+            <header className="border-b bg-muted/40">
+                <div className="mx-auto max-w-4xl px-4 py-7 sm:py-9">
+                    <p className="text-xs font-medium text-muted-foreground">Mutiara Line</p>
+                    <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
                         <div>
-                            <h1 className="text-3xl font-semibold tracking-tight text-primary">
-                                Construction Updates &amp; Schedule
-                            </h1>
-                            <p className="mt-1 max-w-3xl text-muted-foreground">
-                                Track ongoing civil engineering work packages, upcoming station milestones,
-                                and site-specific construction advisories published by the project team.
-                            </p>
+                            <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Construction updates</h1>
+                            <p className="mt-2 text-sm text-muted-foreground">Find ongoing works, upcoming schedules, and notices for your area.</p>
                         </div>
-
-                        <div className="flex flex-wrap gap-2">
-                            <Button asChild variant="outline" size="sm">
-                                <Link to={PATHS.constructionInfo}>
-                                    <TrainFront className="size-4" />
-                                    Route Map &amp; Stations
-                                </Link>
-                            </Button>
-                            <Button asChild size="sm">
-                                <Link to={PATHS.announcements}>
-                                    <BellRing className="size-4" />
-                                    All Announcements
-                                </Link>
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Summary Metrics */}
-                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                        <div className="flex items-center gap-3.5 rounded-xl border bg-card p-4 shadow-sm">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-hazard/15 text-hazard-text">
-                                <HardHat className="size-5" />
-                            </span>
-                            <div>
-                                <p className="text-2xl font-bold text-foreground">{ongoingCount}</p>
-                                <p className="text-xs text-muted-foreground">Ongoing Work Packages</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3.5 rounded-xl border bg-card p-4 shadow-sm">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-info/10 text-info-text">
-                                <CalendarClock className="size-5" />
-                            </span>
-                            <div>
-                                <p className="text-2xl font-bold text-foreground">{upcomingCount}</p>
-                                <p className="text-xs text-muted-foreground">Upcoming Scheduled Works</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3.5 rounded-xl border bg-card p-4 shadow-sm">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success-text">
-                                <CheckCircle2 className="size-5" />
-                            </span>
-                            <div>
-                                <p className="text-2xl font-bold text-foreground">{completedCount}</p>
-                                <p className="text-xs text-muted-foreground">Completed Packages</p>
-                            </div>
-                        </div>
+                        <Link to={PATHS.constructionInfo} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                            Station construction <ArrowUpRight className="size-4" aria-hidden />
+                        </Link>
                     </div>
                 </div>
-            </section>
+            </header>
 
-            {/* Main Body */}
-            <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
-                {/* Filter Bar */}
-                <div className="flex flex-col justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm lg:flex-row lg:items-center">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        {(
-                            [
-                                { value: "all", label: `All (${scheduleItems.length})` },
-                                { value: "ongoing", label: `Ongoing (${ongoingCount})` },
-                                { value: "upcoming", label: `Upcoming (${upcomingCount})` },
-                                { value: "completed", label: `Completed (${completedCount})` },
-                            ] as const
-                        ).map((tab) => (
-                            <button
-                                key={tab.value}
-                                type="button"
-                                onClick={() => setStatusFilter(tab.value)}
-                                className={cn(
-                                    "rounded-lg px-3 py-1.5 text-xs font-medium transition",
-                                    statusFilter === tab.value
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-muted/60 text-muted-foreground hover:text-foreground",
-                                )}
-                            >
-                                {tab.label}
-                            </button>
+            <div className="mx-auto max-w-4xl space-y-8 px-4 py-6 sm:py-8">
+                <section aria-labelledby="work-packages-heading" className="space-y-5">
+                    <dl className="grid grid-cols-3 divide-x rounded-xl border bg-card py-4 text-center">
+                        {([
+                            { value: "ongoing", label: "Ongoing works" },
+                            { value: "upcoming", label: "Upcoming" },
+                            { value: "completed", label: "Completed" },
+                        ] as const).map((status) => (
+                            <div key={status.value} className="px-2">
+                                <dd className="text-xl font-bold text-primary">{scheduleItems.filter((item) => item.status === status.value).length}</dd>
+                                <dt className="mt-1 text-xs text-muted-foreground">{status.label}</dt>
+                            </div>
                         ))}
+                    </dl>
+
+                    <div>
+                        <h2 id="work-packages-heading" className="text-lg font-semibold text-primary">Find construction work</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">Filter by status or area, then expand an update for details.</p>
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="w-full sm:w-48">
-                            <Select value={areaFilter} onValueChange={setAreaFilter}>
-                                <SelectTrigger aria-label="Filter by corridor area">
-                                    <SelectValue placeholder="All corridor areas" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All corridor areas</SelectItem>
-                                    {allAreas.map((area) => (
-                                        <SelectItem key={area} value={area}>
-                                            {area}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="relative w-full sm:w-64">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_9rem_10rem]">
+                        <div className="relative col-span-2 sm:col-span-1">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                             <Input
                                 value={query}
-                                onChange={(event) => setQuery(event.target.value)}
-                                placeholder="Search work package..."
+                                onChange={(event) => { setQuery(event.target.value); setPage(0); }}
+                                placeholder="Work title, area, or reference"
+                                aria-label="Search construction updates"
                                 className="pl-9"
-                                aria-label="Search construction schedule"
                             />
                         </div>
+                        <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value as typeof statusFilter); setPage(0); }}>
+                            <SelectTrigger aria-label="Filter by work status"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All statuses</SelectItem>
+                                <SelectItem value="ongoing">Ongoing works</SelectItem>
+                                <SelectItem value="upcoming">Upcoming</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={areaFilter} onValueChange={(value) => { setAreaFilter(value); setPage(0); }}>
+                            <SelectTrigger aria-label="Filter by work area"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All areas</SelectItem>
+                                {allAreas.map((area) => <SelectItem key={area} value={area}>{area}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </div>
-                </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                        <p role="status">
+                            {filteredSchedule.length > 0
+                                ? `Showing ${currentPage * PAGE_SIZE + 1}–${Math.min((currentPage + 1) * PAGE_SIZE, filteredSchedule.length)} of ${filteredSchedule.length} updates`
+                                : "No matching updates"}
+                        </p>
+                        {hasFilters && <button type="button" onClick={resetFilters} className="rounded-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Clear filters</button>}
+                    </div>
 
-                {/* Two-Column Layout: Work Packages Timeline + Construction Advisories */}
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-                    {/* Left Column: Construction Schedule List */}
-                    <section aria-labelledby="work-packages-heading" className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 id="work-packages-heading" className="text-lg font-semibold text-primary">
-                                Construction Work Packages ({filteredSchedule.length})
-                            </h2>
-                            {(statusFilter !== "all" || areaFilter !== "all" || query) && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setStatusFilter("all");
-                                        setAreaFilter("all");
-                                        setQuery("");
-                                    }}
-                                    className="text-xs font-medium text-primary hover:underline"
-                                >
-                                    Clear filters
-                                </button>
-                            )}
+                    {shownItems.length === 0 ? (
+                        <div className="rounded-xl border border-dashed px-4 py-10 text-center">
+                            <p className="font-medium">No updates found</p>
+                            <p className="mt-1 text-sm text-muted-foreground">Try another area, status, or search term.</p>
+                            <Button variant="outline" size="sm" className="mt-4" onClick={resetFilters}>Reset filters</Button>
                         </div>
+                    ) : (
+                        <ul className="space-y-3">
+                            {shownItems.map((item) => <li key={item.id}><WorkUpdate item={item} /></li>)}
+                        </ul>
+                    )}
 
-                        {filteredSchedule.length === 0 ? (
-                            <Card>
-                                <CardContent className="py-10 text-center">
-                                    <p className="text-sm font-medium">
-                                        No construction work packages match your selection.
-                                    </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        Try selecting another station area or clearing your search query.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <div className="space-y-4">
-                                {filteredSchedule.map((item) => {
-                                    const pct = computeTimelineProgress(item);
-                                    const matchingStation = stations.find(
-                                        (st) => st.area.toLowerCase() === item.area.toLowerCase(),
-                                    );
+                    {pageCount > 1 && (
+                        <nav aria-label="Construction update pages" className="flex items-center justify-between gap-2 border-t pt-4">
+                            <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}><ChevronLeft aria-hidden /> Previous</Button>
+                            <span className="text-xs text-muted-foreground">Page {currentPage + 1} of {pageCount}</span>
+                            <Button variant="outline" size="sm" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Next <ChevronRight aria-hidden /></Button>
+                        </nav>
+                    )}
+                </section>
 
-                                    return (
-                                        <Card key={item.id} className="overflow-hidden shadow-sm">
-                                            <CardHeader className="pb-3">
-                                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs font-medium text-muted-foreground">
-                                                            {item.id}
-                                                        </span>
-                                                        {item.area && (
-                                                            <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                                                                <MapPin className="size-3" />
-                                                                {item.area}
-                                                                {matchingStation ? ` (${matchingStation.code})` : ""}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <Badge variant="outline" className={statusTone[item.status]}>
-                                                        {statusLabels[item.status]}
-                                                    </Badge>
-                                                </div>
-
-                                                <CardTitle className="mt-2 text-base font-semibold text-foreground">
-                                                    {item.title}
-                                                </CardTitle>
-                                                {item.description && (
-                                                    <CardDescription className="text-sm text-muted-foreground">
-                                                        {item.description}
-                                                    </CardDescription>
-                                                )}
-                                            </CardHeader>
-
-                                            <CardContent className="space-y-3 border-t bg-muted/20 pt-3">
-                                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                                                    <span className="inline-flex items-center gap-1.5">
-                                                        <Calendar className="size-3.5 text-primary" />
-                                                        <span className="font-medium text-foreground">
-                                                            {formatDate(item.startsAt)}
-                                                        </span>
-                                                        <span>→</span>
-                                                        <span className="font-medium text-foreground">
-                                                            {formatDate(item.endsAt)}
-                                                        </span>
-                                                    </span>
-
-                                                    <span className="inline-flex items-center gap-1">
-                                                        <Clock className="size-3" />
-                                                        Timeline progress:{" "}
-                                                        <strong className="text-foreground">{pct}%</strong>
-                                                    </span>
-                                                </div>
-
-                                                <Progress value={pct} className="h-1.5" />
-
-                                                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                                                    <span>
-                                                        Last updated by {item.updatedBy} on{" "}
-                                                        {formatDate(item.updatedAt)}
-                                                    </span>
-                                                    <Link
-                                                        to={
-                                                            item.area
-                                                                ? `${PATHS.constructionInfo}?area=${encodeURIComponent(item.area)}`
-                                                                : PATHS.constructionInfo
-                                                        }
-                                                        className="font-medium text-primary hover:underline"
-                                                    >
-                                                        View station alignment →
-                                                    </Link>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </section>
-
-                    {/* Right Column: Construction Notices & Station Progress Snapshot */}
-                    <aside className="space-y-6">
-                        <Card className="shadow-sm">
-                            <CardHeader className="border-b pb-3">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="flex items-center gap-2 text-base text-primary">
-                                        <Megaphone className="size-4" />
-                                        Construction Advisories
-                                    </CardTitle>
-                                    <Link
-                                        to={PATHS.announcements}
-                                        className="text-xs font-medium text-primary hover:underline"
-                                    >
-                                        View all →
-                                    </Link>
-                                </div>
-                                <CardDescription>
-                                    Recent construction and pinned notifications shared by Admin.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="divide-y p-0">
-                                {constructionAnnouncements.length === 0 ? (
-                                    <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                                        No construction advisories for this area.
-                                    </p>
-                                ) : (
-                                    constructionAnnouncements.slice(0, 5).map((item) => (
-                                        <div key={item.id} className="space-y-1.5 px-4 py-3.5">
-                                            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                                                {item.pinned && (
-                                                    <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
-                                                        <Pin className="size-3" />
-                                                        Pinned
-                                                    </span>
-                                                )}
-                                                {item.area && (
-                                                    <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-muted-foreground">
-                                                        {item.area}
-                                                    </span>
-                                                )}
-                                                <span className="ml-auto text-muted-foreground">
-                                                    {item.time}
+                <section aria-labelledby="advisories-heading" className="space-y-4 border-t pt-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h2 id="advisories-heading" className="text-lg font-semibold text-primary">Area advisories</h2>
+                        <Link to={PATHS.announcements} className="text-sm font-medium text-primary hover:underline">All announcements →</Link>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{areaFilter === "all" ? "Recent construction notices and pinned announcements." : `Notices for ${areaFilter}.`}</p>
+                    {advisories.length === 0 ? (
+                        <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">No advisories listed for this area.</p>
+                    ) : (
+                        <ul className="divide-y overflow-hidden rounded-xl border bg-card">
+                            {advisories.slice(0, 3).map((item) => (
+                                <li key={item.id}>
+                                    <details className="group">
+                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+                                            <span className="min-w-0 space-y-1">
+                                                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                                    {item.pinned && <span className="inline-flex items-center gap-1 text-primary"><Pin className="size-3" aria-hidden />Pinned</span>}
+                                                    {item.area && <span>{item.area}</span>}
+                                                    <span>{item.publishedAt ? formatDate(item.publishedAt) : item.time}</span>
                                                 </span>
-                                            </div>
-                                            <p className="text-sm font-semibold text-foreground">
-                                                {item.title}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">{item.body}</p>
-                                        </div>
-                                    ))
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Corridor Progress by Zone */}
-                        <Card className="shadow-sm">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base text-primary">
-                                    Station Progress by Corridor Zone
-                                </CardTitle>
-                                <CardDescription>
-                                    Average civil works completion across the 5 alignment zones.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-3.5">
-                                {(
-                                    [
-                                        "George Town Core",
-                                        "Gelugor & Jelutong",
-                                        "Bayan Lepas & Airport",
-                                        "Seberang Perai Cross-Channel",
-                                        "South Island & Reclamation",
-                                    ] as const
-                                ).map((zone) => {
-                                    const zoneStations = stations.filter((s) => s.zone === zone);
-                                    const avg =
-                                        zoneStations.length > 0
-                                            ? Math.round(
-                                                  zoneStations.reduce((acc, s) => acc + s.progress, 0) /
-                                                      zoneStations.length,
-                                              )
-                                            : 0;
-                                    return (
-                                        <div key={zone} className="space-y-1">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="font-medium text-foreground">{zone}</span>
-                                                <span className="text-muted-foreground">
-                                                    {zoneStations.length} stn ·{" "}
-                                                    <strong className="text-primary">{avg}%</strong>
-                                                </span>
-                                            </div>
-                                            <Progress value={avg} className="h-1.5" />
-                                        </div>
-                                    );
-                                })}
-                            </CardContent>
-                        </Card>
-                    </aside>
-                </div>
+                                                <span className="block text-sm font-medium">{item.title}</span>
+                                            </span>
+                                            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden />
+                                        </summary>
+                                        <p className="border-t px-4 py-4 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+                                    </details>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
             </div>
         </div>
+    );
+}
+
+/** The summary carries the essentials; the description and publishing details stay on demand. */
+function WorkUpdate({ item }: { item: ConstructionSchedule }) {
+    return (
+        <details className="group overflow-hidden rounded-xl border bg-card transition-colors open:border-primary/30">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:p-5 [&::-webkit-details-marker]:hidden">
+                <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className={statusTone[item.status]}>{statusLabels[item.status]}</Badge>
+                        {item.area && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" aria-hidden />{item.area}</span>}
+                    </span>
+                    <span className="mt-2 block text-sm font-semibold leading-relaxed">{item.title}</span>
+                    <span className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
+                        <Calendar className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                        <span><time dateTime={item.startsAt}>{formatDate(item.startsAt)}</time> – <time dateTime={item.endsAt}>{formatDate(item.endsAt)}</time></span>
+                    </span>
+                </span>
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden />
+            </summary>
+            <div className="space-y-4 border-t p-4 sm:p-5">
+                <p className="text-sm leading-relaxed">{item.description}</p>
+                <dl className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
+                    <div><dt className="font-medium text-foreground">Last updated</dt><dd className="mt-1">{formatDate(item.updatedAt)} · {item.updatedBy}</dd></div>
+                    <div><dt className="font-medium text-foreground">Work reference</dt><dd className="mt-1">{item.id}</dd></div>
+                </dl>
+                <Link
+                    to={item.area ? `${PATHS.constructionInfo}?area=${encodeURIComponent(item.area)}` : PATHS.constructionInfo}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                    Station construction <ArrowUpRight className="size-3.5" aria-hidden />
+                </Link>
+            </div>
+        </details>
     );
 }
