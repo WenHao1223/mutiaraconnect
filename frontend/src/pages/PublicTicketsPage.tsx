@@ -132,13 +132,9 @@ export default function PublicTicketsPage() {
                         Tickets &amp; Feedback
                     </h1>
                     <p className="mt-1 max-w-l text-muted-foreground">
-                        Questions, issue reports or feedback: we're here to listen and help keep Penang's
-                        LRT works running smoothly.
+                        Questions, issue reports or feedback: we're here to listen and help keep
+                        Penang's LRT works running smoothly.
                     </p>
-
-                    <div className="mt-8">
-                        <PublicResolvedTickets tickets={resolved} />
-                    </div>
                 </div>
             </section>
 
@@ -149,7 +145,9 @@ export default function PublicTicketsPage() {
                             key={action.panel}
                             type="button"
                             aria-pressed={panel === action.panel}
-                            onClick={() => setPanel(panel === action.panel ? "tickets" : action.panel)}
+                            onClick={() =>
+                                setPanel(panel === action.panel ? "tickets" : action.panel)
+                            }
                             className={cn(
                                 "group flex items-start gap-3 rounded-xl border p-5 text-left shadow-sm transition duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none",
                                 action.card,
@@ -186,7 +184,10 @@ export default function PublicTicketsPage() {
                                 !user && "mx-auto max-w-3xl",
                             )}
                         >
-                            <CircleCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+                            <CircleCheck
+                                className="mt-0.5 size-5 shrink-0 text-primary"
+                                aria-hidden
+                            />
                             <div className="min-w-0 flex-1">
                                 <p className="font-semibold">Ticket {submitted.id} sent</p>
                                 <p className="mt-0.5 text-sm text-muted-foreground">
@@ -198,7 +199,9 @@ export default function PublicTicketsPage() {
                                 </p>
                                 {submitted.submittedByEmail && (
                                     <Button className="mt-3" size="sm" asChild>
-                                        <Link to={PATHS.profileTickets}>Track it in My Tickets</Link>
+                                        <Link to={PATHS.profileTickets}>
+                                            Track it in My Tickets
+                                        </Link>
                                     </Button>
                                 )}
                             </div>
@@ -248,11 +251,14 @@ export default function PublicTicketsPage() {
                                 </>
                             ) : (
                                 <div className="py-6 text-center">
-                                    <TicketIcon className="mx-auto size-8 text-muted-foreground" aria-hidden />
+                                    <TicketIcon
+                                        className="mx-auto size-8 text-muted-foreground"
+                                        aria-hidden
+                                    />
                                     <p className="mt-2 text-sm font-medium">Track your tickets</p>
                                     <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                                        Sign in to follow the progress of every ticket you have submitted.
-                                        You can still send a ticket without an account.
+                                        Sign in to follow the progress of every ticket you have
+                                        submitted. You can still send a ticket without an account.
                                     </p>
                                     <Button className="mt-4" size="sm" asChild>
                                         <Link to={PATHS.login} state={{ from: PATHS.ticket }}>
@@ -263,6 +269,11 @@ export default function PublicTicketsPage() {
                             )}
                         </div>
                     )}
+                </div>
+
+                {/* Fixed issues sit under the actions, so people act first and see the results below. */}
+                <div className="pt-6">
+                    <PublicResolvedTickets tickets={resolved} />
                 </div>
             </div>
         </div>
