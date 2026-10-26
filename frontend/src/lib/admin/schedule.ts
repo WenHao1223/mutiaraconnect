@@ -64,12 +64,7 @@ export function createScheduleItem(input: NewScheduleInput, actor: string): Cons
 
 export function updateScheduleItem(
     id: string,
-    patch: Partial<
-        Pick<
-            ConstructionSchedule,
-            "status" | "endsAt" | "description" | "stationIds" | "closureIds" | "announcementIds"
-        >
-    >,
+    patch: Partial<NewScheduleInput>,
     actor: string,
 ): void {
     const all = readSchedule();
