@@ -3,6 +3,7 @@ import { compare as compareHash, hash as hashPassword } from "bcryptjs";
 import demoUsersData from "@/data/users.json";
 import { recordAudit } from "@/lib/admin/audit";
 import { readUsers } from "@/lib/admin/users";
+import { createNotification } from "@/lib/notifications";
 import type { AppUser, Gender, MockAccount } from "@/types/user";
 
 // @TODO: Replace with real data from Supabase
@@ -57,8 +58,10 @@ function writeStorage(key: string, value: unknown) {
     try {
         if (value === null) localStorage.removeItem(key);
         else localStorage.setItem(key, JSON.stringify(value));
+        return true;
     } catch {
         /* storage unavailable: data just won't survive a refresh */
+        return false;
     }
 }
 
@@ -70,7 +73,7 @@ const readOverrides = () => readStorage<Record<string, AccountOverride>>(OVERRID
 function saveOverride(email: string, patch: AccountOverride) {
     const key = normalizeEmail(email);
     const all = readOverrides();
-    writeStorage(OVERRIDES_KEY, { ...all, [key]: { ...all[key], ...patch } });
+    return writeStorage(OVERRIDES_KEY, { ...all, [key]: { ...all[key], ...patch } });
 }
 
 /** Strip secrets so they never reach React state, and apply any saved profile edits. */
@@ -202,7 +205,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (!account || !(await passwordMatches(account, currentPassword))) {
                     throw new AuthError("Your current password is incorrect.");
                 }
-                saveOverride(user.email, { passwordHash: await hashPassword(newPassword, BCRYPT_COST) });
+                const saved = saveOverride(user.email, { passwordHash: await hashPassword(newPassword, BCRYPT_COST) });
+                if (!saved) throw new AuthError("Could not save your new password. Please try again.");
+                createNotification({
+                    recipient: user.email,
+                    type: "password_changed",
+                    title: "Your password was changed",
+                    body: "Your account password was changed. If you did not make this change, secure your account and contact support.",
+                    destination: "settings",
+                });
             },
 
             signOut() {
