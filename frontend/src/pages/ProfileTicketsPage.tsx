@@ -74,6 +74,7 @@ function TicketsView({ user }: { user: AppUser }) {
             longitude: values.location.longitude,
             premise: values.premise,
             hasPhoto: values.hasPhoto,
+            photos: values.photos,
         });
         setMyTickets((current) => [ticket, ...current]);
         setSelectedId(ticket.id);

@@ -53,7 +53,10 @@ function writeSubmittedTickets(list: Ticket[]) {
 const ADMIN_UPDATES_KEY = "mutiaraconnect.ticket-updates";
 
 /** The parts of a report its owner can change while it is still "received". */
-export type TicketEdit = Pick<Ticket, "description" | "location" | "latitude" | "longitude" | "hasPhoto">;
+export type TicketEdit = Pick<
+    Ticket,
+    "description" | "location" | "latitude" | "longitude" | "hasPhoto" | "photos"
+>;
 
 interface TicketPatch {
     status: TicketStatus;
@@ -220,6 +223,7 @@ export interface NewTicketInput {
     longitude: number;
     premise?: string;
     hasPhoto?: boolean;
+    photos?: string[];
 }
 
 /** Creates a report owned by the signed-in account and stores it locally. */
@@ -238,6 +242,7 @@ export function submitTicket(input: NewTicketInput): Ticket {
         submittedByEmail: input.email,
         premise: input.premise,
         hasPhoto: input.hasPhoto,
+        photos: input.photos,
         updates: [
             {
                 status: "received",

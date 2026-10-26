@@ -130,8 +130,9 @@ export default function TicketDetail({
             location: values.location.address,
             latitude: values.location.latitude,
             longitude: values.location.longitude,
-            // Edit can only add photos (earlier ones aren't kept), so once attached it stays true.
+            // Edit can only add photos, so once attached it stays true.
             hasPhoto: ticket.hasPhoto || values.hasPhoto,
+            photos: [...(ticket.photos ?? []), ...values.photos],
         });
         setEditingId(undefined);
         toast.success(`Ticket ${ticket.id} updated.`);

@@ -103,6 +103,7 @@ export default function PublicTicketsPage() {
             longitude: values.location.longitude,
             premise: values.premise,
             hasPhoto: values.hasPhoto,
+            photos: values.photos,
         });
         // Anonymous tickets carry no email, so they never show up in the account's list.
         if (ticket.submittedByEmail) setMyTickets((current) => [ticket, ...current]);

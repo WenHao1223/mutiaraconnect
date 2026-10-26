@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { shrinkPhoto } from "@/lib/tickets/photos";
 import { categoryLabels } from "@/lib/tickets/tickets";
 import type { TicketCategory } from "@/types/ticket";
 import type { BusinessProfile } from "@/types/user";
@@ -19,8 +20,10 @@ export interface TicketFormValues {
     description: string;
     location: PickedLocation;
     premise?: string;
-    /** Photos were added. The files themselves aren't kept yet (no backend). */
+    /** Photos were added. */
     hasPhoto: boolean;
+    /** The added photos, shrunk to data URLs (see shrinkPhoto). */
+    photos: string[];
     /** File without linking the account; hides the owner's verified badge. */
     anonymous: boolean;
 }
@@ -91,7 +94,7 @@ export default function TicketForm({
         <form
             noValidate
             className="space-y-4"
-            onSubmit={handleSubmit(({ description }) => {
+            onSubmit={handleSubmit(async ({ description }) => {
                 let valid = true;
                 if (!category) {
                     setCategoryError("Choose a category.");
@@ -124,6 +127,10 @@ export default function TicketForm({
                     location,
                     premise,
                     hasPhoto: photos.length > 0,
+                    // A photo the browser can't read (e.g. some HEIC files) is skipped, not fatal.
+                    photos: (await Promise.allSettled(photos.map(shrinkPhoto))).flatMap((result) =>
+                        result.status === "fulfilled" ? [result.value] : [],
+                    ),
                     anonymous,
                 });
                 if (editing) return;
