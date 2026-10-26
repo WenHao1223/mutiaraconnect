@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Plus, SearchX, Ticket as TicketIcon } from "lucide-react";
 import { toast } from "sonner";
 import TicketDetail from "@/components/tickets/TicketDetail";
@@ -13,6 +13,7 @@ import {
     applyTicketChange,
     getTicketsForUser,
     matchesTicketQuery,
+    normalizeTicketId,
     submitTicket,
 } from "@/lib/tickets/tickets";
 import { PATHS } from "@/routes";
@@ -27,22 +28,27 @@ const subtitles: Partial<Record<AppUser["role"], string>> = {
 /** My Tickets: shared by residents and business premises. Admins manage tickets elsewhere. */
 export default function TicketsPage() {
     const { user } = useAuth();
+    const location = useLocation();
 
-    if (!user) return <Navigate to={PATHS.login} state={{ from: PATHS.profileTickets }} replace />;
+    if (!user) return <Navigate to={PATHS.login} state={{ from: `${location.pathname}${location.search}` }} replace />;
     if (user.role === "admin" || user.role === "super_admin") {
         return <Navigate to={PATHS.admin} replace />;
     }
-    return <TicketsView user={user} />;
+    const requestedId = new URLSearchParams(location.search).get("ticket");
+    // A notification can target a different ticket while this page is already open.
+    // Remount for that navigation to refresh owned tickets and clear stale searches/forms.
+    return <TicketsView key={`${user.email ?? user.name}:${location.key}`} user={user}
+        requestedId={requestedId ? normalizeTicketId(requestedId) : undefined} />;
 }
 
-function TicketsView({ user }: { user: AppUser }) {
+function TicketsView({ user, requestedId }: { user: AppUser; requestedId?: string }) {
     const detailRef = useRef<HTMLDivElement>(null);
 
     const [myTickets, setMyTickets] = useState<Ticket[]>(() => getTicketsForUser(user.email));
-    const [selectedId, setSelectedId] = useState<string | undefined>(() => myTickets[0]?.id);
+    const [selectedId, setSelectedId] = useState<string | undefined>(() => requestedId ?? myTickets[0]?.id);
     const [query, setQuery] = useState("");
     // With no tickets yet, open the form straight away.
-    const [showForm, setShowForm] = useState(() => myTickets.length === 0);
+    const [showForm, setShowForm] = useState(() => myTickets.length === 0 && !requestedId);
 
     const removed = new Set(readRemovedPremiseIds(user.email));
     const premises =
@@ -54,7 +60,9 @@ function TicketsView({ user }: { user: AppUser }) {
 
     // Tracking filters the list in place instead of changing the URL.
     const visible = myTickets.filter((ticket) => matchesTicketQuery(ticket, query));
-    const selected = visible.find((t) => t.id === selectedId) ?? visible[0];
+    // Resolve links only against this account's list, never the public ticket lookup.
+    const requestedUnavailable = Boolean(requestedId && selectedId === requestedId && !myTickets.some((ticket) => ticket.id === requestedId));
+    const selected = requestedUnavailable ? undefined : visible.find((t) => t.id === selectedId) ?? visible[0];
 
     function select(id: string) {
         setSelectedId(id);
@@ -192,8 +200,9 @@ function TicketsView({ user }: { user: AppUser }) {
                         <div className="py-10 text-center">
                             <SearchX className="mx-auto size-8 text-muted-foreground" aria-hidden />
                             <p className="mt-2 text-sm font-medium">
-                                Select a ticket to see its progress.
+                                {requestedUnavailable ? "This ticket is unavailable in your account." : "Select a ticket to see its progress."}
                             </p>
+                            {requestedUnavailable && <p className="mt-2 text-sm text-muted-foreground">It may have been withdrawn or belong to a different account. Select one of your tickets to continue.</p>}
                         </div>
                     )}
                 </div>

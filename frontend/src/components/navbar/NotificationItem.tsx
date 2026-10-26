@@ -16,7 +16,9 @@ const categories = {
 
 function destinationFor(notification: AccountNotification, user: AppUser) {
     switch (notification.destination) {
-        case "tickets": return { path: PATHS.profileTickets, label: "View my tickets" };
+        case "tickets": return notification.referenceId
+            ? { path: `${PATHS.profileTickets}?ticket=${encodeURIComponent(notification.referenceId)}`, label: "View ticket" }
+            : { path: PATHS.profileTickets, label: "View my tickets" };
         case "application": return { path: PATHS.profileBusiness, label: "View applications" };
         case "business": return user.role === "business_premise"
             ? { path: PATHS.businessDashboard, label: "View business dashboard" }
