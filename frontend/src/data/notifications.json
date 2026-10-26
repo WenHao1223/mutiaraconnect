@@ -1,0 +1,289 @@
+[
+    {
+        "id": "NT-SEC-101",
+        "recipient": "resident@example.com",
+        "type": "password_changed",
+        "title": "Your password was changed",
+        "body": "Your account password was changed. If you did not make this change, secure your account and contact support.",
+        "createdAt": "2026-10-17T09:00:00+08:00",
+        "destination": "settings",
+        "example": true
+    },
+    {
+        "id": "NT-BA-102",
+        "recipient": "resident@example.com",
+        "type": "application_rejected",
+        "title": "Business account application rejected",
+        "body": "The SSM registration document is unreadable. Upload a clear copy and submit a new application.",
+        "createdAt": "2026-10-16T10:00:00+08:00",
+        "destination": "application",
+        "referenceId": "BA-DEMO-RESIDENT",
+        "example": true
+    },
+    {
+        "id": "NT-FB-2046-1",
+        "recipient": "resident@example.com",
+        "type": "ticket_submitted",
+        "title": "FB-2046: Ticket submitted",
+        "body": "Komtar: We have received your ticket.",
+        "createdAt": "2026-10-15T18:02:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2046"
+    },
+    {
+        "id": "NT-SR-3-2",
+        "recipient": "business@example.com",
+        "type": "support_declined",
+        "title": "Alternative parking: declined",
+        "body": "The requested parking area is inside the work zone and cannot be used. Contact the support desk to discuss another location.",
+        "createdAt": "2026-10-14T14:00:00+08:00",
+        "destination": "business",
+        "referenceId": "SR-DEMO-3",
+        "premiseId": "BP-KOPITIAM",
+        "example": true
+    },
+    {
+        "id": "NT-BA-101",
+        "recipient": "resident@example.com",
+        "type": "application_submitted",
+        "title": "Business account application received",
+        "body": "Your application for Macallum Community Store has been received and is pending review.",
+        "createdAt": "2026-10-14T09:00:00+08:00",
+        "destination": "application",
+        "referenceId": "BA-DEMO-RESIDENT",
+        "example": true
+    },
+    {
+        "id": "NT-BP-101",
+        "recipient": "business@example.com",
+        "type": "premise_access",
+        "title": "Night road closure near your premise",
+        "body": "Jalan Jelutong is scheduled for nightly 11:00 PM–5:00 AM closures from 1–20 November 2026. The footpath stays open; use the signalised crossing at Jalan Perak. Check Road & Access before arranging deliveries.",
+        "createdAt": "2026-10-14T09:00:00+08:00",
+        "destination": "business",
+        "referenceId": "RC-1047",
+        "premiseId": "BP-KOPITIAM"
+    },
+    {
+        "id": "NT-FB-2041-3",
+        "recipient": "resident@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2041: In progress",
+        "body": "Macallum: Contractor reminded of permitted hours. Monitoring tonight.",
+        "createdAt": "2026-10-13T14:05:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2041"
+    },
+    {
+        "id": "NT-SR-2-2",
+        "recipient": "business@example.com",
+        "type": "support_arranged",
+        "title": "Delivery window: arranged",
+        "body": "The team has coordinated a morning delivery window. Check the Business Dashboard for the confirmed arrangements.",
+        "createdAt": "2026-10-13T14:00:00+08:00",
+        "destination": "business",
+        "referenceId": "SR-DEMO-2",
+        "premiseId": "BP-KOPITIAM",
+        "example": true
+    },
+    {
+        "id": "NT-SR-3-1",
+        "recipient": "business@example.com",
+        "type": "support_submitted",
+        "title": "Alternative parking request received",
+        "body": "Your alternative parking request for Jelutong Hainan Kopitiam is pending review.",
+        "createdAt": "2026-10-13T09:00:00+08:00",
+        "destination": "business",
+        "referenceId": "SR-DEMO-3",
+        "premiseId": "BP-KOPITIAM",
+        "example": true
+    },
+    {
+        "id": "NT-SR-1-2",
+        "recipient": "business@example.com",
+        "type": "support_arranged",
+        "title": "Temporary signage: arranged",
+        "body": "Directional signage will be placed at the alternative entrance. Check the Business Dashboard for the support desk reply.",
+        "createdAt": "2026-10-12T14:00:00+08:00",
+        "destination": "business",
+        "referenceId": "SR-DEMO-1",
+        "premiseId": "BP-KOPITIAM",
+        "example": true
+    },
+    {
+        "id": "NT-FB-2035-2",
+        "recipient": "business@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2035: Under review",
+        "body": "Jelutong: Passed to the traffic management team to look at a temporary loading bay.",
+        "createdAt": "2026-10-12T11:40:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2035"
+    },
+    {
+        "id": "NT-FB-2041-2",
+        "recipient": "resident@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2041: Under review",
+        "body": "Macallum: Forwarded to the site contractor for explanation.",
+        "createdAt": "2026-10-12T09:30:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2041"
+    },
+    {
+        "id": "NT-SR-2-1",
+        "recipient": "business@example.com",
+        "type": "support_submitted",
+        "title": "Delivery window request received",
+        "body": "Your delivery window request for Jelutong Hainan Kopitiam is pending review.",
+        "createdAt": "2026-10-12T09:00:00+08:00",
+        "destination": "business",
+        "referenceId": "SR-DEMO-2",
+        "premiseId": "BP-KOPITIAM",
+        "example": true
+    },
+    {
+        "id": "NT-FB-2041-1",
+        "recipient": "resident@example.com",
+        "type": "ticket_submitted",
+        "title": "FB-2041: Ticket submitted",
+        "body": "Macallum: We have received your ticket.",
+        "createdAt": "2026-10-11T23:12:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2041"
+    },
+    {
+        "id": "NT-SR-1-1",
+        "recipient": "business@example.com",
+        "type": "support_submitted",
+        "title": "Temporary signage request received",
+        "body": "Your temporary signage request for Jelutong Hainan Kopitiam is pending review.",
+        "createdAt": "2026-10-11T09:00:00+08:00",
+        "destination": "business",
+        "referenceId": "SR-DEMO-1",
+        "premiseId": "BP-KOPITIAM",
+        "example": true
+    },
+    {
+        "id": "NT-FB-2033-3",
+        "recipient": "business@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2033: In progress",
+        "body": "Jelutong: Six temporary bays are being marked on the opposite side of the road.",
+        "createdAt": "2026-10-10T09:00:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2033"
+    },
+    {
+        "id": "NT-FB-2038-4",
+        "recipient": "resident@example.com",
+        "type": "ticket_resolved",
+        "title": "FB-2038: Resolved",
+        "body": "Komtar: Barrier moved and the walkway is open again. Thank you for flagging this.",
+        "createdAt": "2026-10-09T17:20:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2038"
+    },
+    {
+        "id": "NT-FB-2035-1",
+        "recipient": "business@example.com",
+        "type": "ticket_submitted",
+        "title": "FB-2035: Ticket submitted",
+        "body": "Jelutong: We have received your ticket.",
+        "createdAt": "2026-10-09T10:25:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2035"
+    },
+    {
+        "id": "NT-FB-2038-3",
+        "recipient": "resident@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2038: In progress",
+        "body": "Komtar: Barrier is being moved back to clear a 1.5 m walkway.",
+        "createdAt": "2026-10-08T13:00:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2038"
+    },
+    {
+        "id": "NT-FB-2038-2",
+        "recipient": "resident@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2038: Under review",
+        "body": "Komtar: Site team will inspect the barrier position.",
+        "createdAt": "2026-10-07T10:15:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2038"
+    },
+    {
+        "id": "NT-FB-2033-2",
+        "recipient": "business@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2033: Under review",
+        "body": "Jelutong: Checking the traffic plan for this section.",
+        "createdAt": "2026-10-06T10:00:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2033"
+    },
+    {
+        "id": "NT-FB-2038-1",
+        "recipient": "resident@example.com",
+        "type": "ticket_submitted",
+        "title": "FB-2038: Ticket submitted",
+        "body": "Komtar: We have received your ticket.",
+        "createdAt": "2026-10-06T08:40:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2038"
+    },
+    {
+        "id": "NT-FB-2033-1",
+        "recipient": "business@example.com",
+        "type": "ticket_submitted",
+        "title": "FB-2033: Ticket submitted",
+        "body": "Jelutong: We have received your ticket.",
+        "createdAt": "2026-10-04T15:10:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2033"
+    },
+    {
+        "id": "NT-FB-2022-3",
+        "recipient": "business@example.com",
+        "type": "ticket_resolved",
+        "title": "FB-2022: Resolved",
+        "body": "Jelutong: Dust screens installed and checked on site. Let us know if it returns.",
+        "createdAt": "2026-09-30T16:45:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2022"
+    },
+    {
+        "id": "NT-FB-2022-2",
+        "recipient": "business@example.com",
+        "type": "ticket_updated",
+        "title": "FB-2022: In progress",
+        "body": "Jelutong: Contractor is wetting the site twice a day and fitting dust screens.",
+        "createdAt": "2026-09-26T11:30:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2022"
+    },
+    {
+        "id": "NT-FB-2022-1",
+        "recipient": "business@example.com",
+        "type": "ticket_submitted",
+        "title": "FB-2022: Ticket submitted",
+        "body": "Jelutong: We have received your ticket.",
+        "createdAt": "2026-09-24T09:05:00+08:00",
+        "destination": "tickets",
+        "referenceId": "FB-2022"
+    },
+    {
+        "id": "NT-BA-103",
+        "recipient": "business@example.com",
+        "type": "application_approved",
+        "title": "Business account application approved",
+        "body": "Your application for Jelutong Hainan Kopitiam has been approved. Your account can now use the Business Dashboard.",
+        "createdAt": "2026-09-23T14:00:00+08:00",
+        "destination": "business",
+        "referenceId": "BA-DEMO-BUSINESS",
+        "premiseId": "BP-KOPITIAM",
+        "example": true
+    }
+]
