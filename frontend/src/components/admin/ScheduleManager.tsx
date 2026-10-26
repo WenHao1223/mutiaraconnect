@@ -321,11 +321,10 @@ export default function ScheduleManager() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                        <p role="status">Showing {filteredItems.length} of {items.length} schedules</p>
-                        {hasFilters && <button type="button" onClick={clearFilters}
-                            className="rounded-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Clear filters</button>}
-                    </div>
+                    {hasFilters && <div className="flex justify-end text-xs">
+                        <button type="button" onClick={clearFilters}
+                            className="rounded-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Clear filters</button>
+                    </div>}
                     {editingHidden && <p className="text-xs text-primary">Editing {editingId}. This schedule is outside the current filters.</p>}
                 </CardHeader>
                 <CardContent ref={listScrollRef} role="region" aria-label="Construction schedule results"

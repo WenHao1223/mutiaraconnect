@@ -58,7 +58,7 @@ export default function Navbar({
                     ))}
                 </nav>
 
-                <div className="ml-auto flex items-center gap-1">
+                <div className="ml-auto flex shrink-0 items-center gap-1">
                     <AnnouncementsBell items={items} />
                     <ProfileMenu user={user} onSignOut={onSignOut} />
                 </div>
