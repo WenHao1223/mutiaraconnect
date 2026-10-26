@@ -7,17 +7,23 @@
         "startsAt": "2026-10-01T08:00:00+08:00",
         "endsAt": "2026-12-15T18:00:00+08:00",
         "status": "ongoing",
+        "stationIds": ["st-komtar"],
+        "closureIds": [],
+        "announcementIds": ["AN-101"],
         "updatedBy": "MRT Corp Corridor Control",
         "updatedAt": "2026-10-16T10:00:00+08:00"
     },
     {
         "id": "CS-302",
         "title": "Bayan Lepas FIZ viaduct segment erection",
-        "description": "Night-time precast segmental box girder launching along Jalan Sultan Azlan Shah serving FIZ North (S07) and FIZ South (S06).",
+        "description": "Night-time precast segmental box girder launching along Jalan Sultan Azlan Shah serving Free Industrial Zone (FIZ) (S06) and FIZ South (S05).",
         "area": "Bayan Lepas",
         "startsAt": "2026-09-15T08:00:00+08:00",
         "endsAt": "2026-11-30T18:00:00+08:00",
         "status": "ongoing",
+        "stationIds": ["st-fiz-south", "st-fiz-north"],
+        "closureIds": ["RC-1058"],
+        "announcementIds": ["AN-102"],
         "updatedBy": "SRS Consortium Engineering",
         "updatedAt": "2026-10-16T15:30:00+08:00"
     },
@@ -29,6 +35,9 @@
         "startsAt": "2026-08-20T08:00:00+08:00",
         "endsAt": "2026-12-20T18:00:00+08:00",
         "status": "ongoing",
+        "stationIds": ["st-pia"],
+        "closureIds": [],
+        "announcementIds": [],
         "updatedBy": "Airport Package Lead",
         "updatedAt": "2026-10-15T11:45:00+08:00"
     },
@@ -40,6 +49,9 @@
         "startsAt": "2026-11-10T07:00:00+08:00",
         "endsAt": "2027-02-28T18:00:00+08:00",
         "status": "upcoming",
+        "stationIds": ["st-east-jelutong", "st-sungai-pinang"],
+        "closureIds": [],
+        "announcementIds": [],
         "updatedBy": "DEMO ADMIN",
         "updatedAt": "2026-10-14T16:20:00+08:00"
     },
@@ -51,6 +63,9 @@
         "startsAt": "2026-11-25T08:00:00+08:00",
         "endsAt": "2027-04-30T18:00:00+08:00",
         "status": "upcoming",
+        "stationIds": ["st-macallum", "st-penang-sentral"],
+        "closureIds": [],
+        "announcementIds": [],
         "updatedBy": "Marine Works Package Team",
         "updatedAt": "2026-10-16T09:00:00+08:00"
     },
@@ -62,6 +77,9 @@
         "startsAt": "2026-08-01T08:00:00+08:00",
         "endsAt": "2026-10-05T18:00:00+08:00",
         "status": "completed",
+        "stationIds": ["st-macallum"],
+        "closureIds": [],
+        "announcementIds": ["AN-105"],
         "updatedBy": "MRT Corp Corridor Control",
         "updatedAt": "2026-10-06T09:10:00+08:00"
     }

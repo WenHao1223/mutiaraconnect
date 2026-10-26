@@ -11,6 +11,16 @@ import type { ConstructionSchedule, ScheduleStatus } from "@/types/schedule";
 const SCHEDULE_KEY = "mutiaraconnect.construction-schedule";
 const seed = scheduleData as ConstructionSchedule[];
 
+/** Supply missing link arrays for older records, without changing the stored or seed data. */
+function normalizeSchedule(item: ConstructionSchedule): ConstructionSchedule {
+    return {
+        ...item,
+        stationIds: [...(item.stationIds ?? [])],
+        closureIds: [...(item.closureIds ?? [])],
+        announcementIds: [...(item.announcementIds ?? [])],
+    };
+}
+
 export const scheduleStatusLabels: Record<ScheduleStatus, string> = {
     ongoing: "Ongoing Works",
     upcoming: "Upcoming",
@@ -23,14 +33,15 @@ export const scheduleStatusTone: Record<ScheduleStatus, string> = {
     completed: tone.success,
 };
 
-/** Schedule items, soonest start first. */
+/** Schedule items, soonest start first, with missing relationship arrays defaulted to empty. */
 export function readSchedule(): ConstructionSchedule[] {
-    return [...readJson<ConstructionSchedule[]>(SCHEDULE_KEY, seed)].sort((a, b) =>
-        a.startsAt.localeCompare(b.startsAt),
-    );
+    return readJson<ConstructionSchedule[]>(SCHEDULE_KEY, seed)
+        .map(normalizeSchedule)
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 
-export interface NewScheduleInput {
+export interface NewScheduleInput
+    extends Pick<ConstructionSchedule, "stationIds" | "closureIds" | "announcementIds"> {
     title: string;
     description: string;
     area: string;
@@ -40,26 +51,36 @@ export interface NewScheduleInput {
 }
 
 export function createScheduleItem(input: NewScheduleInput, actor: string): ConstructionSchedule {
-    const item: ConstructionSchedule = {
+    const item = normalizeSchedule({
         id: newId("CS"),
         ...input,
         updatedBy: actor,
         updatedAt: new Date().toISOString(),
-    };
-    writeJson(SCHEDULE_KEY, [...readJson<ConstructionSchedule[]>(SCHEDULE_KEY, seed), item]);
+    });
+    writeJson(SCHEDULE_KEY, [...readSchedule(), item]);
     recordAudit({ actor, action: "schedule_create", detail: `Added schedule item “${input.title}”.` });
     return item;
 }
 
 export function updateScheduleItem(
     id: string,
-    patch: Partial<Pick<ConstructionSchedule, "status" | "endsAt" | "description">>,
+    patch: Partial<
+        Pick<
+            ConstructionSchedule,
+            "status" | "endsAt" | "description" | "stationIds" | "closureIds" | "announcementIds"
+        >
+    >,
     actor: string,
 ): void {
-    const all = readJson<ConstructionSchedule[]>(SCHEDULE_KEY, seed);
+    const all = readSchedule();
     const next = all.map((item) =>
         item.id === id
-            ? { ...item, ...patch, updatedBy: actor, updatedAt: new Date().toISOString() }
+            ? normalizeSchedule({
+                  ...item,
+                  ...patch,
+                  updatedBy: actor,
+                  updatedAt: new Date().toISOString(),
+              })
             : item,
     );
     writeJson(SCHEDULE_KEY, next);
