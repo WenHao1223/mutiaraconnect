@@ -472,13 +472,6 @@ export default function AnnouncementsPage() {
                                 </div>
                                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Choose a year, then optionally a month and day. Dates use Malaysian time. Filters apply to the list below.</p>
                             </fieldset>
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-                                <p className="text-xs text-muted-foreground">Results update as you choose.</p>
-                                <Button type="button" size="sm" onClick={() => {
-                                    if (filtersRef.current) filtersRef.current.open = false;
-                                    filtersRef.current?.querySelector("summary")?.focus();
-                                }}>View results<ArrowRight className="size-3.5" aria-hidden /></Button>
-                            </div>
                         </div>
                     </details>
                     {activeFilters.length > 0 && (
