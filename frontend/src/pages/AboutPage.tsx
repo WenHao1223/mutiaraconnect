@@ -5,7 +5,6 @@ import {
     ChevronRight,
     HardHat,
     LifeBuoy,
-    MapIcon,
     MessageCircleQuestion,
     TrafficCone,
     type LucideIcon,
@@ -21,12 +20,6 @@ import { PATHS } from "@/routes";
  */
 const features = (): { title: string; description: string; icon: LucideIcon; to: string }[] => [
     {
-        title: "Map",
-        description: "See the Mutiara Line, its stations and the works around you.",
-        icon: MapIcon,
-        to: PATHS.home,
-    },
-    {
         title: "Construction updates",
         description: "Follow each work package, what's happening now and what's next.",
         icon: HardHat,
@@ -34,7 +27,7 @@ const features = (): { title: string; description: string; icon: LucideIcon; to:
     },
     {
         title: "Road & access",
-        description: "Check closures and diversions before you head out.",
+        description: "See closures on the map and get a route around them.",
         icon: TrafficCone,
         to: PATHS.roadAccess,
     },
@@ -62,7 +55,7 @@ export default function AboutPage() {
         <div className="flex-1 bg-background">
             {/* The band uses the GIF's own navy so the animation blends into it edge to edge. */}
             <section className="bg-logo-backdrop">
-                <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pt-6 pb-12 text-center">
+                <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pt-4 pb-8 text-center">
                     {/* Visitors who ask for reduced motion get a still frame instead of the loop. The GIF's grainy
                         edges fade out (oval mask) so it has no hard box against the band. */}
                     <picture>
@@ -72,10 +65,10 @@ export default function AboutPage() {
                             alt="MutiaraConnect logo: a train running along the M"
                             width={640}
                             height={360}
-                            className="w-full max-w-[640px] [mask-image:radial-gradient(ellipse_closest-side,black_85%,transparent)]"
+                            className="w-full max-w-[400px] [mask-image:radial-gradient(ellipse_closest-side,black_85%,transparent)]"
                         />
                     </picture>
-                    <h1 className="-mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:whitespace-nowrap">
+                    <h1 className="-mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl lg:whitespace-nowrap">
                         Keeping Penang moving while the Mutiara LRT is built
                     </h1>
                     <p className="mt-3 max-w-xl text-white/75">
@@ -94,7 +87,7 @@ export default function AboutPage() {
                         screens, down the side on phones. Hovering (or focusing) a stop fills the line in
                         gold up to it, stop by stop, and lifts its card. */}
                     <ul
-                        className="mt-6 flex flex-col gap-3 lg:grid lg:grid-cols-5 lg:gap-4"
+                        className="mt-6 flex flex-col gap-3 lg:grid lg:grid-cols-4 lg:gap-4"
                         onMouseLeave={() => setActive(-1)}
                     >
                         {stops.map((feature, index) => {
