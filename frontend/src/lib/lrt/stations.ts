@@ -18,8 +18,8 @@ export function readStationsByLine(line?: LrtLineSegment | "all"): LrtStation[] 
     const all = readLrtStations();
     if (!line || line === "all") return all;
     if (line === "cross_channel") {
-        // Include Bandar Sri Pinang (S17) as the interchange origin plus Penang Sentral (S20)
-        return all.filter((station) => station.line === "cross_channel" || station.code === "S17");
+        // Include Macallum (S18) as the interchange origin plus Penang Sentral (S20)
+        return all.filter((station) => station.line === "cross_channel" || station.code === "S18");
     }
     return all.filter((station) => station.line === line);
 }

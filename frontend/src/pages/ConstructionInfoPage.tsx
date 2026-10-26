@@ -91,7 +91,7 @@ export default function ConstructionInfoPage() {
     const filteredStations = useMemo(() => {
         return stations.filter((station) => {
             if (lineFilter === "cross_channel") {
-                if (station.line !== "cross_channel" && station.code !== "S17") return false;
+                if (station.line !== "cross_channel" && station.code !== "S18") return false;
             } else if (lineFilter !== "all" && station.line !== lineFilter) {
                 return false;
             }
