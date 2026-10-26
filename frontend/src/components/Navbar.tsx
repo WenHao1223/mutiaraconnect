@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import AnnouncementsBell from "@/components/navbar/AnnouncementsBell";
+import NotificationsBell from "@/components/navbar/NotificationsBell";
 import Brand from "@/components/navbar/Brand";
 import ConstructionMenu from "@/components/navbar/ConstructionMenu";
 import MobileMenu from "@/components/navbar/MobileMenu";
@@ -60,6 +61,7 @@ export default function Navbar({
 
                 <div className="ml-auto flex shrink-0 items-center gap-1">
                     <AnnouncementsBell items={items} />
+                    {user && <NotificationsBell key={user.email ?? user.ic ?? user.name} user={user} />}
                     <ProfileMenu user={user} onSignOut={onSignOut} />
                 </div>
             </div>

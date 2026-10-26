@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CircleUser, LayoutDashboard, LogIn, LogOut, Settings, ShieldCheck, Store, Ticket, UserPlus, type LucideIcon } from "lucide-react";
+import { Bell, CircleUser, LayoutDashboard, LogIn, LogOut, Settings, ShieldCheck, Store, Ticket, UserPlus, type LucideIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,11 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
                             </Tooltip>
                         </div>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link to={PATHS.profileNotifications}>
+                                <Bell className="size-4" /> My Notifications
+                            </Link>
+                        </DropdownMenuItem>
                         {user.role !== "resident" && <DropdownMenuItem asChild>
                             <Link to={dashboardPathFor(user.role)}>
                                 <DashboardIcon className="size-4" /> {dashboardLabels[user.role]}

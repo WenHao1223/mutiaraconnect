@@ -18,6 +18,7 @@ import ConstructionInfoPage from "@/pages/ConstructionInfoPage";
 import ConstructionUpdatesPage from "@/pages/ConstructionUpdatesPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
 import TicketsPage from "@/pages/ProfileTicketsPage";
+import ProfileNotificationsPage from "@/pages/ProfileNotificationsPage";
 
 /** Every URL in the app. Use these instead of typing path strings anywhere else. */
 export const PATHS = {
@@ -36,6 +37,7 @@ export const PATHS = {
     profile: "/profile",
     profileSettings: "/profile/settings",
     profileTickets: "/profile/tickets",
+    profileNotifications: "/profile/notifications",
     profileBusiness: "/profile/business",
     businessDashboard: "/business/dashboard",
     admin: "/admin",
@@ -79,6 +81,7 @@ const pages: PageRoute[] = [
     ) },
     { path: PATHS.profileSettings, label: "Account Settings", element: <ProfileSettingsPage /> },
     { path: PATHS.profileTickets, label: "My Tickets", element: <TicketsPage /> },
+    { path: PATHS.profileNotifications, label: "My Notifications", element: <ProfileNotificationsPage /> },
     { path: PATHS.profileBusiness, label: "Business Applications", element: <BusinessApplicationPage /> },
     { path: PATHS.businessDashboard, label: "Business Dashboard", element: (
         <RequireRole allow={["business_premise"]}>
