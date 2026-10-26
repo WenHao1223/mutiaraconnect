@@ -18,6 +18,7 @@ import { formatDistance } from "@/lib/maps/geo";
 import { googleMapsRouteUrl, type Coordinates } from "@/lib/maps/maps";
 import { closureColor, countdown, distanceToClosure, headline, timeStatus } from "@/lib/road/closureDisplay";
 import { ORS_API_KEY, type PlannedRoute } from "@/lib/road/routing";
+import { tone } from "@/lib/tones";
 import type { RoadClosure } from "@/types/road-closure";
 import type { ConstructionSchedule } from "@/types/schedule";
 import type { BusinessProfile } from "@/types/user";
@@ -83,7 +84,7 @@ export default function ShopDetail({
                     <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                     {shop.address || "Pinned on the map"}
                 </p>
-                <span className="mt-2 inline-block rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-green-800 dark:text-green-300">
+                <span className={`mt-2 inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${tone.success}`}>
                     Still open for business
                 </span>
             </div>

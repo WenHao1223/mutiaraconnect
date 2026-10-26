@@ -1,5 +1,6 @@
 import { distanceInKm } from "@/lib/maps/geo";
 import type { Coordinates } from "@/lib/maps/maps";
+import { tone } from "@/lib/tones";
 import type { ClosureHours, RoadClosure } from "@/types/road-closure";
 
 /*
@@ -18,12 +19,12 @@ export const TIME_LABEL: Record<TimeState, string> = {
     ended: "Reopened",
 };
 
-/** Badge colours for each time state, used by the admin closure list. */
+/** Badge colours for each time state, used by the admin closure list. Shared tones, like every badge. */
 export const TIME_TONE: Record<TimeState, string> = {
-    now: "border-destructive/30 bg-destructive/10 text-destructive",
-    later: "border-info/30 bg-info/10 text-sky-800 dark:text-sky-300",
-    upcoming: "border-info/30 bg-info/10 text-sky-800 dark:text-sky-300",
-    ended: "border-transparent bg-muted text-muted-foreground",
+    now: tone.danger,
+    later: tone.info,
+    upcoming: tone.info,
+    ended: tone.neutral,
 };
 
 export const EXTENT_LABEL = { full: "Fully closed", partial: "Partially closed" } as const;

@@ -23,6 +23,7 @@ import {
     timeStatus,
 } from "@/lib/road/closureDisplay";
 import { planRoute, type PlannedRoute } from "@/lib/road/routing";
+import { tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { RoadClosure } from "@/types/road-closure";
 
@@ -284,7 +285,7 @@ function CommunityMapPage() {
                                                     </span>
                                                     <span className="mt-1.5 flex flex-wrap gap-1">
                                                         {near.length === 0 ? (
-                                                            <span className="rounded bg-success/10 px-1.5 py-0.5 text-[11px] font-medium text-green-800 dark:text-green-300">
+                                                            <span className={cn("rounded border px-1.5 py-0.5 text-[11px] font-medium", tone.success)}>
                                                                 No closures nearby
                                                             </span>
                                                         ) : (
