@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RequireRole from "@/components/auth/RequireRole";
+import HomePage from "@/pages/HomePage";
 import MapPage from "@/pages/MapPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -55,14 +56,15 @@ interface PageRoute {
  * Order below is the order shown in the navbar.
  */
 const pages: PageRoute[] = [
-    // Road closures and local businesses share this one map page.
-    { path: PATHS.home, label: "Map", element: <MapPage />, nav: "main" },
+    // Off the navbar: the logo leads home.
+    { path: PATHS.home, label: "Home", element: <HomePage /> },
 
     { path: PATHS.constructionInfo, label: "Stations & Alignment", element: <ConstructionInfoPage />, nav: "construction" },
     { path: PATHS.constructionUpdates, label: "Construction Updates", element: <ConstructionUpdatesPage />, nav: "construction" },
     { path: PATHS.announcements, label: "Announcements", element: <AnnouncementsPage />, nav: "construction" },
 
-    { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
+    // Road closures and local businesses share this one map page.
+    { path: PATHS.roadAccess, label: "Road & Access", element: <MapPage />, nav: "main" },
     { path: PATHS.ticket, label: "Support", element: <PublicTicketsPage />, nav: "main" },
     { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <FaqPage />, nav: "main" },

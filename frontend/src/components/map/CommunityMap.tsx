@@ -30,6 +30,8 @@ interface CommunityMapProps {
     origin?: Coordinates;
     focus?: MapFocus;
     onMapClick?: () => void;
+    /** "cooperative" when the map sits inside a scrolling page, so scrolling moves the page. */
+    gestureHandling?: "greedy" | "cooperative";
 }
 
 /**
@@ -49,6 +51,7 @@ export default function CommunityMap({
     origin,
     focus,
     onMapClick,
+    gestureHandling = "greedy",
 }: CommunityMapProps) {
     return (
         <Map
@@ -56,7 +59,7 @@ export default function CommunityMap({
             mapId={MAP_ID}
             defaultCenter={PENANG_CENTER}
             defaultZoom={13}
-            gestureHandling="greedy"
+            gestureHandling={gestureHandling}
             mapTypeControl={false}
             streetViewControl={false}
             fullscreenControl={false}

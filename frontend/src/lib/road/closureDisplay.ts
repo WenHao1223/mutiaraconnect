@@ -29,7 +29,12 @@ export const TIME_TONE: Record<TimeState, string> = {
 export const EXTENT_LABEL = { full: "Fully closed", partial: "Partially closed" } as const;
 
 /** Map line colours: red/orange while blocked, faded blue while not blocked yet, harbour blue for a planned route. */
-export const LINE_COLOR = { full: "#dc2626", partial: "#f97316", notYet: "#0284c7", route: "#0b4f6c" } as const;
+export const LINE_COLOR = {
+    full: "#dc2626",
+    partial: "#f97316",
+    notYet: "#0284c7",
+    route: "#0b4f6c",
+} as const;
 
 const DAY_MS = 86_400_000;
 
@@ -75,7 +80,10 @@ export const extentOf = (closure: RoadClosure) => closure.extent ?? "full";
  * "Jalan Penang (near Komtar, night only)". Night work adds "night only"; other set hours add "set hours".
  */
 export function closureTitle(road: string, detail: string, hours?: ClosureHours): string {
-    const qualifiers = [detail.trim(), hours ? (isNightWork(hours) ? "night only" : "set hours") : ""].filter(Boolean);
+    const qualifiers = [
+        detail.trim(),
+        hours ? (isNightWork(hours) ? "night only" : "set hours") : "",
+    ].filter(Boolean);
     return qualifiers.length > 0 ? `${road.trim()} (${qualifiers.join(", ")})` : road.trim();
 }
 
@@ -102,7 +110,8 @@ export function headline(closure: RoadClosure, now = new Date()): string {
     const extent = EXTENT_LABEL[extentOf(closure)];
     const { state } = timeStatus(closure, now);
     if (state === "now") return `${extent} now`;
-    if (state === "later" && closure.hours) return `${extent} from ${formatTime(closure.hours.from)}`;
+    if (state === "later" && closure.hours)
+        return `${extent} from ${formatTime(closure.hours.from)}`;
     if (state === "upcoming") return `${extent} from ${shortDate(closure.startAt)}`;
     return `Reopened ${shortDate(closure.endAt)}`;
 }
@@ -120,13 +129,18 @@ export function countdown(closure: RoadClosure, now = new Date()): string | unde
     return days === 1 ? "Last day" : `${days} days left`;
 }
 
+/** Every point of a closure's drawn road, or its pin if it has none. */
+export const closurePoints = (closure: RoadClosure): Coordinates[] =>
+    closure.path && closure.path.length > 0 ? closure.path : [closure];
+
 /** Distance from a point to the nearest part of the closed road (its drawn path, or its pin). */
 export function distanceToClosure(point: Coordinates, closure: RoadClosure): number {
-    const nodes = closure.path && closure.path.length > 0 ? closure.path : [closure];
-    return Math.min(...nodes.map((node) => distanceInKm(point, node)));
+    return Math.min(...closurePoints(closure).map((node) => distanceInKm(point, node)));
 }
 
 /** Colour for the closure's line and card accent: red/orange when blocked now, blue otherwise. */
 export function closureColor(closure: RoadClosure, now = new Date()): string {
-    return timeStatus(closure, now).state === "now" ? LINE_COLOR[extentOf(closure)] : LINE_COLOR.notYet;
+    return timeStatus(closure, now).state === "now"
+        ? LINE_COLOR[extentOf(closure)]
+        : LINE_COLOR.notYet;
 }

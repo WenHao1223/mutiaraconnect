@@ -20,24 +20,15 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { readAnnouncements, subscribeAnnouncements } from "@/lib/admin/announcements";
-import { readSchedule } from "@/lib/admin/schedule";
+import {
+    readSchedule,
+    scheduleStatusLabels as statusLabels,
+    scheduleStatusTone as statusTone,
+} from "@/lib/admin/schedule";
 import { readLrtStations } from "@/lib/lrt/stations";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { ConstructionSchedule, ScheduleStatus } from "@/types/schedule";
-import { tone } from "@/lib/tones";
-
-const statusLabels: Record<ScheduleStatus, string> = {
-    ongoing: "Ongoing Works",
-    upcoming: "Upcoming",
-    completed: "Completed",
-};
-
-const statusTone: Record<ScheduleStatus, string> = {
-    upcoming: tone.info,
-    ongoing: tone.warning,
-    completed: tone.success,
-};
 
 function computeTimelineProgress(item: ConstructionSchedule): number {
     if (item.status === "completed") return 100;

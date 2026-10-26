@@ -1,6 +1,7 @@
 import scheduleData from "@/data/construction-schedule.json";
 import { recordAudit } from "@/lib/admin/audit";
 import { newId, readJson, writeJson } from "@/lib/admin/store";
+import { tone } from "@/lib/tones";
 import type { ConstructionSchedule, ScheduleStatus } from "@/types/schedule";
 
 /**
@@ -9,6 +10,18 @@ import type { ConstructionSchedule, ScheduleStatus } from "@/types/schedule";
  */
 const SCHEDULE_KEY = "mutiaraconnect.construction-schedule";
 const seed = scheduleData as ConstructionSchedule[];
+
+export const scheduleStatusLabels: Record<ScheduleStatus, string> = {
+    ongoing: "Ongoing Works",
+    upcoming: "Upcoming",
+    completed: "Completed",
+};
+
+export const scheduleStatusTone: Record<ScheduleStatus, string> = {
+    upcoming: tone.info,
+    ongoing: tone.warning,
+    completed: tone.success,
+};
 
 /** Schedule items, soonest start first. */
 export function readSchedule(): ConstructionSchedule[] {
