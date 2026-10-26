@@ -1,13 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { TrainFront } from "lucide-react";
+import StationDetailsDialog from "@/components/construction/StationDetailsDialog";
 import lrtPhoto from "@/assets/penang-lrt.png";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { scheduleStatusLabels, scheduleStatusTone } from "@/lib/admin/schedule";
 import { readLrtStations, readStationsByLine } from "@/lib/lrt/stations";
 import { cn } from "@/lib/utils";
-import { PATHS } from "@/routes";
 import type { LrtStation, StationConstructionStatus } from "@/types/lrt";
 
 /** The diagram is drawn in a 1000 x 450 box that scales to its container. */
@@ -73,7 +71,7 @@ const statuses: StationConstructionStatus[] = ["upcoming", "ongoing", "completed
  * The Mutiara Line as a transit diagram: every station on one route, in its construction status
  * colour. When it scrolls into view the line draws from the first station to the last, each
  * station appears as the line reaches it, then a train runs the route. Hovering a station shows
- * its progress; clicking opens it on the Stations & Alignment page. Everything is laid out from
+ * its progress; clicking opens a summary anchored to that station. Everything is laid out from
  * the station list, and holds still for people who ask for reduced motion.
  */
 export default function LrtRouteDiagram() {
@@ -90,7 +88,6 @@ export default function LrtRouteDiagram() {
     const [spur, setSpur] = useState<{ from: Stop; stop: Stop }>();
     const [shown, setShown] = useState(reduced);
     const [running, setRunning] = useState(false);
-
     // Place the stations evenly along the line, with each name on the side facing away from it.
     // The cross-channel station hangs off the station it branches from, towards the inside.
     useLayoutEffect(() => {
@@ -156,47 +153,42 @@ export default function LrtRouteDiagram() {
     });
 
     const renderStop = ({ station, x, y, side, along }: Stop) => (
-        <Tooltip key={station.id}>
-            <TooltipTrigger asChild>
-                <Link
-                    to={`${PATHS.constructionInfo}?station=${station.code}`}
-                    aria-label={`${station.code} ${station.name}, ${scheduleStatusLabels[station.status]}, ${station.progress}% done`}
+        <StationDetailsDialog
+            key={station.id}
+            station={station}
+            side={side === "bottom" ? "top" : "bottom"}
+        >
+            <button
+                type="button"
+                aria-label={`${station.code} ${station.name}, ${scheduleStatusLabels[station.status]}, ${station.progress}% done`}
+                className={cn(
+                    "group absolute z-10 cursor-pointer -translate-x-1/2 -translate-y-1/2 transition duration-300 focus-visible:outline-none motion-reduce:transition-none",
+                    shown ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                )}
+                style={{
+                    left: `${(x / VIEW_W) * 100}%`,
+                    top: `${(y / VIEW_H) * 100}%`,
+                    ...delay(along),
+                }}
+            >
+                <span
                     className={cn(
-                        "group absolute z-10 -translate-x-1/2 -translate-y-1/2 transition duration-300 focus-visible:outline-none motion-reduce:transition-none",
-                        shown ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                        "grid size-9 place-items-center rounded-full border-4 bg-card text-[11px] font-bold text-foreground transition duration-200 group-hover:scale-110 group-data-[state=open]:ring-2 group-data-[state=open]:ring-primary/40 group-data-[state=open]:ring-offset-2 group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-background motion-reduce:transition-none",
+                        ring[station.status],
                     )}
-                    style={{
-                        left: `${(x / VIEW_W) * 100}%`,
-                        top: `${(y / VIEW_H) * 100}%`,
-                        ...delay(along),
-                    }}
                 >
-                    <span
-                        className={cn(
-                            "grid size-9 place-items-center rounded-full border-4 bg-card text-[11px] font-bold text-foreground transition duration-200 group-hover:scale-110 group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-background motion-reduce:transition-none",
-                            ring[station.status],
-                        )}
-                    >
-                        {station.code}
-                    </span>
-                    <span
-                        className={cn(
-                            "absolute w-28 text-xs leading-tight font-semibold text-foreground",
-                            labelPosition[side],
-                        )}
-                    >
-                        {station.name}
-                    </span>
-                </Link>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-56 space-y-0.5">
-                <p className="font-semibold">{station.name}</p>
-                <p>
-                    {scheduleStatusLabels[station.status]} · {station.progress}%
-                </p>
-                <p className="opacity-80">{station.currentPhase}</p>
-            </TooltipContent>
-        </Tooltip>
+                    {station.code}
+                </span>
+                <span
+                    className={cn(
+                        "absolute w-28 text-xs leading-tight font-semibold text-foreground",
+                        labelPosition[side],
+                    )}
+                >
+                    {station.name}
+                </span>
+            </button>
+        </StationDetailsDialog>
     );
 
     return (
@@ -315,6 +307,7 @@ export default function LrtRouteDiagram() {
                     {spur && renderStop(spur.stop)}
                 </div>
             </div>
+
         </div>
     );
 }
@@ -322,25 +315,27 @@ export default function LrtRouteDiagram() {
 /** One station on the narrow-screen list: its code ring, name, and progress written out. */
 function StationRow({ station }: { station: LrtStation }) {
     return (
-        <Link
-            to={`${PATHS.constructionInfo}?station=${station.code}`}
-            className="group flex items-center gap-3 rounded-md py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-            <span
-                className={cn(
-                    "relative z-10 grid size-9 shrink-0 place-items-center rounded-full border-4 bg-card text-[11px] font-bold text-foreground transition-colors duration-200 motion-reduce:transition-none",
-                    ring[station.status],
-                )}
+        <StationDetailsDialog station={station}>
+            <button
+                type="button"
+                className="group flex w-full cursor-pointer items-center gap-3 rounded-md py-1.5 text-left data-[state=open]:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-                {station.code}
-            </span>
-            <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold">{station.name}</span>
-                <span className="block text-xs text-muted-foreground">
-                    {scheduleStatusLabels[station.status]} · {station.progress}%
+                <span
+                    className={cn(
+                        "relative z-10 grid size-9 shrink-0 place-items-center rounded-full border-4 bg-card text-[11px] font-bold text-foreground transition-colors duration-200 motion-reduce:transition-none",
+                        ring[station.status],
+                    )}
+                >
+                    {station.code}
                 </span>
-            </span>
-        </Link>
+                <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">{station.name}</span>
+                    <span className="block text-xs text-muted-foreground">
+                        {scheduleStatusLabels[station.status]} · {station.progress}%
+                    </span>
+                </span>
+            </button>
+        </StationDetailsDialog>
     );
 }
 
