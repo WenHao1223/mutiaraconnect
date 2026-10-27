@@ -1,10 +1,10 @@
 import type { ReactElement } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RequireRole from "@/components/auth/RequireRole";
+import HomePage from "@/pages/HomePage";
 import MapPage from "@/pages/MapPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFoundPage from "@/pages/NotFoundPage";
-import Placeholder from "@/pages/Placeholder";
 import ProfileSettingsPage from "@/pages/auth/ProfileSettingsPage";
 import RegisterPage from "@/pages/RegisterPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
@@ -18,6 +18,7 @@ import ConstructionInfoPage from "@/pages/ConstructionInfoPage";
 import ConstructionUpdatesPage from "@/pages/ConstructionUpdatesPage";
 import PublicTicketsPage from "@/pages/PublicTicketsPage";
 import TicketsPage from "@/pages/ProfileTicketsPage";
+import ProfileNotificationsPage from "@/pages/ProfileNotificationsPage";
 
 /** Every URL in the app. Use these instead of typing path strings anywhere else. */
 export const PATHS = {
@@ -36,6 +37,7 @@ export const PATHS = {
     profile: "/profile",
     profileSettings: "/profile/settings",
     profileTickets: "/profile/tickets",
+    profileNotifications: "/profile/notifications",
     profileBusiness: "/profile/business",
     businessDashboard: "/business/dashboard",
     admin: "/admin",
@@ -55,14 +57,15 @@ interface PageRoute {
  * Order below is the order shown in the navbar.
  */
 const pages: PageRoute[] = [
-    // Road closures and local businesses share this one map page.
-    { path: PATHS.home, label: "Map", element: <MapPage />, nav: "main" },
+    // Off the navbar: the logo leads home.
+    { path: PATHS.home, label: "Home", element: <HomePage /> },
 
     { path: PATHS.constructionInfo, label: "Stations & Alignment", element: <ConstructionInfoPage />, nav: "construction" },
     { path: PATHS.constructionUpdates, label: "Construction Updates", element: <ConstructionUpdatesPage />, nav: "construction" },
     { path: PATHS.announcements, label: "Announcements", element: <AnnouncementsPage />, nav: "construction" },
 
-    { path: PATHS.roadAccess, label: "Road & Access", element: <Placeholder title="Road & Access" />, nav: "main" },
+    // Road closures and local businesses share this one map page.
+    { path: PATHS.roadAccess, label: "Road & Access", element: <MapPage />, nav: "main" },
     { path: PATHS.ticket, label: "Support", element: <PublicTicketsPage />, nav: "main" },
     { path: PATHS.business, label: "Local Businesses", element: <BusinessNoticesPage />, nav: "main" },
     { path: PATHS.faqs, label: "FAQs", element: <FaqPage />, nav: "main" },
@@ -71,13 +74,14 @@ const pages: PageRoute[] = [
     { path: PATHS.login, label: "Sign in", element: <LoginPage /> },
     { path: PATHS.register, label: "Register", element: <RegisterPage /> },
 
-    { path: PATHS.profile, label: "My Dashboard", element: (
+    { path: PATHS.profile, label: "Profile", element: (
         <RequireRole allow={["resident"]}>
-            <Placeholder title="My Dashboard" />
+            <Navigate to={PATHS.profileTickets} replace />
         </RequireRole>
     ) },
     { path: PATHS.profileSettings, label: "Account Settings", element: <ProfileSettingsPage /> },
     { path: PATHS.profileTickets, label: "My Tickets", element: <TicketsPage /> },
+    { path: PATHS.profileNotifications, label: "My Notifications", element: <ProfileNotificationsPage /> },
     { path: PATHS.profileBusiness, label: "Business Applications", element: <BusinessApplicationPage /> },
     { path: PATHS.businessDashboard, label: "Business Dashboard", element: (
         <RequireRole allow={["business_premise"]}>

@@ -1,5 +1,5 @@
-import { useReducer, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { AlertTriangle, BadgeCheck, Clock, ExternalLink, LifeBuoy, MapPin, MessageSquarePlus, Navigation, Store, Ticket as TicketIcon } from "lucide-react";
 import SummaryCard from "@/components/admin/SummaryCard";
@@ -20,19 +20,31 @@ import { supportRequestsFor, supportTypeLabels } from "@/lib/business/support";
 import { AFFECTED_RADIUS_KM, isWithinRadius } from "@/lib/maps/geo";
 import { formatDate, formatDateTime, getTicketsForUser, isOpen } from "@/lib/tickets/tickets";
 import { PATHS } from "@/routes";
+import type { AppUser } from "@/types/user";
 
 /** Business Dashboard: home for business premise accounts (route is guarded by RequireRole). */
 export default function BusinessDashboardPage() {
     const { user } = useAuth();
+    const location = useLocation();
+    if (!user) return null;
+    const requestId = new URLSearchParams(location.search).get("request") ?? undefined;
+    // Refresh replies and open the request even when a notification targets the current page.
+    return <BusinessDashboard key={`${user.email ?? user.ic ?? user.name}:${location.key}`} user={user} requestId={requestId} />;
+}
+
+function BusinessDashboard({ user, requestId }: { user: AppUser; requestId?: string }) {
+    const requestsRef = useRef<HTMLDivElement>(null);
     const [selectedId, setSelectedId] = useState<string>();
     // Tickets are read fresh each render; bump this after the owner edits one so it re-reads.
     const [, refreshTickets] = useReducer((n: number) => n + 1, 0);
-    const owner = user ? user.email ?? user.ic ?? user.name : "";
+    const owner = user.email ?? user.ic ?? user.name;
     const [requests, setRequests] = useState(() => supportRequestsFor(owner));
     const [requesting, setRequesting] = useState(false);
-    const [tab, setTab] = useState<"tickets" | "requests">("tickets");
+    const [tab, setTab] = useState<"tickets" | "requests">(requestId ? "requests" : "tickets");
 
-    if (!user) return null;
+    useEffect(() => {
+        if (requestId) requestsRef.current?.scrollIntoView({ block: "start" });
+    }, [requestId]);
 
     const premises = premisesFor(owner, user.businesses);
     const origins = premises.map(({ name, latitude, longitude }) => ({ name, latitude, longitude }));
@@ -109,7 +121,7 @@ export default function BusinessDashboardPage() {
                             </CardFooter>
                         </Card>
 
-                        <Card>
+                        <Card ref={requestsRef} className="scroll-mt-20">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg">
                                     <TicketIcon className="size-4" /> Your tickets &amp; requests
@@ -165,7 +177,7 @@ export default function BusinessDashboardPage() {
                                                 No support requests yet. Use Request support on the right.
                                             </p>
                                         ) : (
-                                            <Accordion type="single" collapsible>
+                                            <Accordion type="single" collapsible defaultValue={requestId}>
                                                 {requests.map((request) => (
                                                     <AccordionItem key={request.id} value={request.id}>
                                                         <AccordionTrigger className="gap-3">

@@ -19,8 +19,9 @@ import {
     toggleAnnouncementPin,
 } from "@/lib/admin/announcements";
 import { createAccessInfo, readClosures } from "@/lib/admin/closures";
-import { readAllPremises } from "@/lib/admin/users";
+import { readAllPremises, readPremiseOwners } from "@/lib/admin/users";
 import { useAuth } from "@/lib/auth/auth";
+import { createNotification } from "@/lib/notifications";
 import { getStationAreas } from "@/lib/lrt/stations";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
@@ -130,9 +131,9 @@ export default function NotificationsManager() {
         }
     }
 
-    function choosePremise(name: string) {
-        const premise = premises.find((item) => item.name === name);
-        setNotice((current) => ({ ...current, business: name }));
+    function choosePremise(id: string) {
+        const premise = premises.find((item) => item.id === id);
+        setNotice((current) => ({ ...current, business: id }));
         if (premise) {
             setNoticeLocation({
                 latitude: premise.latitude,
@@ -144,12 +145,13 @@ export default function NotificationsManager() {
 
     function sendNotice(event: FormEvent) {
         event.preventDefault();
-        if (!notice.business.trim() || !notice.affected.trim() || !noticeLocation) {
+        const premise = premises.find((item) => item.id === notice.business);
+        if (!premise || !notice.affected.trim() || !noticeLocation) {
             toast.error("Choose a business, describe the info and pin a location.");
             return;
         }
         const now = new Date().toISOString();
-        createAccessInfo(
+        const accessInfo = createAccessInfo(
             {
                 title: notice.affected.trim(),
                 area: notice.area.trim(),
@@ -161,10 +163,22 @@ export default function NotificationsManager() {
             },
             actor,
         );
+        const owners = readPremiseOwners(premise.id);
+        for (const recipient of owners) {
+            createNotification({
+                recipient,
+                type: "premise_access",
+                title: `Access update: ${premise.name}`,
+                body: [notice.affected.trim(), notice.alternative.trim(), notice.until ? `Until ${notice.until}.` : ""].filter(Boolean).join(" "),
+                destination: "business",
+                referenceId: accessInfo.id,
+                premiseId: premise.id,
+            });
+        }
         setNotice({ business: "", area: "", affected: "", alternative: "", until: "" });
         setNoticeLocation(null);
         setNotices(readClosures().filter((closure) => closure.kind === "access"));
-        toast.success("Info shared with nearby business premises.");
+        toast.success(owners.length ? "Access info published and the premise owner notified." : "Access info published. This premise has no linked account to notify.");
     }
 
     return (
@@ -177,7 +191,7 @@ export default function NotificationsManager() {
                                 <BellRing className="size-4 text-primary" /> Publish & Share Public Announcement
                             </CardTitle>
                             <CardDescription>
-                                Broadcasts immediately to the navbar notification bell and public announcements centre.
+                                Publishes immediately to the public announcements feed and navbar megaphone.
                             </CardDescription>
                         </div>
                         <Button asChild variant="outline" size="sm">
@@ -372,7 +386,7 @@ export default function NotificationsManager() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {premises.map((premise) => (
-                                        <SelectItem key={premise.id} value={premise.name}>
+                                        <SelectItem key={premise.id} value={premise.id}>
                                             {premise.name}
                                         </SelectItem>
                                     ))}

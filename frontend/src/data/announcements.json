@@ -13,7 +13,7 @@
     {
         "id": "AN-102",
         "title": "Night Viaduct Segment Launching at Bayan Lepas FIZ",
-        "body": "Precast box girder segment launching using overhead gantry cranes will take place along Jalan Sultan Azlan Shah between FIZ North (S07) and Jalan Tengah (S08) from 11:00 PM to 5:00 AM.",
+        "body": "Precast box girder segment launching using overhead gantry cranes will take place along Jalan Sultan Azlan Shah between Free Industrial Zone (FIZ) (S06) and Jalan Tengah (S07) from 11:00 PM to 5:00 AM.",
         "time": "5 hours ago",
         "type": "construction",
         "area": "Bayan Lepas",
@@ -24,7 +24,7 @@
     {
         "id": "AN-103",
         "title": "Geotechnical & Marine Barge Survey in Penang Strait",
-        "body": "Marine borehole investigation barges are operating along the Cross-Channel Link alignment between Bandar Sri Pinang (S17) and Penang Sentral (S20). Ferry operations remain unaffected.",
+        "body": "Marine borehole investigation barges are operating along the Cross-Channel Link alignment between Macallum (S18) and Penang Sentral (S20). Ferry operations remain unaffected.",
         "time": "Yesterday",
         "type": "construction",
         "area": "Butterworth",
@@ -44,6 +44,116 @@
         "createdBy": "Community Liaison Unit"
     },
     {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
+        "id": "AN-105",
+        "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
+        "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",
+        "time": "3 days ago",
+        "type": "construction",
+        "area": "Macallum",
+        "pinned": false,
+        "publishedAt": "2026-10-14T14:20:00+08:00",
+        "createdBy": "MRT Corp Corridor Control"
+    },
+        {
         "id": "AN-105",
         "title": "Utility Relocation Completed Ahead of Schedule at Macallum",
         "body": "High-voltage cable and water main diversion works along Gat Lebuh Macallum (Station S18) have been completed. Road surface reinstatement and permanent line markings are now open to traffic.",

@@ -36,7 +36,7 @@ const ADMIN_TABS = [
     { value: "tickets", label: "Tickets", icon: Ticket, superAdminOnly: false },
     { value: "closures", label: "Road closures", icon: TrafficCone, superAdminOnly: false },
     { value: "schedule", label: "Construction schedule", icon: CalendarClock, superAdminOnly: false },
-    { value: "notifications", label: "Notifications", icon: BellRing, superAdminOnly: false },
+    { value: "notifications", label: "Announcements & access", icon: BellRing, superAdminOnly: false },
     { value: "businesses", label: "Business", icon: Store, superAdminOnly: false },
     { value: "users", label: "Users", icon: Users, superAdminOnly: true },
     { value: "audit", label: "Audit log", icon: ScrollText, superAdminOnly: true },
@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
                     </p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-primary">Admin Dashboard</h1>
                     <p className="mt-1 text-muted-foreground">
-                        Manage tickets, closures, the construction schedule and public notifications.
+                        Manage tickets, closures, the construction schedule, public announcements and business access notices.
                     </p>
                 </div>
             </section>

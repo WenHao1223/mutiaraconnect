@@ -36,7 +36,7 @@ export default function LrtRouteMapSvg({
         .filter((station) => station.line === "island_mainline")
         .sort((a, b) => a.code.localeCompare(b.code));
 
-    const bspStation = stations.find((station) => station.code === "S17");
+    const bspStation = stations.find((station) => station.code === "S18");
     const sentralStation = stations.find((station) => station.code === "S20");
 
     const mainlinePoints = islandStations.map((station) => `${station.svgX},${station.svgY}`).join(" ");
@@ -225,7 +225,7 @@ export default function LrtRouteMapSvg({
                             </text>
                         </g>
 
-                        {/* Cross-Channel Alignment Line (S17 Bandar Sri Pinang -> S20 Penang Sentral) */}
+                        {/* Cross-Channel Alignment Line (S18 Macallum -> S20 Penang Sentral) */}
                         {bspStation && sentralStation && (
                             <g
                                 opacity={
@@ -314,7 +314,7 @@ export default function LrtRouteMapSvg({
                             const dimmed =
                                 activeLineFilter !== "all" &&
                                 station.line !== activeLineFilter &&
-                                !(activeLineFilter === "cross_channel" && station.code === "S17");
+                                !(activeLineFilter === "cross_channel" && station.code === "S18");
 
                             const pos = station.labelPosition ?? "bottom";
                             let labelX = station.svgX;
@@ -416,7 +416,7 @@ export default function LrtRouteMapSvg({
                     </span>
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                         <span className="h-1.5 w-5 rounded-full border border-amber-500 bg-amber-500/80" />
-                        Cross-Channel Link (S17–S20)
+                        Cross-Channel Link (S18–S20)
                     </span>
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                         <span className="size-3 rounded-full border-2 border-foreground bg-background" />

@@ -12,7 +12,7 @@ export default function NotFoundPage() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Button asChild>
-                    <Link to={PATHS.home}>Back to map</Link>
+                    <Link to={PATHS.home}>Back to home</Link>
                 </Button>
                 <Button asChild variant="outline">
                     <Link to={PATHS.ticket}>Report a problem</Link>

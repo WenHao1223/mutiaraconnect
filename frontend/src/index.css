@@ -171,6 +171,7 @@
     --radius-xl: calc(var(--radius) + 4px);
 
     --font-sans: system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --font-display: "Unbounded", system-ui, sans-serif;
 }
 
 /* Tailwind v4 defaults borders to currentColor, so restore the theme border.
@@ -200,17 +201,6 @@ body {
     text-rendering: optimizeLegibility;
 }
 
-/* Endless horizontal scroll: the track holds two identical copies, so sliding
-   it by half its width lands exactly where it started. */
-@keyframes marquee {
-    from {
-        transform: translateX(0);
-    }
-    to {
-        transform: translateX(-50%);
-    }
-}
-
 /* Resolved-ticket card shaped like a transit ticket: two half-circle notches cut into the
    edges where the dashed tear line sits, 2.75rem (the stub's height) up from the bottom. */
 .ticket-stub {
@@ -233,6 +223,43 @@ body {
     }
     to {
         left: 100%;
+    }
+}
+
+/* The home headline's track: draws in from the left, its stations pop on, then a train runs it once.
+   Each animates a separate property from Tailwind's translate, so they don't fight the positioning. */
+@keyframes line-draw {
+    from {
+        transform: scaleX(0);
+    }
+}
+
+@keyframes stop-pop {
+    from {
+        scale: 0;
+    }
+    70% {
+        scale: 1.3;
+    }
+}
+
+@keyframes headline-train {
+    from {
+        left: 0;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    to {
+        left: calc(100% - 1.5rem);
+    }
+}
+
+/* A pin hopping once, for the home area chips on hover. */
+@keyframes pin-hop {
+    40% {
+        transform: translateY(-3px);
     }
 }
 

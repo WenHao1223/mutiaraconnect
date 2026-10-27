@@ -41,6 +41,8 @@ export interface Ticket {
     /** Business premise the report is about (business users only). */
     premise?: string;
     hasPhoto?: boolean;
+    /** The attached photos, shrunk to JPEG data URLs. Sample tickets have hasPhoto but no photos. */
+    photos?: string[];
     /** Oldest first. */
     updates: TicketUpdate[];
 }

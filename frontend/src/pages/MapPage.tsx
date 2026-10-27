@@ -13,19 +13,24 @@ import { currentNotices, worksNear } from "@/lib/business/business";
 import { AFFECTED_RADIUS_KM, distanceInKm } from "@/lib/maps/geo";
 import { MAPS_API_KEY } from "@/lib/maps/mapConfig";
 import type { Coordinates } from "@/lib/maps/maps";
-import { closureColor, distanceToClosure, EXTENT_LABEL, LINE_COLOR, TIME_LABEL, timeStatus } from "@/lib/road/closureDisplay";
+import {
+    closureColor,
+    closurePoints,
+    distanceToClosure,
+    EXTENT_LABEL,
+    LINE_COLOR,
+    TIME_LABEL,
+    timeStatus,
+} from "@/lib/road/closureDisplay";
 import { planRoute, type PlannedRoute } from "@/lib/road/routing";
+import { tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { RoadClosure } from "@/types/road-closure";
 
 type PanelTab = "shops" | "closures";
 
-/** Every point of a closure's drawn road, or its pin if it has none. */
-const closurePoints = (closure: RoadClosure): Coordinates[] =>
-    closure.path && closure.path.length > 0 ? closure.path : [closure];
-
 /**
- * Main page: registered shops and road closures on one map. Pick a shop to see which closed
+ * Road & Access: registered shops and road closures on one map. Pick a shop to see which closed
  * roads affect it and get a route there that avoids them.
  */
 export default function MapPage() {
@@ -73,9 +78,11 @@ function CommunityMapPage() {
         [shops, nearbyByShop],
     );
 
-    // "/?closure=RC-1042" (from announcements and old Road & Access links) opens on that closure.
+    // "?closure=RC-1042" (from the home page and announcements) opens on that closure;
+    // "?shop=<id>" (from Local Businesses) opens on that shop.
     const [searchParams] = useSearchParams();
     const linkedClosure = closures.find((closure) => closure.id === searchParams.get("closure"));
+    const linkedShop = linkedClosure ? undefined : shops.find((shop) => shop.id === searchParams.get("shop"));
 
     const [panelTab, setPanelTab] = useState<PanelTab>(linkedClosure ? "closures" : "shops");
     const [panelOpen, setPanelOpen] = useState(true);
@@ -84,12 +91,17 @@ function CommunityMapPage() {
         return state === "ended" ? "now" : state;
     });
     const [selectedClosureId, setSelectedClosureId] = useState(linkedClosure?.id);
-    const [selectedShopId, setSelectedShopId] = useState<string>();
+    const [selectedShopId, setSelectedShopId] = useState(linkedShop?.id);
     const [query, setQuery] = useState("");
     const [focus, setFocus] = useState<MapFocus>(() =>
         linkedClosure
             ? { key: `closure:${linkedClosure.id}`, points: closurePoints(linkedClosure) }
-            : { key: "all", points: [...shops, ...closures.flatMap(closurePoints)] },
+            : linkedShop
+              ? {
+                    key: `shop:${linkedShop.id}`,
+                    points: [linkedShop, ...(nearbyByShop.get(linkedShop.id) ?? []).flatMap(closurePoints)],
+                }
+              : { key: "all", points: [...shops, ...closures.flatMap(closurePoints)] },
     );
 
     // The route starts at the visitor's location or at an address they searched for.
@@ -273,7 +285,7 @@ function CommunityMapPage() {
                                                     </span>
                                                     <span className="mt-1.5 flex flex-wrap gap-1">
                                                         {near.length === 0 ? (
-                                                            <span className="rounded bg-success/10 px-1.5 py-0.5 text-[11px] font-medium text-green-800 dark:text-green-300">
+                                                            <span className={cn("rounded border px-1.5 py-0.5 text-[11px] font-medium", tone.success)}>
                                                                 No closures nearby
                                                             </span>
                                                         ) : (

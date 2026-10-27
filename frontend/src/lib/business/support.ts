@@ -1,5 +1,6 @@
 import { recordAudit } from "@/lib/admin/audit";
 import { readJson, writeJson } from "@/lib/admin/store";
+import { createNotification } from "@/lib/notifications";
 import type { SupportRequest, SupportRequestStatus, SupportRequestType } from "@/types/business";
 import { tone } from "@/lib/tones";
 
@@ -49,6 +50,15 @@ export function submitSupportRequest(input: NewSupportRequestInput): SupportRequ
         submittedAt: new Date().toISOString(),
     };
     writeJson(SUPPORT_KEY, [request, ...all]);
+    createNotification({
+        recipient: request.owner,
+        type: "support_submitted",
+        title: `${supportTypeLabels[request.type]} request received`,
+        body: `Your request for ${request.premiseName} is pending review.`,
+        destination: "business",
+        referenceId: request.id,
+        premiseId: request.premiseId,
+    });
     return request;
 }
 
@@ -59,11 +69,23 @@ export function respondToSupportRequest(
     reply: string,
     actor: string,
 ): void {
-    const next = readJson<SupportRequest[]>(SUPPORT_KEY, []).map((request) =>
+    const all = readJson<SupportRequest[]>(SUPPORT_KEY, []);
+    const current = all.find((request) => request.id === id);
+    if (!current || (current.status === status && current.reply === reply.trim())) return;
+    const next = all.map((request) =>
         request.id === id
             ? { ...request, status, reply: reply.trim(), repliedBy: actor, repliedAt: new Date().toISOString() }
             : request,
     );
     writeJson(SUPPORT_KEY, next);
     recordAudit({ actor, action: "business_support", detail: `Support request ${id} ${status}.` });
+    createNotification({
+        recipient: current.owner,
+        type: status === "arranged" ? "support_arranged" : "support_declined",
+        title: `${supportTypeLabels[current.type]}: ${supportStatusMeta[status].label}`,
+        body: `${current.premiseName}: ${reply.trim()}`,
+        destination: "business",
+        referenceId: id,
+        premiseId: current.premiseId,
+    });
 }

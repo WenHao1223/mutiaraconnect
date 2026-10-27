@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import ticketData from "@/data/tickets.json";
 import usersData from "@/data/users.json";
+import { createNotification } from "@/lib/notifications";
 import type { Ticket, TicketCategory, TicketStatus, TicketUpdate } from "@/types/ticket";
 import type { BusinessProfile, MockAccount } from "@/types/user";
 
@@ -53,7 +54,10 @@ function writeSubmittedTickets(list: Ticket[]) {
 const ADMIN_UPDATES_KEY = "mutiaraconnect.ticket-updates";
 
 /** The parts of a report its owner can change while it is still "received". */
-export type TicketEdit = Pick<Ticket, "description" | "location" | "latitude" | "longitude" | "hasPhoto">;
+export type TicketEdit = Pick<
+    Ticket,
+    "description" | "location" | "latitude" | "longitude" | "hasPhoto" | "photos"
+>;
 
 interface TicketPatch {
     status: TicketStatus;
@@ -118,10 +122,21 @@ export function updateTicketStatus(
     const base = allBaseTickets().find((ticket) => ticket.id === id);
     if (!base) return undefined;
     const patches = readPatches();
+    if (patches[id]?.withdrawn) return undefined;
     const update: TicketUpdate = { status, message, by, at: new Date().toISOString() };
     // Keep any reporter edits already layered on this ticket.
     patches[id] = { ...patches[id], status, updates: [...(patches[id]?.updates ?? []), update] };
     writePatches(patches);
+    if (base.submittedByEmail) {
+        createNotification({
+            recipient: base.submittedByEmail,
+            type: status === "resolved" ? "ticket_resolved" : "ticket_updated",
+            title: `${id}: ${statusMeta[status].label}`,
+            body: `${withPatch(base).location}: ${message}`,
+            destination: "tickets",
+            referenceId: id,
+        });
+    }
     return withPatch(base);
 }
 
@@ -220,6 +235,7 @@ export interface NewTicketInput {
     longitude: number;
     premise?: string;
     hasPhoto?: boolean;
+    photos?: string[];
 }
 
 /** Creates a report owned by the signed-in account and stores it locally. */
@@ -235,9 +251,10 @@ export function submitTicket(input: NewTicketInput): Ticket {
         status: "received",
         submittedAt: now,
         updatedAt: now,
-        submittedByEmail: input.email,
+        submittedByEmail: input.email?.trim().toLowerCase() || undefined,
         premise: input.premise,
         hasPhoto: input.hasPhoto,
+        photos: input.photos,
         updates: [
             {
                 status: "received",
@@ -248,6 +265,17 @@ export function submitTicket(input: NewTicketInput): Ticket {
         ],
     };
     writeSubmittedTickets([...readSubmittedTickets(), ticket]);
+    // Anonymous reports retain their tracking ID without creating an account notification.
+    if (ticket.submittedByEmail) {
+        createNotification({
+            recipient: ticket.submittedByEmail,
+            type: "ticket_submitted",
+            title: `${ticket.id}: Ticket submitted`,
+            body: `${ticket.location}: ${ticket.updates[0].message}`,
+            destination: "tickets",
+            referenceId: ticket.id,
+        });
+    }
     return ticket;
 }
 

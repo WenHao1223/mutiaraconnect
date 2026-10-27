@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell } from "lucide-react";
+import { Megaphone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -48,9 +48,10 @@ export default function AnnouncementsBell({ items }: { items: Announcement[] }) 
                     variant="ghost"
                     size="icon"
                     className="relative"
+                    title="Public announcements"
                     aria-label={badgeCount > 0 ? `Announcements, ${badgeCount} unread` : "Announcements"}
                 >
-                    <Bell className="size-5" />
+                    <Megaphone className="size-5" aria-hidden />
                     {badgeCount > 0 && (
                         <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-hazard text-[10px] font-bold text-hazard-foreground">
                             {badgeCount}

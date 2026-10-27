@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { ArrowRight, ExternalLink, HardHat, Info, MapPin, Search, Store, TrafficCone, type LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronRight, ExternalLink, MapPin, Search, Store } from "lucide-react";
+import AccessNotices from "@/components/business/AccessNotices";
 import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
 import { badgeVariants } from "@/components/ui/badge";
@@ -15,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { tone } from "@/lib/tones";
 import type { RoadClosure } from "@/types/road-closure";
 import type { ConstructionSchedule } from "@/types/schedule";
+import { PATHS } from "@/routes";
 
 const ALL_AREAS = "__all__";
 
@@ -245,6 +249,13 @@ export default function BusinessNoticesPage() {
                                         <MapsLink location={selected.premise}>
                                             Open in Google Maps <ExternalLink className="size-3" aria-hidden />
                                         </MapsLink>
+                                        {/* Opens the shop on the Road & Access map, with the closures around it. */}
+                                        <Link
+                                            to={`${PATHS.roadAccess}?shop=${selected.premise.id}`}
+                                            className="inline-flex items-center gap-0.5 font-medium text-primary hover:underline"
+                                        >
+                                            View on map <ChevronRight className="size-3.5" aria-hidden />
+                                        </Link>
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
