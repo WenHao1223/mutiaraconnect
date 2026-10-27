@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { Check, ChevronRight, MapPin, TrainFront } from "lucide-react";
 import LrtRouteDiagram from "@/components/construction/LrtRouteDiagram";
+import { PalmCrown, PALM_SWAY } from "@/components/custom/PalmTree";
 import CommunityMap from "@/components/map/CommunityMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -203,15 +204,53 @@ export default function HomePage() {
 /** Where the stations sit along the headline's track, as a share of its width. */
 const TITLE_STOPS = [0, 0.33, 0.66, 1];
 
+/** Two-tone shadow under each word: the brand blue, stepped. */
+const TITLE_SHADOW = "[text-shadow:3px_3px_0_var(--brand-blue),6px_6px_0_rgb(39_79_142/0.45)]";
+
 /**
- * "Mutiara Line" on its own line under the headline, with a track under it that draws in on load. Its stations pop
+ * An "i" drawn as a Penang coconut palm: a dotless i is the trunk and the crown sits where the dot
+ * would be, swaying a little (still for people who ask for reduced motion).
+ */
+function PalmI({ front, back }: { front: string; back: string }) {
+    return (
+        <span className="relative inline-block">
+            ı
+            <svg
+                viewBox="0 0 160 90"
+                className={cn(
+                    "pointer-events-none absolute top-[-0.46em] left-1/2 h-[1.05em] w-[1.9em] -translate-x-1/2 overflow-visible origin-[50%_69%]",
+                    PALM_SWAY,
+                )}
+            >
+                <PalmCrown front={front} back={back} />
+            </svg>
+        </span>
+    );
+}
+
+/**
+ * "Mutiara Line" on its own line under the headline: gold "Mutiara" and white "Line" with a blue
+ * shadow, each "i" a coconut palm. A track under it draws in on load. Its stations pop
  * on as the line reaches them, then a small train runs it once and stops at the end. People who
  * ask for reduced motion see the finished track with the train already there.
  */
 function MutiaraLineTitle() {
     return (
-        <span className="relative mt-2 block w-fit pb-5 font-display text-[2rem] whitespace-nowrap text-brand-gold sm:text-5xl lg:text-6xl">
-            Mutiara Line
+        <span className="relative mt-6 block w-fit pb-5 font-display text-[2rem] whitespace-nowrap sm:mt-8 sm:text-5xl lg:text-6xl">
+            <span className="sr-only">Mutiara Line</span>
+            {/* Decorated letters are hidden from screen readers, which read the plain text above. */}
+            <span aria-hidden>
+                <span className={cn("text-brand-gold", TITLE_SHADOW)}>
+                    Mut
+                    <PalmI front="fill-white" back="fill-brand-gold" />
+                    ara
+                </span>{" "}
+                <span className={cn("text-white", TITLE_SHADOW)}>
+                    L
+                    <PalmI front="fill-brand-gold" back="fill-white" />
+                    ne
+                </span>
+            </span>
             <span className="absolute inset-x-0 bottom-0 h-4" aria-hidden>
                 <span className="absolute inset-x-0 top-1/2 h-1 origin-left -translate-y-1/2 rounded-full bg-info animate-[line-draw_1s_ease-out_both] motion-reduce:animate-none" />
                 {TITLE_STOPS.map((at) => (
