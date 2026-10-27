@@ -1,6 +1,7 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link, Navigate } from "react-router-dom";
-import { Bell, BellOff, CheckCheck, Megaphone, Settings } from "lucide-react";
+import { Bell, BellOff, CheckCheck, ChevronLeft, ChevronRight, Megaphone, Settings } from "lucide-react";
 import NotificationItem from "@/components/navbar/NotificationItem";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +11,8 @@ import { useSettings } from "@/lib/settings/settings";
 import { PATHS } from "@/routes";
 import type { AppUser } from "@/types/user";
 
+const NOTIFICATIONS_PER_PAGE = 5;
+
 export default function ProfileNotificationsPage() {
     const { user } = useAuth();
     if (!user) return <Navigate to={PATHS.login} state={{ from: PATHS.profileNotifications }} replace />;
@@ -18,6 +21,9 @@ export default function ProfileNotificationsPage() {
 
 function NotificationInbox({ user }: { user: AppUser }) {
     const [filter, setFilter] = useState("all");
+    const [pagination, setPagination] = useState({ filter: "all", page: 0 });
+    const listStartRef = useRef<HTMLDivElement>(null);
+    const listSummaryRef = useRef<HTMLParagraphElement>(null);
     const [, refresh] = useReducer((version: number) => version + 1, 0);
     const { notificationsEnabled } = useSettings();
     useEffect(() => subscribeNotifications(refresh), []);
@@ -27,6 +33,23 @@ function NotificationInbox({ user }: { user: AppUser }) {
     const readIds = new Set(readNotificationIds(recipient));
     const unreadCount = items.filter((item) => !readIds.has(item.id)).length;
     const visible = filter === "unread" ? items.filter((item) => !readIds.has(item.id)) : items;
+    const pageCount = Math.ceil(visible.length / NOTIFICATIONS_PER_PAGE);
+    const currentPage = pagination.filter === filter
+        ? Math.min(pagination.page, Math.max(0, pageCount - 1)) : 0;
+    if (pagination.filter !== filter || pagination.page !== currentPage) {
+        setPagination({ filter, page: currentPage });
+    }
+    const pageStart = currentPage * NOTIFICATIONS_PER_PAGE;
+    const visibleItems = visible.slice(pageStart, pageStart + NOTIFICATIONS_PER_PAGE);
+
+    function changePage(page: number) {
+        flushSync(() => setPagination({ filter, page }));
+        listSummaryRef.current?.focus({ preventScroll: true });
+        listStartRef.current?.scrollIntoView({
+            block: "start",
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        });
+    }
 
     return (
         <div className="flex-1 bg-background">
@@ -44,19 +67,23 @@ function NotificationInbox({ user }: { user: AppUser }) {
             <div className="mx-auto w-full max-w-4xl space-y-5 px-4 py-6 sm:py-8">
                 {!notificationsEnabled && <div className="flex items-start gap-3 rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground"><BellOff className="mt-0.5 size-4 shrink-0" aria-hidden /><p>Unread badges are paused. You can still read and manage your notifications here.</p></div>}
                 <Tabs value={filter} onValueChange={setFilter}>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div ref={listStartRef} className="flex scroll-mt-24 flex-wrap items-center justify-between gap-3">
                         <TabsList aria-label="Filter notifications">
                             <TabsTrigger value="all">All ({items.length})</TabsTrigger>
                             <TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger>
                         </TabsList>
                         <Button type="button" variant="outline" size="sm" disabled={unreadCount === 0} onClick={() => markAllNotificationsRead(recipient)}><CheckCheck aria-hidden />Mark all as read</Button>
                     </div>
-                    <p className="sr-only" role="status">{unreadCount} unread notifications. Showing {visible.length} notifications.</p>
+                    <p ref={listSummaryRef} tabIndex={-1} className="mt-4 text-xs text-muted-foreground" role="status">
+                        {visible.length > 0
+                            ? `Showing ${pageStart + 1}–${pageStart + visibleItems.length} of ${visible.length} ${filter === "unread" ? "unread " : ""}${visible.length === 1 ? "notification" : "notifications"}`
+                            : "No notifications to show"}
+                    </p>
                     {["all", "unread"].map((value) => (
                         <TabsContent key={value} value={value} className="mt-4 overflow-hidden rounded-xl border bg-card shadow-sm">
                             {visible.length > 0 ? (
                                 <ul className="divide-y" aria-label={value === "unread" ? "Unread account notifications" : "All account notifications"}>
-                                    {visible.map((item) => <li key={item.id}><NotificationItem notification={item} user={user} isUnread={!readIds.has(item.id)} /></li>)}
+                                    {visibleItems.map((item) => <li key={item.id}><NotificationItem notification={item} user={user} isUnread={!readIds.has(item.id)} /></li>)}
                                 </ul>
                             ) : (
                                 <div className="px-6 py-14 text-center">
@@ -68,6 +95,21 @@ function NotificationInbox({ user }: { user: AppUser }) {
                             )}
                         </TabsContent>
                     ))}
+                    {pageCount > 1 && (
+                        <nav aria-label="Notification pages" className="mt-5 flex items-center justify-between gap-2 border-t pt-5">
+                            <Button
+                                type="button" variant="outline" size="sm"
+                                disabled={currentPage === 0}
+                                onClick={() => changePage(currentPage - 1)}
+                            ><ChevronLeft className="size-4" aria-hidden />Previous</Button>
+                            <span className="text-xs tabular-nums text-muted-foreground" aria-current="page">Page {currentPage + 1} of {pageCount}</span>
+                            <Button
+                                type="button" variant="outline" size="sm"
+                                disabled={currentPage === pageCount - 1}
+                                onClick={() => changePage(currentPage + 1)}
+                            >Next<ChevronRight className="size-4" aria-hidden /></Button>
+                        </nav>
+                    )}
                 </Tabs>
                 {items.some((item) => item.example) && <p className="text-xs leading-relaxed text-muted-foreground">Items labelled “Example scenario” demonstrate possible updates. They do not create matching applications, support requests or account changes.</p>}
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-4 sm:px-6">
