@@ -3,15 +3,17 @@ import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, BadgeCheck, ClipboardCheck, ExternalLink, Minus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import ApplicationDetail from "@/components/business/ApplicationDetail";
+import ApplicationStatusBadge from "@/components/business/ApplicationStatusBadge";
 import PremiseForm from "@/components/business/PremiseForm";
 import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth/auth";
-import { addPremise, findApplication, readPremises, readRemovedPremiseIds, removePremise, submitApplication } from "@/lib/business/business";
+import { findApplication, premiseRequestsFor, readPremises, readRemovedPremiseIds, removePremise, submitApplication } from "@/lib/business/business";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
 import type { ApplicationStatus, BusinessApplication } from "@/types/business";
@@ -53,7 +55,7 @@ function BusinessDetails({ business, onRemove }: { business: BusinessDetailsData
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute right-0 top-0 size-7 text-muted-foreground hover:text-destructive"
+                            className="absolute right-0 top-0 size-7 bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:text-destructive-foreground"
                             aria-label={`Remove ${business.name}`}
                         >
                             <Minus className="size-4" />
@@ -132,7 +134,9 @@ export default function BusinessApplicationPage() {
     const { user } = useAuth();
     const applicantKey = user ? user.email ?? user.ic ?? user.name : "";
     const [application, setApplication] = useState<BusinessApplication | undefined>(() => findApplication(applicantKey));
-    const [extraPremises, setExtraPremises] = useState<BusinessProfile[]>(() => readPremises(applicantKey));
+    const [extraPremises] = useState<BusinessProfile[]>(() => readPremises(applicantKey));
+    // Extra shops need an admin's approval too; approved ones show up in extraPremises.
+    const [premiseRequests, setPremiseRequests] = useState(() => premiseRequestsFor(applicantKey));
     const [removedIds, setRemovedIds] = useState<string[]>(() => readRemovedPremiseIds(applicantKey));
     // A rejected applicant can open the form again to submit a fresh application.
     const [reapplying, setReapplying] = useState(false);
@@ -204,20 +208,58 @@ export default function BusinessApplicationPage() {
                     </CardContent>
                 </Card>
 
+                {premiseRequests.some((request) => request.status !== "approved") && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                                <ClipboardCheck className="size-4" /> Premise requests
+                            </CardTitle>
+                            <CardDescription>
+                                New premises appear above once an admin approves them. Click a request to see it.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Accordion type="single" collapsible>
+                                {premiseRequests
+                                    .filter((request) => request.status !== "approved")
+                                    .map((request) => (
+                                        <AccordionItem key={request.id} value={request.id}>
+                                            <AccordionTrigger className="gap-3">
+                                                <span className="flex-1">{request.businessName}</span>
+                                                <ApplicationStatusBadge status={request.status} />
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <ApplicationDetail application={request} hideTitle />
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                            </Accordion>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <PremiseForm
                     title="Add a premise"
-                    description="Register another shop location to this account."
-                    submitLabel="Add premise"
-                    onSubmit={({ businessName, registrationNumber, location }) => {
-                        const premise = addPremise(applicantKey, {
-                            name: businessName,
+                    description="Register another shop. An admin checks it before it's added to your account."
+                    submitLabel="Send for approval"
+                    withApplicationDetails
+                    onSubmit={({ businessName, registrationNumber, location, businessType, contactPhone, documents }) => {
+                        const request = submitApplication({
+                            kind: "premise",
+                            applicant: applicantKey,
+                            email: user.email,
+                            applicantName: user.name,
+                            businessName,
                             registrationNumber,
-                            address: location.address,
+                            businessType: businessType ?? "other",
+                            contactPhone: contactPhone ?? "",
+                            documents: documents ?? [],
+                            premiseAddress: location.address,
                             latitude: location.latitude,
                             longitude: location.longitude,
                         });
-                        setExtraPremises((current) => [...current, premise]);
-                        toast.success(`${premise.name} was added to your account.`);
+                        setPremiseRequests((current) => [request, ...current]);
+                        toast.success(`${request.businessName} was sent to an admin for approval.`);
                     }}
                 />
             </div>

@@ -1,6 +1,6 @@
 import { recordAudit } from "@/lib/admin/audit";
 import { updateUserRole } from "@/lib/admin/users";
-import { addPremise, saveDecision } from "@/lib/business/business";
+import { addPremise, isAccountApplication, saveDecision } from "@/lib/business/business";
 import type { BusinessApplication } from "@/types/business";
 
 /**
@@ -11,10 +11,12 @@ import type { BusinessApplication } from "@/types/business";
 export class ReviewError extends Error {}
 
 export function approveApplication(application: BusinessApplication, actor: string): BusinessApplication {
-    if (!application.email) {
+    // A premise request comes from an existing business account, so only the shop is added.
+    const isNewAccount = isAccountApplication(application);
+    if (isNewAccount && !application.email) {
         throw new ReviewError("This applicant has no email on their account, so their role can't be upgraded.");
     }
-    updateUserRole(application.email, "business_premise", actor);
+    if (isNewAccount && application.email) updateUserRole(application.email, "business_premise", actor);
     addPremise(application.applicant, {
         name: application.businessName,
         registrationNumber: application.registrationNumber,
@@ -26,7 +28,7 @@ export function approveApplication(application: BusinessApplication, actor: stri
     recordAudit({
         actor,
         action: "business_application",
-        detail: `Approved ${application.id} (“${application.businessName}”) for ${application.email}.`,
+        detail: `Approved ${isNewAccount ? "" : "new premise "}${application.id} (“${application.businessName}”) for ${application.email ?? application.applicant}.`,
     });
     return updated ?? application;
 }

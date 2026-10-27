@@ -10,17 +10,24 @@ import type { BusinessApplication } from "@/types/business";
 const ignoreLocationChange = () => undefined;
 
 /** One business application, laid out like TicketDetail: summary, location, documents, decision. */
-export default function ApplicationDetail({ application }: { application: BusinessApplication }) {
+export default function ApplicationDetail({
+    application,
+    hideTitle = false,
+}: {
+    application: BusinessApplication;
+    /** Leave out the name and status badge when the surrounding row already shows them. */
+    hideTitle?: boolean;
+}) {
     return (
         <article>
             <header className="flex items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-lg font-semibold">{application.businessName}</h2>
+                    {!hideTitle && <h2 className="text-lg font-semibold">{application.businessName}</h2>}
                     <p className="mt-0.5 text-sm text-muted-foreground">
                         {application.id} · Submitted {formatDate(application.submittedAt)}
                     </p>
                 </div>
-                <ApplicationStatusBadge status={application.status} />
+                {!hideTitle && <ApplicationStatusBadge status={application.status} />}
             </header>
 
             <div className="mt-4">

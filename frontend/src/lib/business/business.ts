@@ -40,10 +40,44 @@ function readStorage<T>(key: string, fallback: T): T {
 
 export const readApplications = () => readStorage<BusinessApplication[]>(APPLICATIONS_KEY, []);
 
+/** True for a resident's business-account application (older ones have no kind). */
+export const isAccountApplication = (application: BusinessApplication) => application.kind !== "premise";
+
+/** A resident's business-account application, if they've made one. */
 export function findApplication(applicant?: string): BusinessApplication | undefined {
     if (!applicant) return undefined;
     const target = normalizeKey(applicant);
-    return readApplications().find((application) => normalizeKey(application.applicant) === target);
+    return readApplications().find(
+        (application) => isAccountApplication(application) && normalizeKey(application.applicant) === target,
+    );
+}
+
+/** A business account's requests to add another premise, newest first. */
+export function premiseRequestsFor(owner?: string): BusinessApplication[] {
+    if (!owner) return [];
+    const target = normalizeKey(owner);
+    return readApplications()
+        .filter((application) => !isAccountApplication(application) && normalizeKey(application.applicant) === target)
+        .reverse();
+}
+
+/**
+ * The approved application a premise came from (same owner, name and pin), which holds details the
+ * premise itself doesn't store, like its business type and contact number. Seeded premises have none.
+ */
+export function applicationForPremise(
+    owner: string,
+    premise: Pick<BusinessProfile, "name" | "latitude" | "longitude">,
+): BusinessApplication | undefined {
+    const target = normalizeKey(owner);
+    return readApplications().find(
+        (application) =>
+            application.status === "approved" &&
+            normalizeKey(application.applicant) === target &&
+            application.businessName === premise.name &&
+            application.latitude === premise.latitude &&
+            application.longitude === premise.longitude,
+    );
 }
 
 export type NewApplicationInput = Omit<
@@ -51,7 +85,10 @@ export type NewApplicationInput = Omit<
     "id" | "status" | "submittedAt" | "rejectionReason" | "reviewedBy" | "reviewedAt"
 >;
 
-/** Files a new application, replacing any earlier (e.g. rejected) one from the same applicant. */
+/**
+ * Files a new application. A new account application replaces the applicant's earlier (e.g. rejected)
+ * one; premise requests are kept side by side, one per shop.
+ */
 export function submitApplication(input: NewApplicationInput): BusinessApplication {
     const application: BusinessApplication = {
         ...input,
@@ -60,7 +97,10 @@ export function submitApplication(input: NewApplicationInput): BusinessApplicati
         submittedAt: new Date().toISOString(),
     };
     const rest = readApplications().filter(
-        (a) => normalizeKey(a.applicant) !== normalizeKey(application.applicant),
+        (a) =>
+            !isAccountApplication(application) ||
+            !isAccountApplication(a) ||
+            normalizeKey(a.applicant) !== normalizeKey(application.applicant),
     );
     try {
         localStorage.setItem(APPLICATIONS_KEY, JSON.stringify([...rest, application]));
