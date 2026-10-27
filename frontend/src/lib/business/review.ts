@@ -1,6 +1,7 @@
 import { recordAudit } from "@/lib/admin/audit";
 import { updateUserRole } from "@/lib/admin/users";
-import { addPremise, isAccountApplication, saveDecision } from "@/lib/business/business";
+import { addPremise, isAccountApplication, readApplications, saveDecision } from "@/lib/business/business";
+import { createNotification } from "@/lib/notifications";
 import type { BusinessApplication } from "@/types/business";
 
 /**
@@ -19,6 +20,7 @@ function pendingApplication(id: string): BusinessApplication {
 }
 
 export function approveApplication(application: BusinessApplication, actor: string): BusinessApplication {
+    application = pendingApplication(application.id);
     // A premise request comes from an existing business account, so only the shop is added.
     const isNewAccount = isAccountApplication(application);
     if (isNewAccount && !application.email) {

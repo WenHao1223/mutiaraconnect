@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { ArrowRight, ExternalLink, HardHat, Info, MapPin, Search, Store, TrafficCone, type LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ChevronRight, ExternalLink, MapPin, Search, Store } from "lucide-react";
-import AccessNotices from "@/components/business/AccessNotices";
+import { ArrowRight, ChevronRight, ExternalLink, HardHat, Info, MapPin, Search, Store, TrafficCone, type LucideIcon } from "lucide-react";
 import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
 import { badgeVariants } from "@/components/ui/badge";
@@ -16,9 +14,9 @@ import { formatDate } from "@/lib/tickets/tickets";
 import type { Coordinates } from "@/lib/maps/maps";
 import { cn } from "@/lib/utils";
 import { tone } from "@/lib/tones";
+import { PATHS } from "@/routes";
 import type { RoadClosure } from "@/types/road-closure";
 import type { ConstructionSchedule } from "@/types/schedule";
-import { PATHS } from "@/routes";
 
 const ALL_AREAS = "__all__";
 
