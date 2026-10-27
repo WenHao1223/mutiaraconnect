@@ -10,6 +10,7 @@ import {
     type LucideIcon,
 } from "lucide-react";
 import HelpPanel from "@/components/custom/HelpPanel";
+import PalmTree from "@/components/custom/PalmTree";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PATHS } from "@/routes";
@@ -54,8 +55,22 @@ export default function AboutPage() {
     return (
         <div className="flex-1 bg-background">
             {/* The band uses the GIF's own navy so the animation blends into it edge to edge. */}
-            <section className="bg-logo-backdrop">
-                <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pt-4 pb-8 text-center">
+            <section className="relative overflow-hidden bg-logo-backdrop">
+                {/* Penang coconut palms framing the header (same design as the Home headline), behind the
+                    text; left out on small screens where they'd crowd it. */}
+                <PalmTree
+                    front="fill-white"
+                    back="fill-brand-gold"
+                    trunk="fill-brand-gold/80"
+                    className="pointer-events-none absolute bottom-0 left-2 hidden h-[85%] md:block lg:left-[6%]"
+                />
+                <PalmTree
+                    front="fill-brand-gold"
+                    back="fill-white"
+                    trunk="fill-white/80"
+                    className="pointer-events-none absolute right-2 bottom-0 hidden h-[85%] -scale-x-100 md:block lg:right-[6%]"
+                />
+                <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 pt-4 pb-8 text-center">
                     {/* Visitors who ask for reduced motion get a still frame instead of the loop. The GIF's grainy
                         edges fade out (oval mask) so it has no hard box against the band. */}
                     <picture>
