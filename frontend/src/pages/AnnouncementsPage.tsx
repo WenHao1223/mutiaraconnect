@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { flushSync } from "react-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { useConstructionData } from "@/hooks/use-construction-data";
+import { announcementDestination, announcementUrl } from "@/lib/announcementLinks";
+import { sortAnnouncements } from "@/lib/constructionRelations";
 import {
     ArrowRight,
     ChevronDown,
@@ -37,7 +40,6 @@ import {
     markAllAnnouncementsRead,
     markAnnouncementRead,
     markAnnouncementUnread,
-    readAnnouncements,
     readReadAnnouncementIds,
     subscribeAnnouncements,
 } from "@/lib/admin/announcements";
@@ -75,10 +77,17 @@ const months = ["January", "February", "March", "April", "May", "June", "July", 
 type TypeFilter = "all" | Announcement["type"] | "unread" | "pinned";
 
 export default function AnnouncementsPage() {
+    const [params] = useSearchParams();
+    const targetId = params.get("announcement") ?? "";
+    return <AnnouncementFeed key={targetId} targetId={targetId} />;
+}
+
+function AnnouncementFeed({ targetId }: { targetId: string }) {
     const { user } = useAuth();
     const { notificationsEnabled, setNotificationsEnabled } = useSettings();
 
-    const [items, setItems] = useState<Announcement[]>(() => readAnnouncements());
+    const { announcements: items } = useConstructionData();
+    const targetIndex = sortAnnouncements(items).findIndex((item) => item.id === targetId);
     const [readIds, setReadIds] = useState<string[]>(() => readReadAnnouncementIds());
     const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
     const [areaFilter, setAreaFilter] = useState<string>("all");
@@ -86,14 +95,14 @@ export default function AnnouncementsPage() {
     const [yearFilter, setYearFilter] = useState("all");
     const [monthFilter, setMonthFilter] = useState("all");
     const [dayFilter, setDayFilter] = useState("all");
-    const [pagination, setPagination] = useState({ filterKey: "", page: 0 });
+    const [pagination, setPagination] = useState({ filterKey: JSON.stringify(["all", "all", "", "all", "all", "all"]), page: Math.floor(Math.max(0, targetIndex) / ANNOUNCEMENTS_PER_PAGE) });
     const listHeadingRef = useRef<HTMLHeadingElement>(null);
     const filterKey = JSON.stringify([typeFilter, areaFilter, query, yearFilter, monthFilter, dayFilter]);
     // Reset with the filters before committing a render, without an extra effect.
     if (pagination.filterKey !== filterKey) {
         setPagination({ filterKey, page: 0 });
     }
-    const [expandedAnnouncementKey, setExpandedAnnouncementKey] = useState<string | null>(null);
+    const [expandedAnnouncementKey, setExpandedAnnouncementKey] = useState<string | null>(targetIndex >= 0 ? `${targetId}-${targetIndex}` : null);
     const filtersRef = useRef<HTMLDetailsElement>(null);
     const searchRef = useRef<HTMLInputElement>(null);
     const datePrefix = yearFilter === "all" ? "" : monthFilter === "all" ? yearFilter
@@ -136,10 +145,16 @@ export default function AnnouncementsPage() {
 
     useEffect(() => {
         return subscribeAnnouncements(() => {
-            setItems(readAnnouncements());
             setReadIds(readReadAnnouncementIds());
         });
     }, []);
+
+    useEffect(() => {
+        if (!targetId) return;
+        const target = document.getElementById(`announcement-${targetId}`);
+        target?.focus({ preventScroll: true });
+        target?.scrollIntoView({ block: "start" });
+    }, [targetId]);
 
     const areas = useMemo(() => {
         const stationAreas = getStationAreas();
@@ -148,15 +163,7 @@ export default function AnnouncementsPage() {
     }, [items]);
 
     const sortedItems = useMemo(() => {
-        return [...items].sort((a, b) => {
-            if (Boolean(a.pinned) !== Boolean(b.pinned)) {
-                return a.pinned ? -1 : 1;
-            }
-            if (a.publishedAt && b.publishedAt) {
-                return b.publishedAt.localeCompare(a.publishedAt);
-            }
-            return 0;
-        });
+        return sortAnnouncements(items);
     }, [items]);
 
     const filteredItems = useMemo(() => {
@@ -211,7 +218,7 @@ export default function AnnouncementsPage() {
     }
 
     // Highlights remain independent of the list filters, with pinned notices first.
-    const featuredItems = sortedItems.slice(0, 5);
+    const featuredItems = sortedItems.filter((item) => item.closureState !== "ended").slice(0, 5);
 
     function openAnnouncement(id: string) {
         flushSync(() => {
@@ -258,7 +265,7 @@ export default function AnnouncementsPage() {
         const shareText = `[MutiaraConnect ${typeBadgeStyle[item.type].label}] ${item.title}${
             item.area ? ` (${item.area})` : ""
         } — ${item.body}`;
-        const shareUrl = window.location.href;
+        const shareUrl = `${window.location.origin}${announcementUrl(item.id)}`;
 
         try {
             if (navigator.share) {
@@ -344,6 +351,7 @@ export default function AnnouncementsPage() {
 
             {/* Content Area */}
             <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+                {targetId && targetIndex < 0 && <p role="status" className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">This announcement is no longer available. Browse the latest announcements below.</p>}
                 {featuredItems.length > 0 && (
                     <AnnouncementHighlights
                         key={featuredItems.map((item) => item.id).join("|")}
@@ -579,6 +587,7 @@ function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, 
     }, [item.body]);
 
     const badge = typeBadgeStyle[item.type];
+    const destination = announcementDestination(item);
     const publishedDate = item.publishedAt ? new Date(item.publishedAt) : null;
     const dateLabel = publishedDate && !Number.isNaN(publishedDate.getTime())
         ? publishedDate.toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kuala_Lumpur" })
@@ -597,6 +606,7 @@ function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, 
             <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <Badge variant="outline" className={cn("text-[10px] md:text-xs", badge.className)}>{badge.label}</Badge>
+                    {item.closureState === "ended" && <Badge variant="secondary">Restriction ended</Badge>}
                     {item.pinned && <span className="inline-flex items-center text-hazard-text" title="Pinned advisory"><Pin className="size-3.5" aria-hidden /><span className="sr-only">Pinned advisory</span></span>}
                     {isUnread && <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary"><span className="size-1.5 rounded-full bg-hazard" aria-hidden />Unread</span>}
                 </div>
@@ -627,14 +637,15 @@ function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, 
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                 {item.area && <span className="inline-flex items-center gap-1"><MapPin className="size-3 shrink-0" aria-hidden />{item.area}</span>}
                 <span>{dateLabel}</span>
+                {item.updatedAt && <span>Updated {new Date(item.updatedAt).toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}</span>}
             </div>
             <p ref={bodyRef} id={`announcement-body-${rowKey}`} className={cn("mt-3 min-w-0 whitespace-pre-line break-words text-sm leading-6 text-muted-foreground", !expanded && "line-clamp-4")}>{item.body}</p>
             <div className={cn("mt-4 space-y-3 border-t pt-3", !expanded && hasOverflow && "hidden md:block")}>
                 {item.createdBy && <p className="text-xs leading-relaxed text-muted-foreground">Published by <span className="font-medium text-foreground">{item.createdBy}</span></p>}
                 <Link
-                    to={item.type === "closure" ? PATHS.roadAccess : item.area ? `${PATHS.constructionInfo}?area=${encodeURIComponent(item.area)}` : PATHS.constructionInfo}
+                    to={destination.to}
                     className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary hover:underline md:min-h-0 md:text-xs"
-                >{item.type === "closure" ? "View road & access map" : "View station progress"}<ArrowRight className="size-3.5" aria-hidden /></Link>
+                >{destination.label}<ArrowRight className="size-3.5" aria-hidden /></Link>
             </div>
             {(hasOverflow || expanded) && (
                 <button

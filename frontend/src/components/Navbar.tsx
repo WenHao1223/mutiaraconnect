@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useConstructionData } from "@/hooks/use-construction-data";
 import { NavLink } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
@@ -9,7 +9,6 @@ import ConstructionMenu from "@/components/navbar/ConstructionMenu";
 import MobileMenu from "@/components/navbar/MobileMenu";
 import ProfileMenu from "@/components/navbar/ProfileMenu";
 import { navStyles } from "@/components/navbar/navStyles";
-import { readAnnouncements, subscribeAnnouncements } from "@/lib/admin/announcements";
 import { navRoutes } from "@/routes";
 import type { Announcement } from "@/types/announcement";
 import type { AppUser } from "@/types/user";
@@ -27,13 +26,7 @@ export default function Navbar({
     onSignOut,
     announcements,
 }: NavbarProps) {
-    const [storedAnnouncements, setStoredAnnouncements] = useState<Announcement[]>(() => readAnnouncements());
-
-    useEffect(() => {
-        return subscribeAnnouncements(() => {
-            setStoredAnnouncements(readAnnouncements());
-        });
-    }, []);
+    const { announcements: storedAnnouncements } = useConstructionData();
 
     const items = announcements ?? storedAnnouncements;
 

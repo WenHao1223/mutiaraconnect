@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Calendar, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock3, HardHat, MapPin, Megaphone, Pin, Search, TrainFront } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { readAnnouncements, subscribeAnnouncements } from "@/lib/admin/announcements";
-import { readSchedule, scheduleStatusLabels as statusLabels, scheduleStatusTone as statusTone } from "@/lib/admin/schedule";
+import { scheduleStatusLabels as statusLabels, scheduleStatusTone as statusTone } from "@/lib/admin/schedule";
+import ClosureNotice from "@/components/construction/ClosureNotice";
+import { useConstructionData } from "@/hooks/use-construction-data";
+import { announcementDestination, announcementUrl } from "@/lib/announcementLinks";
+import { constructionAdvisories } from "@/lib/constructionRelations";
+import type { RoadClosure } from "@/types/road-closure";
 import { readLrtStations } from "@/lib/lrt/stations";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
@@ -28,35 +32,17 @@ function formatDate(iso: string): string {
 }
 
 export default function ConstructionUpdatesPage() {
-    const [scheduleItems, setScheduleItems] = useState(() => readSchedule());
-    const [announcements, setAnnouncements] = useState(() => readAnnouncements());
-    const [stations, setStations] = useState(() => readLrtStations());
+    const { schedules: scheduleItems, announcements, closures } = useConstructionData();
+    const stations = useMemo(() => readLrtStations(), []);
     const [statusFilter, setStatusFilter] = useState<ScheduleStatus | "all">("all");
     const [areaFilter, setAreaFilter] = useState("all");
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(0);
     const resultsHeading = useRef<HTMLHeadingElement>(null);
 
-    useEffect(() => {
-        const refresh = () => {
-            setAnnouncements(readAnnouncements());
-            setScheduleItems(readSchedule());
-            setStations(readLrtStations());
-        };
-        const unsubscribe = subscribeAnnouncements(refresh);
-        // Schedule and station changes do not emit the announcement event.
-        window.addEventListener("storage", refresh);
-        window.addEventListener("focus", refresh);
-        return () => {
-            unsubscribe();
-            window.removeEventListener("storage", refresh);
-            window.removeEventListener("focus", refresh);
-        };
-    }, []);
-
     const allAreas = useMemo(() => Array.from(new Set([
         ...scheduleItems.map((item) => item.area),
-        ...announcements.filter((item) => item.type === "construction" || item.pinned).map((item) => item.area),
+        ...constructionAdvisories(announcements, scheduleItems).map((item) => item.area),
     ].filter((area): area is string => Boolean(area)))).sort(), [scheduleItems, announcements]);
     const areaSchedule = scheduleItems.filter((item) => areaFilter === "all" || item.area === areaFilter);
     const filteredSchedule = useMemo(() => {
@@ -69,10 +55,7 @@ export default function ConstructionUpdatesPage() {
             (a.status === "upcoming" ? a.startsAt.localeCompare(b.startsAt) : b.updatedAt.localeCompare(a.updatedAt)));
     }, [scheduleItems, statusFilter, areaFilter, query]);
     // Area is shared; status and search only narrow the work list.
-    const advisories = announcements.filter((item) =>
-        (item.type === "construction" || item.pinned) &&
-        (areaFilter === "all" || item.area?.toLowerCase() === areaFilter.toLowerCase()),
-    ).sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
+    const advisories = constructionAdvisories(announcements, scheduleItems, areaFilter);
     const latestUpdate = areaSchedule.map((item) => item.updatedAt).sort().at(-1);
     const pageCount = Math.ceil(filteredSchedule.length / PAGE_SIZE);
     const currentPage = Math.min(page, Math.max(0, pageCount - 1));
@@ -177,7 +160,7 @@ export default function ConstructionUpdatesPage() {
                             <p className="mt-1 text-sm text-muted-foreground">Try another area, status, or search term.</p>
                             <Button variant="outline" size="sm" className="mt-4" onClick={resetFilters}>Reset filters</Button>
                         </div> : <ul className="space-y-4">{shownItems.map((item) => <li key={item.id}>
-                            <WorkUpdate item={item} stations={stations} announcements={announcements} />
+                            <WorkUpdate item={item} stations={stations} announcements={announcements} closures={closures} />
                         </li>)}</ul>}
                         {pageCount > 1 && <nav aria-label="Construction update pages" className="flex items-center justify-between gap-2 pt-2">
                             <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => changePage(currentPage - 1)}>
@@ -192,7 +175,7 @@ export default function ConstructionUpdatesPage() {
                             <div className="border-b bg-hazard/10 p-5">
                                 <h2 id="advisories-heading" tabIndex={-1} className="scroll-mt-24 flex items-center gap-2 font-semibold">
                                     <Megaphone className="size-4 text-hazard-text" aria-hidden />Area advisories</h2>
-                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{areaFilter === "all" ? "Construction notices and pinned announcements across all areas." : `Construction notices and pinned announcements for ${areaFilter}.`} Search and work status do not filter these notices.</p>
+                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Construction notices, related road restrictions and pinned announcements{areaFilter === "all" ? " across all areas" : ` for ${areaFilter}`}. Ended restrictions remain in the announcement archive. Search and work status do not filter these notices.</p>
                             </div>
                             {advisories.length === 0 ? <p className="p-5 text-sm text-muted-foreground">No advisories listed for this area. Check the road &amp; access map before travelling.</p> : <ul className="divide-y">{advisories.slice(0, 3).map((item) => <li key={item.id}>
                                 <Advisory item={item} />
@@ -219,9 +202,10 @@ export default function ConstructionUpdatesPage() {
 }
 
 /** Keep the what, where and when visible; expand for supporting records and provenance. */
-function WorkUpdate({ item, stations, announcements }: { item: ConstructionSchedule; stations: LrtStation[]; announcements: Announcement[]; }) {
+function WorkUpdate({ item, stations, announcements, closures }: { item: ConstructionSchedule; stations: LrtStation[]; announcements: Announcement[]; closures: RoadClosure[] }) {
     const relatedStations = stations.filter((station) => item.stationIds?.includes(station.id));
     const relatedNotices = announcements.filter((notice) => item.announcementIds?.includes(notice.id));
+    const relatedClosures = closures.filter((closure) => item.closureIds?.includes(closure.id));
     return (
         <article className={`overflow-hidden rounded-xl border border-l-4 bg-card ${item.status === "ongoing" ? "border-l-hazard" : item.status === "upcoming" ? "border-l-info" : "border-l-success"}`}>
             <div className="p-5 sm:p-6">
@@ -245,9 +229,7 @@ function WorkUpdate({ item, stations, announcements }: { item: ConstructionSched
                         </dd>
                     </div>
                 </dl>
-                {(item.closureIds?.length ?? 0) > 0 && <Link to={PATHS.roadAccess} className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
-                    <MapPin className="size-3.5" aria-hidden />Related road &amp; access notice · Check map<ArrowUpRight className="size-3.5" aria-hidden />
-                </Link>}
+                {relatedClosures.length > 0 && <p className="mt-3 text-xs text-muted-foreground">{relatedClosures.length} related road &amp; access {relatedClosures.length === 1 ? "notice" : "notices"} · View details below</p>}
             </div>
             <details className="group border-t">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-sm font-medium text-primary hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:px-6 [&::-webkit-details-marker]:hidden">
@@ -258,6 +240,10 @@ function WorkUpdate({ item, stations, announcements }: { item: ConstructionSched
                     <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden />
                 </summary>
                 <div className="space-y-5 border-t bg-muted/20 p-5 sm:px-6">
+                    {relatedClosures.length > 0 && <div className="space-y-3">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Road restrictions &amp; access history</h4>
+                        {relatedClosures.map((closure) => <ClosureNotice key={closure.id} closure={closure} announcement={relatedNotices.find((notice) => notice.sourceClosureId === closure.id)} />)}
+                    </div>}
                     <div>
                         <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Related stations</h4>
                         <div className="mt-2 flex flex-wrap gap-2">{relatedStations.length ? relatedStations.map((station) => <Link key={station.id} to={`${PATHS.constructionInfo}?station=${encodeURIComponent(station.code)}`} className="inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-primary hover:bg-accent">
@@ -266,7 +252,7 @@ function WorkUpdate({ item, stations, announcements }: { item: ConstructionSched
                     </div>
                     {relatedNotices.length > 0 && <div className="space-y-3">
                         <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Related notices</h4>{relatedNotices.map((notice) => <div key={notice.id} className="border-l-2 border-hazard pl-3">
-                            <p className="text-sm font-medium">{notice.title}</p>
+                            <Link to={announcementUrl(notice.id)} className="text-sm font-medium text-primary hover:underline">{notice.title}</Link>
                             <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{notice.body}</p>
                         </div>)}</div>}
                     <dl className="grid gap-3 border-t pt-4 text-xs sm:grid-cols-2">
@@ -287,6 +273,7 @@ function WorkUpdate({ item, stations, announcements }: { item: ConstructionSched
 }
 
 function Advisory({ item }: { item: Announcement; }) {
+    const destination = announcementDestination(item);
     return (
         <div className="p-5">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">{item.pinned && <span className="inline-flex items-center gap-1 font-medium text-hazard-text">
@@ -304,6 +291,10 @@ function Advisory({ item }: { item: Announcement; }) {
                 </summary>
                 <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{item.body}</p>
             </details>
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-primary">
+                <Link to={announcementUrl(item.id)} className="hover:underline">View announcement →</Link>
+                {item.sourceClosureId && <Link to={destination.to} className="hover:underline">{destination.label} →</Link>}
+            </div>
         </div>
     );
 }

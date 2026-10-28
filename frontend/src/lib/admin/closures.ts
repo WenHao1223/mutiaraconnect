@@ -103,6 +103,7 @@ export function setClosureSchedule(id: string, scheduleId: string, actor: string
 export function createAccessInfo(input: Omit<BaseInput, "reason" | "status">, actor: string): RoadClosure {
     const notice = create("access", { ...input, road: "", reason: "", status: "active" }, actor);
     recordAudit({ actor, action: "business_notice", detail: `Shared access info “${input.title}”.` });
+    notifyAnnouncementsChanged();
     return notice;
 }
 

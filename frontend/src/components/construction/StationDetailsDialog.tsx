@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { scheduleStatusLabels, scheduleStatusTone } from "@/lib/admin/schedule";
+import { useConstructionData } from "@/hooks/use-construction-data";
+import { stationRelations } from "@/lib/constructionRelations";
+import { timeStatus } from "@/lib/road/closureDisplay";
 import { PATHS } from "@/routes";
 import type { LrtStation } from "@/types/lrt";
 
@@ -24,6 +27,9 @@ export default function StationDetailsDialog({
 }: StationDetailsDialogProps) {
     const titleId = useId();
     const descriptionId = useId();
+    const data = useConstructionData();
+    const related = stationRelations(station, data.schedules, data.closures, data.announcements);
+    const restrictions = related.closures.filter((item) => item.kind === "closure" && timeStatus(item).state !== "ended");
 
     return (
         <Popover>
@@ -82,6 +88,11 @@ export default function StationDetailsDialog({
                         </div>
                     </dl>
 
+                    {restrictions.length > 0 && <div className="mt-3 rounded-lg border bg-muted/40 p-3 text-xs">
+                        <p className="font-semibold">{restrictions.length} related road {restrictions.length === 1 ? "restriction" : "restrictions"}</p>
+                        <p className="mt-1 text-muted-foreground">{restrictions[0].title}{restrictions.length > 1 ? ` and ${restrictions.length - 1} more` : ""}</p>
+                        <Link to={`${PATHS.constructionInfo}?station=${encodeURIComponent(station.code)}`} className="mt-2 inline-block font-medium text-primary hover:underline">View related works &amp; access →</Link>
+                    </div>}
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
                         <MapsLink location={station} mode="search" className="py-1.5 text-xs">
                             <Navigation className="size-3" aria-hidden />
