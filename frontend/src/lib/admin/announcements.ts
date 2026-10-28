@@ -18,7 +18,7 @@ const ANNOUNCEMENTS_EVENT =
 
 const seed = announcementsData as Announcement[];
 
-function notifyAnnouncementsChanged(): void {
+export function notifyAnnouncementsChanged(): void {
     if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent(ANNOUNCEMENTS_EVENT));
     }
@@ -35,6 +35,7 @@ export interface NewAnnouncementInput {
     type: Announcement["type"];
     area?: string;
     pinned?: boolean;
+    sourceClosureId?: string;
 }
 
 function relativeTime(iso?: string): string {
@@ -48,7 +49,17 @@ function relativeTime(iso?: string): string {
     return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-export function publishAnnouncement(input: NewAnnouncementInput, actor: string): Announcement {
+export function publishAnnouncement(
+    input: NewAnnouncementInput,
+    actor: string,
+    options: { notify?: boolean } = {},
+): Announcement {
+    // One generated notice per closure; ordinary manual bulletins are never deduplicated.
+    if (input.sourceClosureId) {
+        if (input.type !== "closure") throw new Error("A closure advisory must use the road closure category.");
+        const existing = readAnnouncements().find((item) => item.sourceClosureId === input.sourceClosureId);
+        if (existing) return existing;
+    }
     const publishedAt = new Date().toISOString();
     const cleanedArea = input.area?.trim();
     const item: Announcement = {
@@ -61,11 +72,12 @@ export function publishAnnouncement(input: NewAnnouncementInput, actor: string):
         publishedAt,
         time: relativeTime(publishedAt),
         createdBy: actor,
+        ...(input.sourceClosureId ? { sourceClosureId: input.sourceClosureId } : {}),
     };
     const next = [item, ...readAnnouncements()];
     writeJson(ANNOUNCEMENTS_KEY, next);
     recordAudit({ actor, action: "announcement", detail: `Published “${input.title}”.` });
-    notifyAnnouncementsChanged();
+    if (options.notify !== false) notifyAnnouncementsChanged();
     return item;
 }
 

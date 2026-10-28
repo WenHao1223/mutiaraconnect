@@ -1,7 +1,9 @@
 import closureData from "@/data/closures.json";
 import { recordAudit } from "@/lib/admin/audit";
+import { notifyAnnouncementsChanged, publishAnnouncement, readAnnouncements } from "@/lib/admin/announcements";
 import { readSchedule, updateScheduleItem } from "@/lib/admin/schedule";
 import { newId, readJson, writeJson } from "@/lib/admin/store";
+import { EXTENT_LABEL, extentOf, hoursLabel } from "@/lib/road/closureDisplay";
 import type {
     ClosureExtent,
     ClosureHours,
@@ -64,13 +66,41 @@ function create(kind: ClosureKind, input: NewClosureInput, actor: string): RoadC
     return closure;
 }
 
-/** Sets a temporary road closure. */
+function closureAnnouncementBody(closure: RoadClosure): string {
+    const formatDate = (iso: string) => new Date(iso).toLocaleString("en-MY", {
+        timeZone: "Asia/Kuala_Lumpur", dateStyle: "medium", timeStyle: "short",
+    });
+    return [
+        `Road: ${closure.road}`,
+        closure.area ? `Area: ${closure.area}` : "",
+        `Restriction: ${EXTENT_LABEL[extentOf(closure)]}`,
+        `Starts: ${formatDate(closure.startAt)} MYT`,
+        `Expected end: ${formatDate(closure.endAt)} MYT`,
+        `Hours: ${hoursLabel(closure.hours)} (Malaysia time)`,
+        closure.reason ? `Reason: ${closure.reason}` : "",
+        closure.pedestrian ? `Pedestrian access: ${closure.pedestrian}` : "",
+    ].filter(Boolean).join("\n");
+}
+
+/** Publishes a temporary road closure and its public advisory under the selected schedule. */
 export function createClosure(input: NewClosureInput & { scheduleId: string }, actor: string): RoadClosure {
     const { scheduleId, ...details } = input;
     if (!readSchedule().some((item) => item.id === scheduleId)) {
         throw new Error("Select a valid construction schedule.");
     }
+    const start = Date.parse(details.startAt);
+    const end = Date.parse(details.endAt);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+        throw new Error("The closure end must be after its start.");
+    }
     const closure = create("closure", details, actor);
+    publishAnnouncement({
+        title: `Road closure: ${closure.title}`,
+        body: closureAnnouncementBody(closure),
+        type: "closure",
+        area: closure.area,
+        sourceClosureId: closure.id,
+    }, actor, { notify: false });
     setClosureSchedule(closure.id, scheduleId, actor);
     recordAudit({ actor, action: "closure_create", detail: `Set closure “${input.title}” (${input.road}).` });
     return closure;
@@ -85,14 +115,24 @@ export function setClosureSchedule(id: string, scheduleId: string, actor: string
     if (!schedules.some((item) => item.id === scheduleId)) {
         throw new Error("Select a valid construction schedule.");
     }
+    const generatedIds = readAnnouncements().filter((item) => item.sourceClosureId === id).map((item) => item.id);
     for (const schedule of schedules) {
         const linked = schedule.closureIds ?? [];
+        const announcements = schedule.announcementIds ?? [];
         const shouldLink = schedule.id === scheduleId;
-        if (linked.includes(id) === shouldLink) continue;
+        const nextAnnouncements = shouldLink
+            ? [...new Set([...announcements, ...generatedIds])]
+            : announcements.filter((announcementId) => !generatedIds.includes(announcementId));
+        if (linked.includes(id) === shouldLink &&
+            announcements.length === nextAnnouncements.length &&
+            announcements.every((announcementId, index) => announcementId === nextAnnouncements[index])) continue;
         updateScheduleItem(schedule.id, {
-            closureIds: shouldLink ? [...linked, id] : linked.filter((closureId) => closureId !== id),
+            closureIds: shouldLink ? [...new Set([...linked, id])] : linked.filter((closureId) => closureId !== id),
+            announcementIds: nextAnnouncements,
         }, actor);
     }
+    // Notify readers only after the closure, announcement and schedule links are all saved.
+    notifyAnnouncementsChanged();
 }
 
 /** Shares a piece of access information with businesses near a pinned location. */

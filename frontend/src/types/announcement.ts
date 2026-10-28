@@ -13,4 +13,6 @@ export interface Announcement {
     publishedAt?: string;
     /** Name of the admin who published it. */
     createdBy?: string;
+    /** Source road closure for an automatically published advisory; absent on manual notices. */
+    sourceClosureId?: string;
 }

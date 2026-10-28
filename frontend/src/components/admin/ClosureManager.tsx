@@ -95,6 +95,10 @@ export default function ClosureManager() {
             toast.error("Add the road, both dates and draw the closed road on the map.");
             return;
         }
+        if (new Date(form.endAt).getTime() <= new Date(form.startAt).getTime()) {
+            toast.error("The closure end must be after its start.");
+            return;
+        }
         // The pin sits on the middle of the drawn road.
         const location = path[Math.floor(path.length / 2)];
         createClosure(
@@ -122,7 +126,7 @@ export default function ClosureManager() {
         setForm(emptyForm);
         setPath([]);
         setClosures(onlyClosures());
-        toast.success("Road closure published.");
+        toast.success("Road closure and public announcement published.");
     }
 
     function changeStatus(id: string, status: ClosureStatus) {
@@ -143,7 +147,7 @@ export default function ClosureManager() {
                     <CardTitle className="flex items-center gap-2 text-lg">
                         <MapPinned className="size-4" /> Set a temporary road closure
                     </CardTitle>
-                    <CardDescription>Publish a closure and draw the closed road on the map.</CardDescription>
+                    <CardDescription>Draw the closed road and publish the closure. A Road Closure announcement will also be published automatically.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-4">
