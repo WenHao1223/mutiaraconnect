@@ -56,7 +56,11 @@ export function formatTime(time: string): string {
 }
 
 function inHours(hours: ClosureHours, now: Date): boolean {
-    const minute = now.getHours() * 60 + now.getMinutes();
+    const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    }).formatToParts(now);
+    const minute = Number(parts.find((part) => part.type === "hour")?.value) * 60
+        + Number(parts.find((part) => part.type === "minute")?.value);
     const from = toMinutes(hours.from);
     const to = toMinutes(hours.to);
     // Overnight windows (23:00–05:00) wrap past midnight.

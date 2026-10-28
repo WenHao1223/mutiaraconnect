@@ -1,9 +1,9 @@
-import closureData from "@/data/closures.json";
 import { recordAudit } from "@/lib/admin/audit";
-import { notifyAnnouncementsChanged, publishAnnouncement, readAnnouncements } from "@/lib/admin/announcements";
+import { notifyAnnouncementsChanged, publishAnnouncement, syncClosureAnnouncement } from "@/lib/admin/announcements";
+import { readClosureRecords, writeClosureRecords } from "@/lib/admin/closureRecords";
 import { readSchedule, updateScheduleItem } from "@/lib/admin/schedule";
-import { newId, readJson, writeJson } from "@/lib/admin/store";
-import { EXTENT_LABEL, extentOf, hoursLabel } from "@/lib/road/closureDisplay";
+import { newId } from "@/lib/admin/store";
+import { closureAnnouncementFields } from "@/lib/road/closureAnnouncement";
 import type {
     ClosureExtent,
     ClosureHours,
@@ -19,10 +19,7 @@ import type {
  * businesses are "affected" is worked out by distance at display time, not stored.
  * Replace with Supabase later.
  */
-const CLOSURES_KEY = "mutiaraconnect.closures";
-const seed = closureData as RoadClosure[];
-
-const readAll = () => readJson<RoadClosure[]>(CLOSURES_KEY, seed);
+const readAll = readClosureRecords;
 
 /** All closures and access notices, newest start first. */
 export function readClosures(): RoadClosure[] {
@@ -62,24 +59,8 @@ function create(kind: ClosureKind, input: NewClosureInput, actor: string): RoadC
         createdBy: actor,
         createdAt: new Date().toISOString(),
     };
-    writeJson(CLOSURES_KEY, [closure, ...readAll()]);
+    writeClosureRecords([closure, ...readAll()]);
     return closure;
-}
-
-function closureAnnouncementBody(closure: RoadClosure): string {
-    const formatDate = (iso: string) => new Date(iso).toLocaleString("en-MY", {
-        timeZone: "Asia/Kuala_Lumpur", dateStyle: "medium", timeStyle: "short",
-    });
-    return [
-        `Road: ${closure.road}`,
-        closure.area ? `Area: ${closure.area}` : "",
-        `Restriction: ${EXTENT_LABEL[extentOf(closure)]}`,
-        `Starts: ${formatDate(closure.startAt)} MYT`,
-        `Expected end: ${formatDate(closure.endAt)} MYT`,
-        `Hours: ${hoursLabel(closure.hours)} (Malaysia time)`,
-        closure.reason ? `Reason: ${closure.reason}` : "",
-        closure.pedestrian ? `Pedestrian access: ${closure.pedestrian}` : "",
-    ].filter(Boolean).join("\n");
 }
 
 /** Publishes a temporary road closure and its public advisory under the selected schedule. */
@@ -95,10 +76,7 @@ export function createClosure(input: NewClosureInput & { scheduleId: string }, a
     }
     const closure = create("closure", details, actor);
     publishAnnouncement({
-        title: `Road closure: ${closure.title}`,
-        body: closureAnnouncementBody(closure),
-        type: "closure",
-        area: closure.area,
+        ...closureAnnouncementFields(closure),
         sourceClosureId: closure.id,
     }, actor, { notify: false });
     setClosureSchedule(closure.id, scheduleId, actor);
@@ -115,22 +93,8 @@ export function setClosureSchedule(id: string, scheduleId: string, actor: string
     if (!schedules.some((item) => item.id === scheduleId)) {
         throw new Error("Select a valid construction schedule.");
     }
-    const generatedIds = readAnnouncements().filter((item) => item.sourceClosureId === id).map((item) => item.id);
-    for (const schedule of schedules) {
-        const linked = schedule.closureIds ?? [];
-        const announcements = schedule.announcementIds ?? [];
-        const shouldLink = schedule.id === scheduleId;
-        const nextAnnouncements = shouldLink
-            ? [...new Set([...announcements, ...generatedIds])]
-            : announcements.filter((announcementId) => !generatedIds.includes(announcementId));
-        if (linked.includes(id) === shouldLink &&
-            announcements.length === nextAnnouncements.length &&
-            announcements.every((announcementId, index) => announcementId === nextAnnouncements[index])) continue;
-        updateScheduleItem(schedule.id, {
-            closureIds: shouldLink ? [...new Set([...linked, id])] : linked.filter((closureId) => closureId !== id),
-            announcementIds: nextAnnouncements,
-        }, actor);
-    }
+    const target = schedules.find((item) => item.id === scheduleId)!;
+    updateScheduleItem(scheduleId, { closureIds: [...new Set([...(target.closureIds ?? []), id])] }, actor, { notify: false });
     // Notify readers only after the closure, announcement and schedule links are all saved.
     notifyAnnouncementsChanged();
 }
@@ -143,7 +107,13 @@ export function createAccessInfo(input: Omit<BaseInput, "reason" | "status">, ac
 }
 
 export function setClosureStatus(id: string, status: ClosureStatus, actor: string): void {
-    const next = readAll().map((closure) => (closure.id === id ? { ...closure, status } : closure));
-    writeJson(CLOSURES_KEY, next);
+    const all = readAll();
+    const existing = all.find((closure) => closure.id === id);
+    if (!existing) throw new Error("Road closure not found.");
+    if (existing.status === status) return;
+    const next = all.map((closure) => (closure.id === id ? { ...closure, status } : closure));
+    writeClosureRecords(next);
+    syncClosureAnnouncement(id, actor);
     recordAudit({ actor, action: "closure_status", detail: `Closure ${id} marked ${status}.` });
+    notifyAnnouncementsChanged();
 }

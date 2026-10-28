@@ -1,3 +1,5 @@
+import type { TimeState } from "@/lib/road/closureDisplay";
+
 export interface Announcement {
     id: string;
     title: string;
@@ -15,4 +17,8 @@ export interface Announcement {
     createdBy?: string;
     /** Source road closure for an automatically published advisory; absent on manual notices. */
     sourceClosureId?: string;
+    /** Derived from the source closure when read; never an independent restriction status. */
+    closureState?: TimeState;
+    /** Last explicit change to the generated advisory; publication time is preserved. */
+    updatedAt?: string;
 }

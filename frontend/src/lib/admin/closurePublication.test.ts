@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { publishAnnouncement, readAnnouncements, subscribeAnnouncements } from "./announcements";
-import { createAccessInfo, createClosure, readClosures, setClosureSchedule } from "./closures";
-import { readSchedule } from "./schedule";
+import { deleteAnnouncement, markAnnouncementRead, publishAnnouncement, readAnnouncements, readReadAnnouncementIds, subscribeAnnouncements, toggleAnnouncementPin } from "./announcements";
+import { createAccessInfo, createClosure, readClosures, setClosureSchedule, setClosureStatus } from "./closures";
+import { createScheduleItem, readSchedule, updateScheduleItem } from "./schedule";
 
 const details = {
     title: "Jalan Test (night only)", road: "Jalan Test", area: "Komtar",
@@ -21,7 +21,10 @@ describe("automatic road closure publication", () => {
         });
         vi.stubGlobal("window", new EventTarget());
     });
-    afterEach(() => vi.unstubAllGlobals());
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.unstubAllGlobals();
+    });
 
     it("creates a closure-category advisory and links both records to the selected schedule", () => {
         const schedule = readSchedule()[0];
@@ -97,5 +100,99 @@ describe("automatic road closure publication", () => {
         const second = publishAnnouncement(manual, "Admin");
         expect(first.sourceClosureId).toBeUndefined();
         expect(second.id).not.toBe(first.id);
+    });
+
+    it("synchronizes ending and reactivation without replacing publication metadata, pins or read state", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-11-02T15:30:00Z"));
+        const schedule = readSchedule()[0];
+        const closure = createClosure({ ...details, scheduleId: schedule.id }, "Author");
+        const notice = readAnnouncements().find((item) => item.sourceClosureId === closure.id)!;
+        toggleAnnouncementPin(notice.id, "Admin");
+        markAnnouncementRead(notice.id);
+        vi.setSystemTime(new Date("2026-11-03T15:30:00Z"));
+        setClosureStatus(closure.id, "ended", "Editor");
+        const ended = readAnnouncements().find((item) => item.id === notice.id)!;
+        expect(ended).toMatchObject({
+            id: notice.id, publishedAt: notice.publishedAt, createdBy: "Author", pinned: true,
+            closureState: "ended", updatedAt: "2026-11-03T15:30:00.000Z",
+        });
+        expect(ended.body).toContain("Status: Restriction ended");
+        expect(ended.title).toContain("Road closure ended:");
+        expect(readReadAnnouncementIds()).toContain(notice.id);
+        setClosureStatus(closure.id, "active", "Editor");
+        expect(readAnnouncements().find((item) => item.id === notice.id)?.closureState).toBe("now");
+        expect(readSchedule().find((item) => item.id === schedule.id)?.status).toBe(schedule.status);
+    });
+
+    it("derives upcoming, Malaysian daily hours and natural expiry without changing publication dates", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-10-30T00:00:00Z"));
+        const closure = createClosure({ ...details, scheduleId: readSchedule()[0].id }, "Admin");
+        const getNotice = () => readAnnouncements().find((item) => item.sourceClosureId === closure.id)!;
+        const publishedAt = getNotice().publishedAt;
+        expect(getNotice().closureState).toBe("upcoming");
+        vi.setSystemTime(new Date("2026-11-02T15:30:00Z")); // 23:30 MYT, overnight restriction applies.
+        expect(getNotice().closureState).toBe("now");
+        vi.setSystemTime(new Date("2026-11-03T01:30:00Z")); // 09:30 MYT, road open between shifts.
+        expect(getNotice().closureState).toBe("later");
+        vi.setSystemTime(new Date("2026-11-16T00:00:00Z"));
+        expect(getNotice().closureState).toBe("ended");
+        expect(getNotice().publishedAt).toBe(publishedAt);
+        expect(getNotice().updatedAt).toBeUndefined();
+        expect(readClosures().find((item) => item.id === closure.id)?.status).toBe("active");
+    });
+
+    it("moves both records when the schedule editor claims a closure", () => {
+        const [original, target] = readSchedule();
+        const closure = createClosure({ ...details, scheduleId: original.id }, "Admin");
+        const notice = readAnnouncements().find((item) => item.sourceClosureId === closure.id)!;
+        updateScheduleItem(target.id, { closureIds: [...target.closureIds!, closure.id] }, "Editor");
+        expect(readSchedule().filter((item) => item.closureIds?.includes(closure.id)).map((item) => item.id)).toEqual([target.id]);
+        expect(readSchedule().filter((item) => item.announcementIds?.includes(notice.id)).map((item) => item.id)).toEqual([target.id]);
+        updateScheduleItem(target.id, { announcementIds: [] }, "Editor");
+        expect(readSchedule().find((item) => item.id === target.id)?.announcementIds).toContain(notice.id);
+        const before = readSchedule();
+        expect(() => updateScheduleItem(target.id, { closureIds: target.closureIds }, "Editor")).toThrow("Reassign road closures");
+        expect(readSchedule()).toEqual(before);
+    });
+
+    it("also enforces ownership when a new schedule selects an existing closure", () => {
+        const original = readSchedule()[0];
+        const closure = createClosure({ ...details, scheduleId: original.id }, "Admin");
+        const notice = readAnnouncements().find((item) => item.sourceClosureId === closure.id)!;
+        const beforeCount = readSchedule().length;
+        const created = createScheduleItem({
+            title: "New work package", description: original.description, area: original.area,
+            startsAt: original.startsAt, endsAt: original.endsAt, status: original.status,
+            stationIds: original.stationIds, closureIds: [closure.id], announcementIds: [],
+        }, "Editor");
+        expect(readSchedule()).toHaveLength(beforeCount + 1);
+        expect(created.announcementIds).toContain(notice.id);
+        expect(readSchedule().filter((item) => item.closureIds?.includes(closure.id)).map((item) => item.id)).toEqual([created.id]);
+    });
+
+    it("does not let an independent announcement selection move or duplicate generated advisories", () => {
+        const [owner, other] = readSchedule();
+        const closure = createClosure({ ...details, scheduleId: owner.id }, "Admin");
+        const notice = readAnnouncements().find((item) => item.sourceClosureId === closure.id)!;
+        updateScheduleItem(other.id, { announcementIds: [...other.announcementIds!, notice.id] }, "Editor");
+        expect(readSchedule().find((item) => item.id === other.id)?.announcementIds).not.toContain(notice.id);
+        expect(readSchedule().find((item) => item.id === owner.id)?.announcementIds).toContain(notice.id);
+    });
+
+    it("cleans up a deleted notice without deleting its closure or recreating the notice on later changes", () => {
+        const [owner, target] = readSchedule();
+        const closure = createClosure({ ...details, scheduleId: owner.id }, "Admin");
+        const notice = readAnnouncements().find((item) => item.sourceClosureId === closure.id)!;
+        markAnnouncementRead(notice.id);
+        deleteAnnouncement(notice.id, "Admin");
+        expect(readAnnouncements().some((item) => item.id === notice.id)).toBe(false);
+        expect(readSchedule().some((item) => item.announcementIds?.includes(notice.id))).toBe(false);
+        expect(readReadAnnouncementIds()).not.toContain(notice.id);
+        expect(readClosures().some((item) => item.id === closure.id)).toBe(true);
+        setClosureStatus(closure.id, "ended", "Admin");
+        setClosureSchedule(closure.id, target.id, "Admin");
+        expect(readAnnouncements().some((item) => item.sourceClosureId === closure.id)).toBe(false);
     });
 });

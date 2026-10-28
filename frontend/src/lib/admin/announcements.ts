@@ -1,6 +1,9 @@
 import announcementsData from "@/data/announcements.json";
 import { recordAudit } from "@/lib/admin/audit";
+import { readClosureRecords } from "@/lib/admin/closureRecords";
+import { readScheduleRecords, writeScheduleRecords } from "@/lib/admin/scheduleRecords";
 import { newId, readJson, writeJson } from "@/lib/admin/store";
+import { closureAnnouncementFields } from "@/lib/road/closureAnnouncement";
 import type { Announcement } from "@/types/announcement";
 
 /**
@@ -17,6 +20,7 @@ const ANNOUNCEMENTS_EVENT =
     (import.meta.env.VITE_ANNOUNCEMENTS_EVENT as string | undefined) ?? "mutiaraconnect:announcements-changed";
 
 const seed = announcementsData as Announcement[];
+const readStoredAnnouncements = () => readJson<Announcement[]>(ANNOUNCEMENTS_KEY, seed);
 
 export function notifyAnnouncementsChanged(): void {
     if (typeof window !== "undefined") {
@@ -26,7 +30,23 @@ export function notifyAnnouncementsChanged(): void {
 
 /** Newest first. */
 export function readAnnouncements(): Announcement[] {
-    return readJson<Announcement[]>(ANNOUNCEMENTS_KEY, seed);
+    const closures = new Map(readClosureRecords().filter((item) => item.kind === "closure").map((item) => [item.id, item]));
+    return readStoredAnnouncements().map((item) => {
+        const closure = item.sourceClosureId ? closures.get(item.sourceClosureId) : undefined;
+        return closure ? { ...item, ...closureAnnouncementFields(closure) } : item;
+    });
+}
+
+/** Update existing advisories only; an explicitly deleted notice must not be recreated. */
+export function syncClosureAnnouncement(closureId: string, actor: string): void {
+    const closure = readClosureRecords().find((item) => item.id === closureId && item.kind === "closure");
+    if (!closure) return;
+    const current = readStoredAnnouncements();
+    if (!current.some((item) => item.sourceClosureId === closureId)) return;
+    const fields = closureAnnouncementFields(closure);
+    writeJson(ANNOUNCEMENTS_KEY, current.map((item) => item.sourceClosureId === closureId
+        ? { ...item, ...fields, updatedAt: new Date().toISOString() } : item));
+    recordAudit({ actor, action: "announcement", detail: `Updated road closure advisory for ${closureId}.` });
 }
 
 export interface NewAnnouncementInput {
@@ -102,6 +122,14 @@ export function deleteAnnouncement(id: string, actor: string): void {
     if (!target) return;
     const next = current.filter((item) => item.id !== id);
     writeJson(ANNOUNCEMENTS_KEY, next);
+    const updatedAt = new Date().toISOString();
+    const schedules = readScheduleRecords();
+    if (schedules.some((item) => item.announcementIds?.includes(id))) {
+        writeScheduleRecords(schedules.map((item) => item.announcementIds?.includes(id)
+            ? { ...item, announcementIds: item.announcementIds.filter((linkedId) => linkedId !== id), updatedAt, updatedBy: actor }
+            : item));
+    }
+    writeJson(READ_ANNOUNCEMENTS_KEY, readReadAnnouncementIds().filter((readId) => readId !== id));
     recordAudit({ actor, action: "announcement", detail: `Removed announcement “${target.title}”.` });
     notifyAnnouncementsChanged();
 }
