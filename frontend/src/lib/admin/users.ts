@@ -74,6 +74,26 @@ export function readAllPremises(): BusinessProfile[] {
     ];
 }
 
+export interface BusinessAccount {
+    email: string;
+    name: string;
+    premises: BusinessProfile[];
+}
+
+/** Business premise accounts with the premises each one owns, for the admin's Businesses tab. */
+export function readBusinessAccounts(): BusinessAccount[] {
+    const accounts = [
+        ...Object.values(usersData as Record<string, MockAccount>),
+        ...readJson<RegisteredAccount[]>(REGISTERED_KEY, []),
+    ];
+    return readUsers()
+        .filter((user) => user.role === "business_premise")
+        .map((user) => {
+            const account = accounts.find((item) => item.email && normalize(item.email) === normalize(user.email));
+            return { email: user.email, name: user.name, premises: premisesFor(user.email, account?.businesses) };
+        });
+}
+
 /** Account recipients for one exact premise; public directory shops may have no login owner. */
 export function readPremiseOwners(premiseId: string): string[] {
     const accounts = [

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, ExternalLink, MapPin, Search, Store } from "lucide-react";
-import AccessNotices from "@/components/business/AccessNotices";
+import { ArrowRight, ChevronRight, ExternalLink, HardHat, Info, MapPin, Search, Store, TrafficCone, type LucideIcon } from "lucide-react";
 import LocationPicker from "@/components/custom/LocationPicker";
 import MapsLink from "@/components/custom/MapsLink";
 import { badgeVariants } from "@/components/ui/badge";
@@ -12,12 +11,55 @@ import { readAllPremises } from "@/lib/admin/users";
 import { currentNotices, noticeTypeStyles, worksNear } from "@/lib/business/business";
 import { AFFECTED_RADIUS_KM, isWithinRadius } from "@/lib/maps/geo";
 import { formatDate } from "@/lib/tickets/tickets";
+import type { Coordinates } from "@/lib/maps/maps";
 import { cn } from "@/lib/utils";
 import { tone } from "@/lib/tones";
 import { PATHS } from "@/routes";
+import type { RoadClosure } from "@/types/road-closure";
+import type { ConstructionSchedule } from "@/types/schedule";
 
 const ALL_AREAS = "__all__";
+
+/** One icon per notice type, used in the colour key and the shop rows. */
+const typeIcons: Record<keyof typeof noticeTypeStyles, LucideIcon> = {
+    closure: TrafficCone,
+    construction: HardHat,
+    access: Info,
+};
 const ignoreLocationChange = () => undefined;
+
+interface TimelineItem {
+    id: string;
+    type: keyof typeof noticeTypeStyles;
+    title: string;
+    detail?: string;
+    alternative?: string;
+    when: string;
+    location?: Coordinates;
+}
+
+/** A shop's notices and works as timeline entries, soonest to end first. */
+function timeline({ notices, works }: { notices: RoadClosure[]; works: ConstructionSchedule[] }): TimelineItem[] {
+    const fromNotices = [...notices]
+        .sort((a, b) => a.endAt.localeCompare(b.endAt))
+        .map((notice) => ({
+            id: notice.id,
+            type: notice.kind,
+            title: notice.title,
+            detail: notice.reason,
+            alternative: notice.alternative,
+            when: `Until ${formatDate(notice.endAt)}`,
+            location: notice,
+        }));
+    const fromWorks = works.map((item) => ({
+        id: item.id,
+        type: "construction" as const,
+        title: item.title,
+        detail: item.description,
+        when: `${formatDate(item.startsAt)} – ${formatDate(item.endsAt)}`,
+    }));
+    return [...fromNotices, ...fromWorks];
+}
 
 /** Public page: shops affected by the works, what changed, how to reach them, and that they're open. */
 export default function BusinessNoticesPage() {
@@ -107,11 +149,20 @@ export default function BusinessNoticesPage() {
                             </div>
 
                             <ul className="mt-3 flex flex-wrap gap-2" aria-label="Colour key">
-                                {Object.values(noticeTypeStyles).map(({ label, tag }) => (
-                                    <li key={label} className={cn("rounded px-1.5 py-0.5 text-[11px] font-medium", tag)}>
-                                        {label}
-                                    </li>
-                                ))}
+                                {(Object.keys(noticeTypeStyles) as (keyof typeof noticeTypeStyles)[]).map((type) => {
+                                    const Icon = typeIcons[type];
+                                    return (
+                                        <li
+                                            key={type}
+                                            className={cn(
+                                                "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium",
+                                                noticeTypeStyles[type].tag,
+                                            )}
+                                        >
+                                            <Icon className="size-3" aria-hidden /> {noticeTypeStyles[type].label}
+                                        </li>
+                                    );
+                                })}
                             </ul>
 
                             {visible.length === 0 ? (
@@ -123,9 +174,9 @@ export default function BusinessNoticesPage() {
                                     {visible.map(({ premise, notices, works, area }) => {
                                         const isSelected = premise.id === selected?.premise.id;
                                         const counts = [
-                                            { ...noticeTypeStyles.closure, count: notices.filter((n) => n.kind === "closure").length },
-                                            { ...noticeTypeStyles.access, count: notices.filter((n) => n.kind === "access").length },
-                                            { ...noticeTypeStyles.construction, count: works.length },
+                                            { type: "closure" as const, count: notices.filter((n) => n.kind === "closure").length },
+                                            { type: "access" as const, count: notices.filter((n) => n.kind === "access").length },
+                                            { type: "construction" as const, count: works.length },
                                         ].filter(({ count }) => count > 0);
                                         return (
                                             <li key={premise.id}>
@@ -138,19 +189,30 @@ export default function BusinessNoticesPage() {
                                                         isSelected && "border-primary bg-accent",
                                                     )}
                                                 >
-                                                    <span className="block text-sm font-semibold">{premise.name}</span>
-                                                    <span className="mt-0.5 block truncate text-sm text-muted-foreground">
-                                                        {area} · {premise.address || "Pinned on the map"}
-                                                    </span>
-                                                    <span className="mt-2 flex flex-wrap gap-1.5">
-                                                        {counts.map(({ label, tag, count }) => (
-                                                            <span
-                                                                key={label}
-                                                                className={cn("rounded px-1.5 py-0.5 text-[11px] font-medium", tag)}
-                                                            >
-                                                                {count} {label}
-                                                            </span>
-                                                        ))}
+                                                    <span className="flex items-center justify-between gap-3">
+                                                        <span className="min-w-0">
+                                                            <span className="block truncate text-sm font-semibold">{premise.name}</span>
+                                                            <span className="mt-0.5 block text-xs text-muted-foreground">{area}</span>
+                                                        </span>
+                                                        <span className="flex shrink-0 gap-1.5">
+                                                            {counts.map(({ type, count }) => {
+                                                                const Icon = typeIcons[type];
+                                                                const label = `${count} ${noticeTypeStyles[type].label}`;
+                                                                return (
+                                                                    <span
+                                                                        key={type}
+                                                                        title={label}
+                                                                        aria-label={label}
+                                                                        className={cn(
+                                                                            "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium",
+                                                                            noticeTypeStyles[type].tag,
+                                                                        )}
+                                                                    >
+                                                                        <Icon className="size-3" aria-hidden /> {count}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </span>
                                                     </span>
                                                 </button>
                                             </li>
@@ -206,37 +268,69 @@ export default function BusinessNoticesPage() {
                                         }}
                                         onChange={ignoreLocationChange}
                                     />
-                                    {selected.notices.length > 0 && (
-                                        <AccessNotices closures={selected.notices} title="What's affected" />
-                                    )}
-                                    {selected.works.map((item) => (
-                                        <article
-                                            key={item.id}
-                                            className={cn(
-                                                "rounded-lg border border-l-4 bg-card p-5",
-                                                noticeTypeStyles.construction.edge,
-                                            )}
+                                    <section aria-labelledby="whats-affected">
+                                        <h3
+                                            id="whats-affected"
+                                            className="flex items-center gap-2 text-sm font-semibold text-primary"
                                         >
-                                            <div className="flex justify-between gap-3">
-                                                <div>
-                                                    <span
-                                                        className={cn(
-                                                            "rounded px-1.5 py-0.5 text-[11px] font-medium",
-                                                            noticeTypeStyles.construction.tag,
+                                            What's affected
+                                        </h3>
+                                        {/* Same timeline as a ticket's History, with an icon per type on the line. */}
+                                        <ol className="ml-3.5 mt-4 space-y-6 border-l pl-6">
+                                            {timeline(selected).map((item) => {
+                                                const Icon = typeIcons[item.type];
+                                                const style = noticeTypeStyles[item.type];
+                                                return (
+                                                    <li key={item.id} className="relative">
+                                                        <span
+                                                            aria-hidden
+                                                            className="absolute left-[-2.4rem] top-0 rounded-full bg-card ring-4 ring-card"
+                                                        >
+                                                            <span
+                                                                className={cn(
+                                                                    "flex size-7 items-center justify-center rounded-full",
+                                                                    style.tag,
+                                                                )}
+                                                            >
+                                                                <Icon className="size-3.5" />
+                                                            </span>
+                                                        </span>
+                                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                            <p className="font-semibold">{item.title}</p>
+                                                            <span
+                                                                title={style.label}
+                                                                aria-label={style.label}
+                                                                className={cn("inline-flex rounded p-1", style.tag)}
+                                                            >
+                                                                <Icon className="size-3" aria-hidden />
+                                                            </span>
+                                                        </div>
+                                                        {item.detail && (
+                                                            <p className="mt-1 text-sm text-muted-foreground">{item.detail}</p>
                                                         )}
-                                                    >
-                                                        {noticeTypeStyles.construction.label}
-                                                    </span>
-                                                    <h3 className="mt-1.5 text-lg font-semibold">{item.title}</h3>
-                                                </div>
-                                                <span className="text-xs text-muted-foreground">{item.area}</span>
-                                            </div>
-                                            <p className="mt-2 text-sm">{item.description}</p>
-                                            <p className="mt-2 text-xs text-muted-foreground">
-                                                {formatDate(item.startsAt)} – {formatDate(item.endsAt)}
-                                            </p>
-                                        </article>
-                                    ))}
+                                                        {item.alternative && (
+                                                            <p className="mt-1.5 flex items-start gap-1.5 text-sm">
+                                                                <ArrowRight
+                                                                    className="mt-0.5 size-4 shrink-0 text-success"
+                                                                    aria-hidden
+                                                                />
+                                                                {item.alternative}
+                                                            </p>
+                                                        )}
+                                                        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                                            <span>{item.when}</span>
+                                                            {item.location && (
+                                                                <MapsLink location={item.location}>
+                                                                    Open in Google Maps{" "}
+                                                                    <ExternalLink className="size-3" aria-hidden />
+                                                                </MapsLink>
+                                                            )}
+                                                        </p>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ol>
+                                    </section>
                                 </CardContent>
                             </Card>
                         )}

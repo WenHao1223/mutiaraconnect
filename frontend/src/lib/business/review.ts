@@ -1,6 +1,6 @@
 import { recordAudit } from "@/lib/admin/audit";
 import { updateUserRole } from "@/lib/admin/users";
-import { addPremise, readApplications, saveDecision } from "@/lib/business/business";
+import { addPremise, isAccountApplication, readApplications, saveDecision } from "@/lib/business/business";
 import { createNotification } from "@/lib/notifications";
 import type { BusinessApplication } from "@/types/business";
 
@@ -21,10 +21,12 @@ function pendingApplication(id: string): BusinessApplication {
 
 export function approveApplication(application: BusinessApplication, actor: string): BusinessApplication {
     application = pendingApplication(application.id);
-    if (!application.email) {
+    // A premise request comes from an existing business account, so only the shop is added.
+    const isNewAccount = isAccountApplication(application);
+    if (isNewAccount && !application.email) {
         throw new ReviewError("This applicant has no email on their account, so their role can't be upgraded.");
     }
-    updateUserRole(application.email, "business_premise", actor);
+    if (isNewAccount && application.email) updateUserRole(application.email, "business_premise", actor);
     addPremise(application.applicant, {
         name: application.businessName,
         registrationNumber: application.registrationNumber,
@@ -36,7 +38,7 @@ export function approveApplication(application: BusinessApplication, actor: stri
     recordAudit({
         actor,
         action: "business_application",
-        detail: `Approved ${application.id} (“${application.businessName}”) for ${application.email}.`,
+        detail: `Approved ${isNewAccount ? "" : "new premise "}${application.id} (“${application.businessName}”) for ${application.email ?? application.applicant}.`,
     });
     if (updated) createNotification({
         recipient: updated.email ?? updated.applicant,
