@@ -1,5 +1,6 @@
 import closureData from "@/data/closures.json";
 import { recordAudit } from "@/lib/admin/audit";
+import { readSchedule, updateScheduleItem } from "@/lib/admin/schedule";
 import { newId, readJson, writeJson } from "@/lib/admin/store";
 import type {
     ClosureExtent,
@@ -64,10 +65,34 @@ function create(kind: ClosureKind, input: NewClosureInput, actor: string): RoadC
 }
 
 /** Sets a temporary road closure. */
-export function createClosure(input: NewClosureInput, actor: string): RoadClosure {
-    const closure = create("closure", input, actor);
+export function createClosure(input: NewClosureInput & { scheduleId: string }, actor: string): RoadClosure {
+    const { scheduleId, ...details } = input;
+    if (!readSchedule().some((item) => item.id === scheduleId)) {
+        throw new Error("Select a valid construction schedule.");
+    }
+    const closure = create("closure", details, actor);
+    setClosureSchedule(closure.id, scheduleId, actor);
     recordAudit({ actor, action: "closure_create", detail: `Set closure “${input.title}” (${input.road}).` });
     return closure;
+}
+
+/** Store the relationship on schedules, matching the existing schedule editor and public list. */
+export function setClosureSchedule(id: string, scheduleId: string, actor: string): void {
+    if (!readAll().some((closure) => closure.id === id && closure.kind === "closure")) {
+        throw new Error("Road closure not found.");
+    }
+    const schedules = readSchedule();
+    if (!schedules.some((item) => item.id === scheduleId)) {
+        throw new Error("Select a valid construction schedule.");
+    }
+    for (const schedule of schedules) {
+        const linked = schedule.closureIds ?? [];
+        const shouldLink = schedule.id === scheduleId;
+        if (linked.includes(id) === shouldLink) continue;
+        updateScheduleItem(schedule.id, {
+            closureIds: shouldLink ? [...linked, id] : linked.filter((closureId) => closureId !== id),
+        }, actor);
+    }
 }
 
 /** Shares a piece of access information with businesses near a pinned location. */
