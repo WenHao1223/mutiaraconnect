@@ -83,11 +83,13 @@ export default function ProfileMenu({ user, onSignOut }: ProfileMenuProps) {
                                 <DashboardIcon className="size-4" /> {dashboardLabels[user.role]}
                             </Link>
                         </DropdownMenuItem>}
-                        <DropdownMenuItem asChild>
-                            <Link to={PATHS.profileTickets}>
-                                <Ticket className="size-4" /> My Tickets
-                            </Link>
-                        </DropdownMenuItem>
+                        {user.role !== "admin" && user.role !== "super_admin" && (
+                            <DropdownMenuItem asChild>
+                                <Link to={PATHS.profileTickets}>
+                                    <Ticket className="size-4" /> My Tickets
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
                         {user.role === "business_premise" && (
                             <DropdownMenuItem asChild>
                                 <Link to={PATHS.profileBusiness}>
