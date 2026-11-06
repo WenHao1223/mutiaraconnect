@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { readAnnouncements, subscribeAnnouncements } from "@/lib/admin/announcements";
-import { readClosures } from "@/lib/admin/closures";
-import { readSchedule, scheduleStatusLabels, scheduleStatusTone } from "@/lib/admin/schedule";
+import { scheduleStatusLabels, scheduleStatusTone } from "@/lib/admin/schedule";
+import ClosureNotice from "@/components/construction/ClosureNotice";
+import { useConstructionData } from "@/hooks/use-construction-data";
+import { announcementUrl } from "@/lib/announcementLinks";
+import { stationRelations } from "@/lib/constructionRelations";
 import { readLrtStations } from "@/lib/lrt/stations";
-import { TIME_LABEL, timeStatus } from "@/lib/road/closureDisplay";
 import { PATHS } from "@/routes";
 import type { LrtLineSegment, LrtStation, StationConstructionStatus } from "@/types/lrt";
 
@@ -208,21 +209,9 @@ export default function ConstructionInfoPage() {
 
 /** Full information is loaded only after a station is chosen. */
 function StationDetails({ station, headingRef }: { station: LrtStation; headingRef: RefObject<HTMLHeadingElement | null> }) {
-    const [announcements, setAnnouncements] = useState(() => readAnnouncements());
-    useEffect(() => subscribeAnnouncements(() => setAnnouncements(readAnnouncements())), []);
-    const area = station.area.toLowerCase();
-    const name = station.name.toLowerCase();
-    const schedules = readSchedule().filter((item) =>
-        item.area.toLowerCase().includes(area) || area.includes(item.area.toLowerCase()) || item.title.toLowerCase().includes(name),
-    );
-    const closures = readClosures().filter((item) => timeStatus(item).state !== "ended" &&
-        (item.area.toLowerCase().includes(area) || area.includes(item.area.toLowerCase())),
-    );
-    const notice = announcements.find((item) =>
-        (item.area && item.area.toLowerCase().includes(area)) || item.title.toLowerCase().includes(area) ||
-        item.title.toLowerCase().includes(name) || item.body.toLowerCase().includes(area),
-    );
-    const updateCount = schedules.length + closures.length + (notice ? 1 : 0);
+    const data = useConstructionData();
+    const related = stationRelations(station, data.schedules, data.closures, data.announcements);
+    const updateCount = related.schedules.length + related.closures.length + related.announcements.length;
 
     return (
         <article className="overflow-hidden rounded-xl border bg-card shadow-sm">
@@ -255,33 +244,38 @@ function StationDetails({ station, headingRef }: { station: LrtStation; headingR
                 </section>
                 <details className="group rounded-lg border">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg p-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-                        <span>Nearby works &amp; access <span className="ml-1 text-xs font-normal text-muted-foreground">({updateCount})</span></span>
+                        <span>Related works &amp; access <span className="ml-1 text-xs font-normal text-muted-foreground">({updateCount})</span></span>
                         <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden />
                     </summary>
                     <div className="space-y-4 border-t p-4 text-sm">
-                        <p className="text-xs text-muted-foreground">Updates for the {station.area} area.</p>
-                        {updateCount === 0 && <p className="text-muted-foreground">No works or access notices are currently listed for this area.</p>}
-                        {closures.map((closure) => (
-                            <div key={closure.id} className="rounded-md border border-destructive/20 bg-destructive/5 p-3">
-                                <p className="text-xs font-medium text-destructive">{closure.kind === "closure" ? TIME_LABEL[timeStatus(closure).state] : "Access info"}</p>
-                                <p className="mt-1 font-medium">{closure.title}</p>
-                                {closure.alternative && <p className="mt-1 text-xs text-muted-foreground">Alternative: {closure.alternative}</p>}
-                            </div>
-                        ))}
-                        {schedules.map((item) => (
+                        <p className="text-xs text-muted-foreground">Construction works and road restrictions associated with this station. Ended restrictions are kept for reference.</p>
+                        {updateCount === 0 && <p className="text-muted-foreground">No works or notices are listed for this station.</p>}
+                        {related.closures.map((closure) => <ClosureNotice key={closure.id} closure={closure} announcement={related.announcements.find((notice) => notice.sourceClosureId === closure.id)} />)}
+                        {related.schedules.map((item) => (
                             <div key={item.id} className="space-y-1 border-l-2 border-primary/20 pl-3">
                                 <Badge variant="outline" className={scheduleStatusTone[item.status]}>{scheduleStatusLabels[item.status]}</Badge>
                                 <p className="font-medium">{item.title}</p>
                                 <p className="text-xs leading-relaxed text-muted-foreground">{item.description}</p>
                             </div>
                         ))}
-                        {notice && <p className="text-xs text-muted-foreground">Latest notice: <Link to={PATHS.announcements} className="font-medium text-primary hover:underline">{notice.title}</Link></p>}
+                        {related.announcements.length > 0 && <div className="space-y-2">
+                            <h3 className="text-xs font-semibold">Related announcements</h3>
+                            {related.announcements.map((notice) => <p key={notice.id}><Link to={announcementUrl(notice.id)} className="text-sm font-medium text-primary hover:underline">{notice.title}</Link></p>)}
+                        </div>}
                         <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-primary">
                             <Link to={PATHS.constructionUpdates} className="hover:underline">Construction updates →</Link>
                             <Link to={PATHS.roadAccess} className="hover:underline">Road &amp; access map →</Link>
                         </div>
                     </div>
                 </details>
+                {(related.nearbyClosures.length > 0 || related.nearbyAnnouncements.length > 0) && <details className="group rounded-lg border">
+                    <summary className="cursor-pointer rounded-lg p-4 text-sm font-medium">Nearby advisories in {station.area}</summary>
+                    <div className="space-y-3 border-t p-4">
+                        <p className="text-xs text-muted-foreground">Other notices around {station.area}. These may relate to work at nearby locations.</p>
+                        {related.nearbyClosures.map((closure) => <ClosureNotice key={closure.id} closure={closure} announcement={data.announcements.find((notice) => notice.sourceClosureId === closure.id)} />)}
+                        {related.nearbyAnnouncements.map((notice) => <p key={notice.id}><Link to={announcementUrl(notice.id)} className="text-sm font-medium text-primary hover:underline">{notice.title}</Link></p>)}
+                    </div>
+                </details>}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm">
                     <MapsLink location={station} mode="search"><Navigation className="size-4" aria-hidden /> Google Maps</MapsLink>
                     <Link to={PATHS.ticket} className="font-medium text-primary hover:underline">Report an issue →</Link>

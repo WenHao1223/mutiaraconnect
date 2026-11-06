@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { ChevronDown, Search, Store, TrafficCone } from "lucide-react";
 import ClosureList, { type ClosureTab } from "@/components/map/ClosureList";
@@ -7,9 +7,10 @@ import CommunityMap, { type MapFocus } from "@/components/map/CommunityMap";
 import ShopDetail from "@/components/map/ShopDetail";
 import { Input } from "@/components/ui/input";
 import { useGeolocation } from "@/hooks/use-geolocation";
-import { readClosures } from "@/lib/admin/closures";
+import { useConstructionData } from "@/hooks/use-construction-data";
+import { announcementUrl } from "@/lib/announcementLinks";
 import { readAllPremises } from "@/lib/admin/users";
-import { currentNotices, worksNear } from "@/lib/business/business";
+import { worksNear } from "@/lib/business/business";
 import { AFFECTED_RADIUS_KM, distanceInKm } from "@/lib/maps/geo";
 import { MAPS_API_KEY } from "@/lib/maps/mapConfig";
 import type { Coordinates } from "@/lib/maps/maps";
@@ -34,6 +35,7 @@ type PanelTab = "shops" | "closures";
  * roads affect it and get a route there that avoids them.
  */
 export default function MapPage() {
+    const [params] = useSearchParams();
     if (!MAPS_API_KEY) {
         return (
             <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
@@ -46,21 +48,18 @@ export default function MapPage() {
     }
     return (
         <APIProvider apiKey={MAPS_API_KEY} region="MY" language="en">
-            <CommunityMapPage />
+            <CommunityMapPage key={`${params.get("closure") ?? ""}|${params.get("shop") ?? ""}`} />
         </APIProvider>
     );
 }
 
 function CommunityMapPage() {
-    // Read once on load: closures that haven't ended, access notices, and every registered shop.
-    const [{ closures, notices, shops }] = useState(() => ({
-        // Ended covers both closures marked ended and ones past their end date.
-        closures: readClosures().filter(
+    const data = useConstructionData();
+    const closures = useMemo(() => data.closures.filter(
             (closure) => closure.kind === "closure" && timeStatus(closure).state !== "ended",
-        ),
-        notices: currentNotices().filter((notice) => notice.kind === "access"),
-        shops: readAllPremises(),
-    }));
+        ), [data]);
+    const notices = data.closures.filter((notice) => notice.kind === "access" && timeStatus(notice).state !== "ended");
+    const [shops] = useState(readAllPremises);
 
     // Road closures within range of each shop, nearest first.
     const nearbyByShop = useMemo(() => {
@@ -81,16 +80,21 @@ function CommunityMapPage() {
     // "?closure=RC-1042" (from the home page and announcements) opens on that closure;
     // "?shop=<id>" (from Local Businesses) opens on that shop.
     const [searchParams] = useSearchParams();
+    const requestedClosureId = searchParams.get("closure");
     const linkedClosure = closures.find((closure) => closure.id === searchParams.get("closure"));
+    const requestedClosure = data.closures.find((closure) => closure.kind === "closure" && closure.id === requestedClosureId);
+    const archivedNotice = data.announcements.find((notice) => notice.sourceClosureId === requestedClosureId);
     const linkedShop = linkedClosure ? undefined : shops.find((shop) => shop.id === searchParams.get("shop"));
 
-    const [panelTab, setPanelTab] = useState<PanelTab>(linkedClosure ? "closures" : "shops");
+    const [panelTab, setPanelTab] = useState<PanelTab>(requestedClosureId ? "closures" : "shops");
     const [panelOpen, setPanelOpen] = useState(true);
     const [closureTab, setClosureTab] = useState<ClosureTab>(() => {
         const state = linkedClosure ? timeStatus(linkedClosure).state : "now";
         return state === "ended" ? "now" : state;
     });
     const [selectedClosureId, setSelectedClosureId] = useState(linkedClosure?.id);
+    const selectedClosureState = selectedClosureId ? data.closureStates[selectedClosureId] : undefined;
+    const visibleClosureTab = selectedClosureState && selectedClosureState !== "ended" ? selectedClosureState : closureTab;
     const [selectedShopId, setSelectedShopId] = useState(linkedShop?.id);
     const [query, setQuery] = useState("");
     const [focus, setFocus] = useState<MapFocus>(() =>
@@ -227,6 +231,11 @@ function CommunityMapPage() {
                     </button>
                 </div>
 
+                {requestedClosureId && !linkedClosure && <div role="status" className="border-b bg-muted/50 p-3 text-xs">
+                    <p>{requestedClosure ? `The restriction for ${requestedClosure.title} has ended. The map shows current restrictions.` : "This road closure is no longer available. The map shows current restrictions."}</p>
+                    {archivedNotice && <Link to={announcementUrl(archivedNotice.id)} className="mt-2 inline-block font-medium text-primary hover:underline">Read the archived announcement →</Link>}
+                </div>}
+
                 {panelOpen && panelTab === "shops" && (
                     <div className="min-h-0 flex-1 overflow-y-auto">
                         {selectedShop ? (
@@ -320,8 +329,8 @@ function CommunityMapPage() {
                 {panelOpen && panelTab === "closures" && (
                     <ClosureList
                         closures={closures}
-                        tab={closureTab}
-                        onTabChange={setClosureTab}
+                        tab={visibleClosureTab}
+                        onTabChange={(tab) => { setClosureTab(tab); setSelectedClosureId(undefined); }}
                         selectedId={selectedClosureId}
                         onSelect={selectClosure}
                     />

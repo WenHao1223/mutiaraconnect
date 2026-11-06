@@ -17,7 +17,10 @@ export default function Footer({ user = null }: { user?: AppUser | null }) {
                   path: user.role === "resident" ? PATHS.profileSettings : dashboardPathFor(user.role),
                   label: user.role === "resident" ? "Account Settings" : dashboardLabels[user.role],
               },
-              { path: PATHS.profileTickets, label: "My Tickets" },
+              // Admins manage tickets from their dashboard, not My Tickets.
+              ...(user.role === "admin" || user.role === "super_admin"
+                  ? []
+                  : [{ path: PATHS.profileTickets, label: "My Tickets" }]),
           ]
         : [
               { path: PATHS.login, label: "Sign in" },

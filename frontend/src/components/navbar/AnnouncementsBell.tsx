@@ -14,6 +14,7 @@ import {
 import { useSettings } from "@/lib/settings/settings";
 import { PATHS } from "@/routes";
 import type { Announcement } from "@/types/announcement";
+import { announcementUrl } from "@/lib/announcementLinks";
 
 export default function AnnouncementsBell({ items }: { items: Announcement[] }) {
     const [open, setOpen] = useState(false);
@@ -34,7 +35,7 @@ export default function AnnouncementsBell({ items }: { items: Announcement[] }) 
     const handleReadItem = (id: string) => {
         setReadIds(markAnnouncementRead(id));
         setOpen(false);
-        navigate(PATHS.announcements);
+        navigate(announcementUrl(id));
     };
 
     const handleMarkAllRead = () => {

@@ -57,6 +57,7 @@ interface RelationshipOption {
     id: string;
     label: string;
     detail: string;
+    disabled?: boolean;
 }
 
 /** Admin tool: create and edit schedules and their explicitly selected relationships. */
@@ -74,6 +75,13 @@ export default function ScheduleManager() {
     const formScrollRef = useRef<HTMLDivElement>(null);
     const listScrollRef = useRef<HTMLDivElement>(null);
 
+    const announcements = readAnnouncements();
+    const generated = announcements.filter((item) => item.sourceClosureId);
+    const generatedIds = new Set(generated.map((item) => item.id));
+    const selectedAnnouncementIds = [
+        ...form.announcementIds.filter((id) => !generatedIds.has(id)),
+        ...generated.filter((item) => form.closureIds.includes(item.sourceClosureId!)).map((item) => item.id),
+    ];
     const options = {
         stationIds: readLrtStations().map((station): RelationshipOption => ({
             id: station.id,
@@ -83,12 +91,14 @@ export default function ScheduleManager() {
         closureIds: readClosures().map((notice): RelationshipOption => ({
             id: notice.id,
             label: notice.title,
-            detail: `${notice.kind === "closure" ? "Road closure" : "Access notice"} · ${notice.area} · ${notice.id}`,
+            detail: `${notice.kind === "closure" ? "Road closure" : "Access notice"} · ${notice.area} · ${notice.id}${notice.kind === "closure" && items.some((item) => item.id !== editingId && item.closureIds?.includes(notice.id)) ? " · Selecting this moves it from its current schedule" : ""}`,
+            disabled: notice.kind === "closure" && Boolean(editingId && items.find((item) => item.id === editingId)?.closureIds?.includes(notice.id)),
         })),
-        announcementIds: readAnnouncements().map((announcement): RelationshipOption => ({
+        announcementIds: announcements.map((announcement): RelationshipOption => ({
             id: announcement.id,
             label: announcement.title,
-            detail: `${announcement.area || "All areas"} · ${announcement.id}`,
+            detail: `${announcement.area || "All areas"} · ${announcement.id}${announcement.sourceClosureId ? " · Automatically linked with its road closure" : ""}`,
+            disabled: Boolean(announcement.sourceClosureId),
         })),
     };
 
@@ -188,14 +198,19 @@ export default function ScheduleManager() {
             status: form.status,
             stationIds: [...new Set(form.stationIds)],
             closureIds: [...new Set(form.closureIds)],
-            announcementIds: [...new Set(form.announcementIds)],
+            announcementIds: [...new Set(selectedAnnouncementIds)],
         };
-        if (editingId) {
-            updateScheduleItem(editingId, input, actor);
-            toast.success("Schedule updated.");
-        } else {
-            createScheduleItem(input, actor);
-            toast.success("Schedule added.");
+        try {
+            if (editingId) {
+                updateScheduleItem(editingId, input, actor);
+                toast.success("Schedule updated.");
+            } else {
+                createScheduleItem(input, actor);
+                toast.success("Schedule added.");
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Unable to save construction schedule.");
+            return;
         }
         resetForm();
         setItems(readSchedule());
@@ -263,7 +278,8 @@ export default function ScheduleManager() {
                             <fieldset className="space-y-3 border-t pt-4">
                                 <legend className="px-1 text-sm font-semibold">Linked records</legend>
                                 <p className="text-xs text-muted-foreground">
-                                    Select only records related to this work. All links are optional.
+                                    Select records related to this work. Selecting a road closure moves it here with its generated announcement.
+                                    To remove an existing road closure, reassign it in the Closures tab. Generated announcements are managed automatically.
                                 </p>
                                 <RelationshipPicker key={`${editingId ?? "new"}-stations`}
                                     title="Affected stations" options={options.stationIds}
@@ -273,7 +289,7 @@ export default function ScheduleManager() {
                                     selected={form.closureIds} onChange={(closureIds) => set({ closureIds })} />
                                 <RelationshipPicker key={`${editingId ?? "new"}-announcements`}
                                     title="Announcements" options={options.announcementIds}
-                                    selected={form.announcementIds} onChange={(announcementIds) => set({ announcementIds })} />
+                                    selected={selectedAnnouncementIds} onChange={(announcementIds) => set({ announcementIds })} />
                             </fieldset>
                         </div>
                         <div className="flex shrink-0 gap-2 border-t bg-card p-6">
@@ -385,7 +401,7 @@ function RelationshipPicker({ title, options, selected, onChange }: {
     const id = useId();
     const [query, setQuery] = useState("");
     const availableIds = new Set(options.map((option) => option.id));
-    const missing = selected.filter((value) => !availableIds.has(value)).map((value) => ({
+    const missing: RelationshipOption[] = selected.filter((value) => !availableIds.has(value)).map((value) => ({
         id: value, label: `Unavailable record: ${value}`, detail: "Remove this link before saving.",
     }));
     const allOptions = [...missing, ...options];
@@ -420,6 +436,7 @@ function RelationshipPicker({ title, options, selected, onChange }: {
                         <label key={option.id} htmlFor={`${id}-${option.id}`}
                             className="flex cursor-pointer items-start gap-2.5 rounded-md p-2 hover:bg-muted/50">
                             <Checkbox id={`${id}-${option.id}`} className="mt-0.5"
+                                disabled={option.disabled}
                                 checked={selected.includes(option.id)}
                                 onCheckedChange={(checked) => onChange(checked === true
                                     ? [...new Set([...selected, option.id])]

@@ -82,7 +82,11 @@ const pages: PageRoute[] = [
     { path: PATHS.profileSettings, label: "Account Settings", element: <ProfileSettingsPage /> },
     { path: PATHS.profileTickets, label: "My Tickets", element: <TicketsPage /> },
     { path: PATHS.profileNotifications, label: "My Notifications", element: <ProfileNotificationsPage /> },
-    { path: PATHS.profileBusiness, label: "Business Applications", element: <BusinessApplicationPage /> },
+    { path: PATHS.profileBusiness, label: "Business Applications", element: (
+        <RequireRole allow={["resident", "business_premise"]}>
+            <BusinessApplicationPage />
+        </RequireRole>
+    ) },
     { path: PATHS.businessDashboard, label: "Business Dashboard", element: (
         <RequireRole allow={["business_premise"]}>
             <BusinessDashboardPage />

@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { createClosure, readClosures, setClosureStatus } from "@/lib/admin/closures";
+import { createClosure, readClosures, setClosureSchedule, setClosureStatus } from "@/lib/admin/closures";
+import { readSchedule, scheduleStatusLabels } from "@/lib/admin/schedule";
 import { readAllPremises } from "@/lib/admin/users";
 import { useAuth } from "@/lib/auth/auth";
 import { AFFECTED_RADIUS_KM } from "@/lib/maps/geo";
@@ -45,6 +46,7 @@ import type { ClosureExtent, ClosureStatus, RoadPoint } from "@/types/road-closu
 const toIso = (local: string) => (local ? new Date(local).toISOString() : "");
 
 const emptyForm = {
+    scheduleId: "",
     road: "",
     /** Optional qualifier for the title, e.g. "near Komtar". */
     detail: "",
@@ -71,6 +73,13 @@ export default function ClosureManager() {
     const [closures, setClosures] = useState(onlyClosures);
     const [form, setForm] = useState(emptyForm);
     const [path, setPath] = useState<RoadPoint[]>([]);
+    const schedules = readSchedule();
+    const scheduleOptions = (area: string) => [...schedules].sort((a, b) => {
+        const matchesArea = (value: string) => Boolean(area.trim()) && value.trim().toLowerCase() === area.trim().toLowerCase();
+        return Number(matchesArea(b.area)) - Number(matchesArea(a.area))
+            || Number(a.status === "completed") - Number(b.status === "completed")
+            || a.startsAt.localeCompare(b.startsAt);
+    });
 
     const set = (patch: Partial<typeof emptyForm>) => setForm((current) => ({ ...current, ...patch }));
     // Built from the road so every closure title follows the same format.
@@ -78,14 +87,23 @@ export default function ClosureManager() {
 
     function submit(event: FormEvent) {
         event.preventDefault();
+        if (!schedules.some((schedule) => schedule.id === form.scheduleId)) {
+            toast.error("Select the construction schedule this road closure belongs to.");
+            return;
+        }
         if (!form.road.trim() || path.length < 2 || !form.startAt || !form.endAt) {
             toast.error("Add the road, both dates and draw the closed road on the map.");
+            return;
+        }
+        if (new Date(form.endAt).getTime() <= new Date(form.startAt).getTime()) {
+            toast.error("The closure end must be after its start.");
             return;
         }
         // The pin sits on the middle of the drawn road.
         const location = path[Math.floor(path.length / 2)];
         createClosure(
             {
+                scheduleId: form.scheduleId,
                 title,
                 road: form.road.trim(),
                 area: form.area.trim(),
@@ -108,12 +126,18 @@ export default function ClosureManager() {
         setForm(emptyForm);
         setPath([]);
         setClosures(onlyClosures());
-        toast.success("Road closure published.");
+        toast.success("Road closure and public announcement published.");
     }
 
     function changeStatus(id: string, status: ClosureStatus) {
         setClosureStatus(id, status, actor);
         setClosures(onlyClosures());
+    }
+
+    function changeSchedule(id: string, scheduleId: string) {
+        setClosureSchedule(id, scheduleId, actor);
+        setClosures(onlyClosures());
+        toast.success("Construction schedule updated.");
     }
 
     return (
@@ -123,10 +147,33 @@ export default function ClosureManager() {
                     <CardTitle className="flex items-center gap-2 text-lg">
                         <MapPinned className="size-4" /> Set a temporary road closure
                     </CardTitle>
-                    <CardDescription>Publish a closure and draw the closed road on the map.</CardDescription>
+                    <CardDescription>Draw the closed road and publish the closure. A Road Closure announcement will also be published automatically.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={submit} className="space-y-4">
+                        <div>
+                            <Label htmlFor="closure-schedule">Construction schedule (required)</Label>
+                            <Select required value={form.scheduleId} onValueChange={(scheduleId) => set({ scheduleId })}>
+                                <SelectTrigger id="closure-schedule" className="mt-1.5 w-full" aria-describedby="closure-schedule-help">
+                                    <SelectValue placeholder="Select a construction schedule" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {scheduleOptions(form.area).map((schedule) => (
+                                        <SelectItem key={schedule.id} value={schedule.id} textValue={schedule.title}>
+                                            <span className="flex flex-col gap-1">
+                                                <span>{schedule.title}</span>
+                                                <span className="text-xs text-muted-foreground">{schedule.area} · {formatDate(schedule.startsAt)} – {formatDate(schedule.endsAt)} · {scheduleStatusLabels[schedule.status]}</span>
+                                            </span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p id="closure-schedule-help" className="mt-1.5 text-xs text-muted-foreground">
+                                {schedules.length === 0
+                                    ? "Add a schedule in the Construction schedule tab before publishing a closure."
+                                    : "Select the construction work that requires this road closure. Matching-area schedules appear first; closure dates remain independent."}
+                            </p>
+                        </div>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <Label htmlFor="closure-road">Road</Label>
@@ -262,7 +309,7 @@ export default function ClosureManager() {
                             <Label>Closed road</Label>
                             <RoadPathPicker path={path} onPathChange={setPath} extent={form.extent} />
                         </div>
-                        <Button type="submit" className="w-full">
+                        <Button type="submit" className="w-full" disabled={schedules.length === 0}>
                             Publish closure
                         </Button>
                     </form>
@@ -313,6 +360,28 @@ export default function ClosureManager() {
                                 <p className="mt-1 text-xs text-muted-foreground">
                                     {formatDate(closure.startAt)} – {formatDate(closure.endAt)}
                                 </p>
+                                <div className="mt-3">
+                                    <Label htmlFor={`closure-schedule-${closure.id}`}>Construction schedule</Label>
+                                    <Select
+                                        value={schedules.find((schedule) => schedule.closureIds?.includes(closure.id))?.id ?? ""}
+                                        onValueChange={(scheduleId) => changeSchedule(closure.id, scheduleId)}
+                                        disabled={schedules.length === 0}
+                                    >
+                                        <SelectTrigger id={`closure-schedule-${closure.id}`} className="mt-1.5 w-full">
+                                            <SelectValue placeholder="No schedule linked — select one" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {scheduleOptions(closure.area).map((schedule) => (
+                                                <SelectItem key={schedule.id} value={schedule.id} textValue={schedule.title}>
+                                                    <span className="flex flex-col gap-1">
+                                                        <span>{schedule.title}</span>
+                                                        <span className="text-xs text-muted-foreground">{schedule.area} · {formatDate(schedule.startsAt)} – {formatDate(schedule.endsAt)} · {scheduleStatusLabels[schedule.status]}</span>
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                                 <p className="mt-2 text-xs text-muted-foreground">
                                     {affected.length === 0
                                         ? `No business premises within ${Math.round(AFFECTED_RADIUS_KM * 1000)} m.`

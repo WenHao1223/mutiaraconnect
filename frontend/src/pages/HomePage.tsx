@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { Check, ChevronRight, MapPin, TrainFront } from "lucide-react";
@@ -7,8 +7,8 @@ import { PalmCrown, PALM_SWAY } from "@/components/custom/PalmTree";
 import CommunityMap from "@/components/map/CommunityMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { readClosures } from "@/lib/admin/closures";
-import { readSchedule, scheduleStatusLabels, scheduleStatusTone } from "@/lib/admin/schedule";
+import { useConstructionData } from "@/hooks/use-construction-data";
+import { scheduleStatusLabels, scheduleStatusTone } from "@/lib/admin/schedule";
 import { readLrtStations } from "@/lib/lrt/stations";
 import { MAPS_API_KEY } from "@/lib/maps/mapConfig";
 import { closureColor, countdown, headline, timeStatus } from "@/lib/road/closureDisplay";
@@ -28,12 +28,11 @@ const noShops = new Set<string>();
  * each leading to its own page.
  */
 export default function HomePage() {
-    // Read once on load, like the Road & Access map: closures that haven't ended, works not yet
-    // completed, and the newest updates.
-    const [{ closures, works, updates }] = useState(() => {
-        const schedule = readSchedule();
+    const data = useConstructionData();
+    const { closures, works, updates } = useMemo(() => {
+        const schedule = data.schedules;
         return {
-            closures: readClosures().filter(
+            closures: data.closures.filter(
                 (closure) => closure.kind === "closure" && timeStatus(closure).state !== "ended",
             ),
             works: schedule.filter((item) => item.status !== "completed"),
@@ -41,7 +40,7 @@ export default function HomePage() {
                 .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
                 .slice(0, 4),
         };
-    });
+    }, [data]);
     const [area, setArea] = useState<string>();
     const areas = areasAlongLine([...closures, ...works].map((item) => item.area));
     const navigate = useNavigate();
