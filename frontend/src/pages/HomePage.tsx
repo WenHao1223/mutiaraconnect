@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useConstructionData } from "@/hooks/use-construction-data";
 import { scheduleStatusLabels, scheduleStatusTone } from "@/lib/admin/schedule";
 import { readLrtStations } from "@/lib/lrt/stations";
+import { lrtLinePaths } from "@/lib/maps/lrtOverlay";
 import { MAPS_API_KEY } from "@/lib/maps/mapConfig";
 import { closureColor, countdown, headline, timeStatus } from "@/lib/road/closureDisplay";
 import { formatDate } from "@/lib/tickets/tickets";
@@ -42,6 +43,8 @@ export default function HomePage() {
         };
     }, [data]);
     const [area, setArea] = useState<string>();
+    // The line only, no station pins: the diagram above already lists the stations.
+    const [lrtLines] = useState(lrtLinePaths);
     const areas = areasAlongLine([...closures, ...works].map((item) => item.area));
     const navigate = useNavigate();
 
@@ -140,6 +143,7 @@ export default function HomePage() {
                                                 navigate(`${PATHS.roadAccess}?closure=${id}`)
                                             }
                                             affectedShopIds={noShops}
+                                            lrtLines={lrtLines}
                                             gestureHandling="cooperative"
                                         />
                                     </APIProvider>

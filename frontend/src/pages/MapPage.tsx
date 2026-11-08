@@ -11,7 +11,9 @@ import { useConstructionData } from "@/hooks/use-construction-data";
 import { announcementUrl } from "@/lib/announcementLinks";
 import { readAllPremises } from "@/lib/admin/users";
 import { worksNear } from "@/lib/business/business";
+import { LRT_LINES, readLrtStations } from "@/lib/lrt/stations";
 import { AFFECTED_RADIUS_KM, distanceInKm } from "@/lib/maps/geo";
+import { lrtLinePaths, STATION_STATUS } from "@/lib/maps/lrtOverlay";
 import { MAPS_API_KEY } from "@/lib/maps/mapConfig";
 import type { Coordinates } from "@/lib/maps/maps";
 import {
@@ -60,6 +62,10 @@ function CommunityMapPage() {
         ), [data]);
     const notices = data.closures.filter((notice) => notice.kind === "access" && timeStatus(notice).state !== "ended");
     const [shops] = useState(readAllPremises);
+    // The LRT layer: what the closures are for. On by default; the map key can hide it.
+    const [{ stations, lrtLines }] = useState(() => ({ stations: readLrtStations(), lrtLines: lrtLinePaths() }));
+    const [showLrt, setShowLrt] = useState(true);
+    const [selectedStationId, setSelectedStationId] = useState<string>();
 
     // Road closures within range of each shop, nearest first.
     const nearbyByShop = useMemo(() => {
@@ -184,11 +190,24 @@ function CommunityMapPage() {
                     walk={routeForShop?.route?.walk?.path}
                     origin={origin}
                     focus={focus}
-                    onMapClick={() => setSelectedClosureId(undefined)}
+                    onMapClick={() => {
+                        setSelectedClosureId(undefined);
+                        setSelectedStationId(undefined);
+                    }}
+                    lrtLines={showLrt ? lrtLines : undefined}
+                    stations={showLrt ? stations : undefined}
+                    selectedStationId={selectedStationId}
+                    onSelectStation={setSelectedStationId}
                 />
             </div>
 
-            <MapKey />
+            <MapKey
+                showLrt={showLrt}
+                onToggleLrt={() => {
+                    setShowLrt((shown) => !shown);
+                    setSelectedStationId(undefined);
+                }}
+            />
 
             <aside
                 aria-label="Shops and road closures"
@@ -369,7 +388,7 @@ function PanelTabButton({
 }
 
 /** Explains the map's colours, in the same words as the panel. */
-function MapKey() {
+function MapKey({ showLrt, onToggleLrt }: { showLrt: boolean; onToggleLrt: () => void }) {
     const items = [
         { label: `${EXTENT_LABEL.full}, ${TIME_LABEL.now.toLowerCase()}`, swatch: { backgroundColor: LINE_COLOR.full } },
         { label: `${EXTENT_LABEL.partial}, ${TIME_LABEL.now.toLowerCase()}`, swatch: { backgroundColor: LINE_COLOR.partial } },
@@ -379,20 +398,49 @@ function MapKey() {
         },
         { label: "Your route", swatch: { backgroundColor: LINE_COLOR.route } },
     ];
+    // White ticks over the line colour, like the railway style drawn on the map.
+    const rail = (color: string) => ({
+        background: `repeating-linear-gradient(90deg, ${color} 0 6px, #ffffff 6px 8px)`,
+    });
     return (
-        <div className="pointer-events-none absolute left-3 top-3 z-10 hidden flex-col gap-1 rounded-lg bg-card/95 px-3 py-2 text-xs shadow-sm backdrop-blur sm:flex">
-            {items.map((item) => (
-                <span key={item.label} className="flex items-center gap-2">
-                    <span className="h-1.5 w-6 rounded-full" style={item.swatch} aria-hidden />
-                    {item.label}
+        <div className="absolute left-3 top-3 z-10 flex flex-col gap-1 rounded-lg bg-card/95 px-3 py-2 text-xs shadow-sm backdrop-blur">
+            {/* The toggle shows on every screen size; the colour key only from tablet width up. */}
+            <label className="flex cursor-pointer items-center gap-2 font-medium">
+                <input type="checkbox" checked={showLrt} onChange={onToggleLrt} className="accent-primary" />
+                Show LRT line &amp; stations
+            </label>
+            <div className="hidden flex-col gap-1 sm:flex">
+                {items.map((item) => (
+                    <span key={item.label} className="flex items-center gap-2">
+                        <span className="h-1.5 w-6 rounded-full" style={item.swatch} aria-hidden />
+                        {item.label}
+                    </span>
+                ))}
+                <span className="flex items-center gap-2">
+                    <span className="flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground" aria-hidden>
+                        <Store className="size-2.5" />
+                    </span>
+                    Shop (amber ring: closures nearby)
                 </span>
-            ))}
-            <span className="flex items-center gap-2">
-                <span className="flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground" aria-hidden>
-                    <Store className="size-2.5" />
-                </span>
-                Shop (amber ring: closures nearby)
-            </span>
+                {showLrt && (
+                    <>
+                        {LRT_LINES.map((line) => (
+                            <span key={line.id} className="flex items-center gap-2">
+                                <span className="h-1.5 w-6 rounded-full" style={rail(line.color)} aria-hidden />
+                                {line.badge}
+                            </span>
+                        ))}
+                        <span className="flex items-center gap-2">
+                            <span className="flex w-6 justify-center" aria-hidden>
+                                <span className="flex size-3.5 items-center justify-center rounded-full border-2 border-[#0055b8] bg-white">
+                                    <span className="size-1.5 rounded-full" style={{ backgroundColor: STATION_STATUS.ongoing.color }} />
+                                </span>
+                            </span>
+                            Station (centre: build status)
+                        </span>
+                    </>
+                )}
+            </div>
         </div>
     );
 }
