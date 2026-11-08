@@ -57,8 +57,8 @@ function buildStatusData(tickets: Ticket[]) {
 /** The three management charts: reports by category, over time, and by status. */
 export default function ReportsCharts({ tickets }: { tickets: Ticket[] }) {
     return (
-        <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
+        <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+            <Card className="min-w-0">
                 <CardHeader>
                     <CardTitle className="text-lg">Tickets by category</CardTitle>
                     <CardDescription>What people are reporting.</CardDescription>
@@ -89,7 +89,7 @@ export default function ReportsCharts({ tickets }: { tickets: Ticket[] }) {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="min-w-0">
                 <CardHeader>
                     <CardTitle className="text-lg">Tickets over time</CardTitle>
                     <CardDescription>Daily submissions.</CardDescription>
@@ -113,7 +113,7 @@ export default function ReportsCharts({ tickets }: { tickets: Ticket[] }) {
                 </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2">
+            <Card className="min-w-0 lg:col-span-2">
                 <CardHeader>
                     <CardTitle className="text-lg">Status breakdown</CardTitle>
                     <CardDescription>Where every ticket currently sits.</CardDescription>
