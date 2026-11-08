@@ -1,10 +1,14 @@
 import { useEffect, useRef } from "react";
-import { AdvancedMarker, Map, useMap } from "@vis.gl/react-google-maps";
+import { Link } from "react-router-dom";
+import { AdvancedMarker, InfoWindow, Map, useMap } from "@vis.gl/react-google-maps";
 import { Store } from "lucide-react";
+import { type LrtLinePath, STATION_STATUS } from "@/lib/maps/lrtOverlay";
 import { MAP_ID, PENANG_CENTER } from "@/lib/maps/mapConfig";
 import type { Coordinates } from "@/lib/maps/maps";
 import { closureColor, LINE_COLOR, timeStatus } from "@/lib/road/closureDisplay";
 import { cn } from "@/lib/utils";
+import { PATHS } from "@/routes";
+import type { LrtStation } from "@/types/lrt";
 import type { RoadClosure } from "@/types/road-closure";
 import type { BusinessProfile } from "@/types/user";
 
@@ -32,6 +36,11 @@ interface CommunityMapProps {
     onMapClick?: () => void;
     /** "cooperative" when the map sits inside a scrolling page, so scrolling moves the page. */
     gestureHandling?: "greedy" | "cooperative";
+    /** LRT lines and stations to draw under the closures. Leave out to hide the LRT layer. */
+    lrtLines?: LrtLinePath[];
+    stations?: LrtStation[];
+    selectedStationId?: string;
+    onSelectStation?: (id: string | undefined) => void;
 }
 
 /**
@@ -52,7 +61,12 @@ export default function CommunityMap({
     focus,
     onMapClick,
     gestureHandling = "greedy",
+    lrtLines = [],
+    stations = [],
+    selectedStationId,
+    onSelectStation,
 }: CommunityMapProps) {
+    const selectedStation = stations.find((station) => station.id === selectedStationId);
     return (
         <Map
             className="h-full w-full"
@@ -66,6 +80,48 @@ export default function CommunityMap({
             clickableIcons={false}
             onClick={onMapClick}
         >
+            <LrtLines lines={lrtLines} />
+            {stations.map((station) => {
+                const selected = station.id === selectedStationId;
+                const lineColor = lrtLines.find((line) => line.id === station.line)?.color ?? LINE_COLOR.route;
+                return (
+                    <AdvancedMarker
+                        key={station.id}
+                        position={{ lat: station.latitude, lng: station.longitude }}
+                        title={`${station.code} ${station.name}`}
+                        zIndex={selected ? 25 : 5}
+                        onClick={() => onSelectStation?.(selected ? undefined : station.id)}
+                    >
+                        {/* Ring in the line colour, centre in the build-status colour. */}
+                        <span
+                            className={cn(
+                                "flex items-center justify-center rounded-full border-[3px] bg-white shadow transition-transform",
+                                selected ? "size-6" : "size-4",
+                            )}
+                            style={{ borderColor: lineColor }}
+                        >
+                            <span
+                                className={cn("rounded-full", selected ? "size-2.5" : "size-1.5")}
+                                style={{ backgroundColor: STATION_STATUS[station.status].color }}
+                            />
+                        </span>
+                    </AdvancedMarker>
+                );
+            })}
+            {selectedStation && (
+                <InfoWindow
+                    position={{ lat: selectedStation.latitude, lng: selectedStation.longitude }}
+                    pixelOffset={[0, -14]}
+                    headerContent={
+                        <span className="text-sm font-semibold">
+                            {selectedStation.code} · {selectedStation.name}
+                        </span>
+                    }
+                    onCloseClick={() => onSelectStation?.(undefined)}
+                >
+                    <StationCard station={selectedStation} />
+                </InfoWindow>
+            )}
             <ClosedRoadLines closures={closures} selectedId={selectedClosureId} onSelect={onSelectClosure} />
             {route && route.length > 1 && <RouteLine path={route} />}
             {walk && walk.length > 1 && <RouteLine path={walk} dashed />}
@@ -98,6 +154,68 @@ export default function CommunityMap({
             )}
             {focus && <FrameFocus focus={focus} />}
         </Map>
+    );
+}
+
+/**
+ * The LRT alignment in railway style: the line colour with white ticks along it, drawn underneath
+ * closures, routes and pins so those stay readable on top.
+ */
+function LrtLines({ lines }: { lines: LrtLinePath[] }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!map) return;
+        const drawn: google.maps.Polyline[] = [];
+        for (const line of lines) {
+            if (line.points.length < 2) continue;
+            const path = line.points.map((point) => ({ lat: point.latitude, lng: point.longitude }));
+            drawn.push(
+                new google.maps.Polyline({
+                    map,
+                    path,
+                    strokeColor: line.color,
+                    strokeOpacity: 0.85,
+                    strokeWeight: 5,
+                    zIndex: 0,
+                    clickable: false,
+                    icons: [
+                        {
+                            icon: { path: "M 0,-1 0,1", strokeColor: "#ffffff", strokeOpacity: 0.9, strokeWeight: 2, scale: 2 },
+                            offset: "0",
+                            repeat: "16px",
+                        },
+                    ],
+                }),
+            );
+        }
+        return () => drawn.forEach((line) => line.setMap(null));
+    }, [map, lines]);
+
+    return null;
+}
+
+/** What the station popup shows: build status, progress, landmark, and a link to its details. */
+function StationCard({ station }: { station: LrtStation }) {
+    const status = STATION_STATUS[station.status];
+    return (
+        <div className="w-60 space-y-2 text-sm text-foreground">
+            <p className="flex items-center gap-1.5 text-xs font-medium">
+                <span className="size-2 rounded-full" style={{ backgroundColor: status.color }} aria-hidden />
+                {status.label} · {station.progress}%
+            </p>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+                <div className="h-full rounded-full" style={{ width: `${station.progress}%`, backgroundColor: status.color }} />
+            </div>
+            <p className="text-xs text-muted-foreground">{station.currentPhase}</p>
+            {station.landmark && <p className="text-xs">Near {station.landmark}</p>}
+            <Link
+                to={`${PATHS.constructionInfo}?station=${station.code}`}
+                className="inline-block text-xs font-semibold text-primary hover:underline"
+            >
+                Station details →
+            </Link>
+        </div>
     );
 }
 

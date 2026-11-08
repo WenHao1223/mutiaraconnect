@@ -103,9 +103,6 @@ const pages: PageRoute[] = [
 export const appRoutes: RouteObject[] = [
     ...pages.map(({ path, element }) => ({ path, element })),
     { path: PATHS.construction, element: <Navigate to={PATHS.constructionInfo} replace /> },
-    // Road & Access and Local Businesses were merged into the map; keep old links working.
-    { path: PATHS.roadAccess, element: <Navigate to={PATHS.home} replace /> },
-    { path: PATHS.business, element: <Navigate to={PATHS.home} replace /> },
     { path: "*", element: <NotFoundPage /> },
 ];
 
