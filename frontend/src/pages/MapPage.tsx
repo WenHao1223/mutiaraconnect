@@ -402,14 +402,24 @@ function MapKey({ showLrt, onToggleLrt }: { showLrt: boolean; onToggleLrt: () =>
     const rail = (color: string) => ({
         background: `repeating-linear-gradient(90deg, ${color} 0 6px, #ffffff 6px 8px)`,
     });
+    // Phones keep the key folded so it doesn't cover the small map; tablets and up always show it.
+    const [open, setOpen] = useState(false);
     return (
         <div className="absolute left-3 top-3 z-10 flex flex-col gap-1 rounded-lg bg-card/95 px-3 py-2 text-xs shadow-sm backdrop-blur">
-            {/* The toggle shows on every screen size; the colour key only from tablet width up. */}
             <label className="flex cursor-pointer items-center gap-2 font-medium">
                 <input type="checkbox" checked={showLrt} onChange={onToggleLrt} className="accent-primary" />
                 Show LRT line &amp; stations
             </label>
-            <div className="hidden flex-col gap-1 sm:flex">
+            <button
+                type="button"
+                onClick={() => setOpen((value) => !value)}
+                aria-expanded={open}
+                className="flex items-center gap-1 font-medium text-primary sm:hidden"
+            >
+                Map key
+                <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} aria-hidden />
+            </button>
+            <div className={cn("flex-col gap-1 sm:flex", open ? "flex" : "hidden")}>
                 {items.map((item) => (
                     <span key={item.label} className="flex items-center gap-2">
                         <span className="h-1.5 w-6 rounded-full" style={item.swatch} aria-hidden />
