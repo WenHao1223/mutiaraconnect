@@ -573,6 +573,7 @@ function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, 
     onShare: () => void;
 }) {
     const bodyRef = useRef<HTMLParagraphElement>(null);
+    const toggleRef = useRef<HTMLButtonElement>(null);
     const [hasOverflow, setHasOverflow] = useState(false);
 
     useEffect(() => {
@@ -589,6 +590,7 @@ function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, 
     }, [item.body]);
 
     const collapsedOnMobile = !expanded && hasOverflow;
+    const showToggle = hasOverflow || expanded;
     const badge = typeBadgeStyle[item.type];
     const destination = announcementDestination(item);
     const publishedDate = item.publishedAt ? new Date(item.publishedAt) : null;
@@ -643,8 +645,26 @@ function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, 
                 {item.updatedAt && <span>Updated {new Date(item.updatedAt).toLocaleDateString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}</span>}
             </div>
             <p ref={bodyRef} id={`announcement-body-${rowKey}`} className={cn("mt-3 min-w-0 whitespace-pre-line break-words text-sm leading-6 text-muted-foreground", !expanded && "line-clamp-4")}>{item.body}</p>
+            {showToggle && (
+                <button
+                    ref={toggleRef}
+                    type="button"
+                    aria-expanded={expanded}
+                    aria-controls={`announcement-body-${rowKey}`}
+                    aria-label={`${expanded ? "Show less" : "Read more"}: ${item.title}`}
+                    onClick={() => {
+                        flushSync(onToggleExpanded);
+                        // Collapsing a long notice can leave this button above the screen.
+                        if (expanded) toggleRef.current?.scrollIntoView({ block: "nearest" });
+                    }}
+                    className="inline-flex min-h-11 scroll-mt-24 cursor-pointer items-center gap-1 rounded-md text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9"
+                >
+                    {expanded ? "Show less" : "Read more"}
+                    <ChevronDown className={cn("size-4 transition-transform motion-reduce:transition-none", expanded && "rotate-180")} aria-hidden />
+                </button>
+            )}
             {/* On mobile, a collapsed long card keeps only the letter button in this footer. */}
-            <div className={cn("mt-4 flex flex-col gap-3 border-t pt-3", collapsedOnMobile && !item.letterUrl && "hidden md:flex")}>
+            <div className={cn("flex flex-col gap-3 border-t pt-3", showToggle ? "mt-1" : "mt-4", collapsedOnMobile && !item.letterUrl && "hidden md:flex")}>
                 {item.createdBy && <p className={cn("text-xs leading-relaxed text-muted-foreground", collapsedOnMobile && "hidden md:block")}>Published by <span className="font-medium text-foreground">{item.createdBy}</span></p>}
                 <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
                     {item.letterUrl && (
@@ -668,18 +688,6 @@ function AnnouncementCard({ item, rowKey, isUnread, expanded, onToggleExpanded, 
                     >{destination.label}<ArrowRight className="size-3.5" aria-hidden /></Link>
                 </div>
             </div>
-            {(hasOverflow || expanded) && (
-                <button
-                    type="button"
-                    aria-expanded={expanded}
-                    aria-controls={`announcement-body-${rowKey}`}
-                    onClick={onToggleExpanded}
-                    className="-mb-2 mt-1 flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-md text-xs font-semibold text-primary hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                    {expanded ? "Show less" : "Read announcement"}
-                    <ChevronDown className={cn("size-4 transition-transform motion-reduce:transition-none", expanded && "rotate-180")} aria-hidden />
-                </button>
-            )}
         </article>
     );
 }
