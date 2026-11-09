@@ -20,7 +20,27 @@ const ANNOUNCEMENTS_EVENT =
     (import.meta.env.VITE_ANNOUNCEMENTS_EVENT as string | undefined) ?? "mutiaraconnect:announcements-changed";
 
 const seed = announcementsData as Announcement[];
-const readStoredAnnouncements = () => readJson<Announcement[]>(ANNOUNCEMENTS_KEY, seed);
+
+/** Formal letters by announcement ID, matched by filename (letter-AN-101.pdf -> AN-101). */
+const letterUrls: Record<string, string> = Object.fromEntries(
+    Object.entries(import.meta.glob<string>("@/data/letter-*.pdf", { query: "?url", import: "default", eager: true }))
+        .map(([path, url]) => [path.slice(path.lastIndexOf("/letter-") + "/letter-".length, -".pdf".length), url]),
+);
+
+/**
+ * Saved lists can predate the seed cleanup and can hold URLs from an older build,
+ * so repeated IDs are dropped and letter URLs are always resolved afresh.
+ */
+function readStoredAnnouncements(): Announcement[] {
+    const seen = new Set<string>();
+    return readJson<Announcement[]>(ANNOUNCEMENTS_KEY, seed)
+        .filter((item) => {
+            if (seen.has(item.id)) return false;
+            seen.add(item.id);
+            return true;
+        })
+        .map((item) => ({ ...item, letterUrl: letterUrls[item.id] }));
+}
 
 export function notifyAnnouncementsChanged(): void {
     if (typeof window !== "undefined") {

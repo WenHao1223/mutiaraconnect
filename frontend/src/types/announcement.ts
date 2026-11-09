@@ -21,4 +21,6 @@ export interface Announcement {
     closureState?: TimeState;
     /** Last explicit change to the generated advisory; publication time is preserved. */
     updatedAt?: string;
+    /** URL of the formal letter PDF. Resolved when read from data/letter-<id>.pdf; never set in the seed. */
+    letterUrl?: string;
 }
